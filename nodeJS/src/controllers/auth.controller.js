@@ -3,6 +3,8 @@ const User = require("../models/employee.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { googleAuth } = require("../services/authgoogleService"); // Importation du service Google
+
 const {loginface,
     signup,
     login
@@ -136,7 +138,19 @@ const forgetPasswordController = async (req, res) => {
   };
 
 
+
+  const googleAuthController = async (req, res) => {
+    try {
+      const userData = await googleAuth(req);
+      const { token, email } = userData;
   
+      // Redirect to the frontend with token and email as query parameters
+      res.redirect(`http://localhost:5173/login?token=${token}&email=${email}`);
+    } catch (error) {
+      // Redirect to the frontend with an error message if something goes wrong
+      res.redirect(`http://localhost:5173/login?error=${error.message}`);
+    }
+  };
 
 
 
@@ -146,5 +160,6 @@ const forgetPasswordController = async (req, res) => {
     forgetPasswordController,
     resetPasswordController,
     loginFaceController,
+    googleAuthController
 
 };

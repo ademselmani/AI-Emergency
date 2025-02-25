@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Login = () => {
@@ -7,10 +7,17 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Handle Google Login
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:3000/api/auth/google";
+  };
+
+  // Handle regular login
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Réinitialise l'erreur avant chaque tentative de connexion
+    setError(""); // Reset error before each login attempt
 
     try {
       const response = await axios.post(
@@ -18,7 +25,7 @@ const Login = () => {
         { email, password }
       );
 
-      // Si la connexion est réussie, on enregistre le token et redirige l'utilisateur
+      // If login is successful, save the token and redirect the user
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.role);
@@ -26,20 +33,56 @@ const Login = () => {
         if (response.data.role === "admin") navigate("/dashboard");
         else navigate("/showPatients");
       } else {
-        setError("Une erreur inconnue est survenue");
+        setError("An unknown error occurred");
       }
     } catch (err) {
       if (err.response) {
-        setError(err.response.data.message || "Erreur lors de la connexion");
+        setError(err.response.data.message || "Login failed");
       } else {
-        setError("Impossible de se connecter au serveur");
+        setError("Unable to connect to the server");
       }
     }
   };
 
+  // Handle face recognition login
   const handleFaceRecognitionClick = () => {
-    navigate("/face-recognition"); // Naviguer vers la page de reconnaissance faciale
+    navigate("/face-recognition"); // Navigate to the face recognition page
   };
+
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const token = queryParams.get("token");
+    const email = queryParams.get("email");
+    const error = queryParams.get("error");
+
+    if (error) {
+      setError(error); // Display error message if any
+    }
+
+    if (token && email) {
+      // Save the token and user data to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("email", email);
+
+      // Fetch user role or additional details if needed
+      axios
+        .get("http://localhost:3000/api/auth/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          const role = response.data.role;
+          localStorage.setItem("role", role);
+
+          // Redirect the user based on their role
+          if (role === "admin") navigate("/dashboard");
+          else navigate("/showPatients");
+        })
+        .catch((err) => {
+          setError("Failed to fetch user details");
+        });
+    }
+  }, [location, navigate]);
 
   return (
     <div className="authentication-wrapper authentication-basic container-p-y">
@@ -87,28 +130,44 @@ const Login = () => {
                   />
                 </div>
               </div>
-              <div className="mb-3">
-                <button
-                  type="button"
-                  className="btn btn-secondary w-100"
-                  onClick={handleFaceRecognitionClick}
-                >
-                  Use Face Recognition
-                </button>
+              <div className="d-flex justify-content-center">
+                <div className="col-3">
+                  <div className="mb-3">
+                    <button className="btn btn-primary d-grid w-100" type="submit">
+                      Sign in
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="mb-3">
-                <button className="btn btn-primary d-grid w-100" type="submit">
-                  Sign in
-                </button>
+              <div className="d-flex justify-content-center">
+                <div className="col-3 text-center">
+                  <div className="mb-3">
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-100"
+                      onClick={handleFaceRecognitionClick}
+                    >
+                      Use Face Recognition
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="d-flex justify-content-center">
+                <div className="col-3">
+                  <div className="mb-3">
+                    <button
+                      className="btn btn-danger d-grid w-100"
+                      type="button"
+                      onClick={handleGoogleLogin}
+                    >
+                      Sign in With GOOGLE
+                    </button>
+                  </div>
+                </div>
               </div>
             </form>
 
-            <p className="text-center">
-              <span>New on our platform?</span>
-              <a href="register">
-                <span>Create an account</span>
-              </a>
-            </p>
+           
           </div>
         </div>
       </div>

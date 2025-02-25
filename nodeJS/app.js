@@ -6,18 +6,22 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const mongoose = require("mongoose");
+const session = require("express-session");
+const passport = require("passport"); // 🔥 Import Passport
+require("dotenv").config();
+require("./src/config/passport"); // 🔥 Load Passport config
+const authRoute = require("./src/routes/index.route");
+
 const configDB = require("./src/config/db.json");
 const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
 
-// Charger node-canvas et patcher face-api.js
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
-const authRoute = require("./src/routes/index.route");
-// const employeeRoute = require("./src/routes/employee.route"); // Si nécessaire
 
-// Connexion à MongoDB
+
+// ✅ **Connect to MongoDB**
 mongoose
   .connect(configDB.mongo.uri, {
     useNewUrlParser: true,
@@ -29,27 +33,33 @@ mongoose
 const app = express();
 const server = http.createServer(app);
 
-// Middlewares
+// ✅ **Middlewares**
 app.use(cors());
 app.use(logger("dev"));
-app.use(express.json({ limit: "10mb" })); // augmenter la taille si besoin
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// ✅ **Session & Passport Middleware**
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your_secret_key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
-
-
-// Montons nos routes
-app.use("/api/auth", authRoute);
-// app.use("/employee", employeeRoute); // Si besoin
-
-// Gestion des erreurs 404
+// ✅ **Routes**
+ 
+// ✅ **Handle 404 Errors**
 app.use((req, res, next) => {
   next(createError(404));
 });
 
-// Gestion centrale des erreurs
+// ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
@@ -57,7 +67,7 @@ app.use((err, req, res, next) => {
   res.json({ error: err.message });
 });
 
-// Chargement des modèles face-api.js
+// ✅ **Load face-api.js Models**
 const MODEL_URL = path.join(__dirname, "/model");
 Promise.all([
   faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL),
@@ -70,11 +80,9 @@ Promise.all([
   .catch((error) => {
     console.error("❌ Erreur lors du chargement des modèles face-api.js :", error);
   });
+   app.use("/api/auth", authRoute);
   
- 
-
-
-// Démarrage du serveur
+// ✅ **Start Server**
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });

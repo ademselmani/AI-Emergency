@@ -101,11 +101,10 @@ const Register = () => {
             <div className="app-brand justify-content-center">
               <a href="index.html" className="app-brand-link gap-2">
                 <span className="app-brand-logo demo"></span>
-                <span className="app-brand-text demo text-body fw-bolder">Sneat</span>
+                <span className="app-brand-text demo text-body fw-bolder">Create employee</span>
               </a>
             </div>
-            <h4 className="mb-2">Adventure starts here 🚀</h4>
-            <p className="mb-4">Make your app management easy and fun!</p>
+           
 
             {error && <div className="alert alert-danger">{error}</div>}
 
@@ -231,12 +230,7 @@ const Register = () => {
               </button>
             </form>
 
-            <p className="text-center">
-              <span>Already have an account?</span>
-              <a href="login">
-                <span>Sign in instead</span>
-              </a>
-            </p>
+         
           </div>
         </div>
       </div>
