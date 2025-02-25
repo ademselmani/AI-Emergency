@@ -1,0 +1,13 @@
+{
+    "mongo" : {
+        "uri" : "mongodb://127.0.0.1:27017/emergencyDepartement"
+    },
+    "jwt": {
+      "secret": "votre_cle_secrete_super_securisee"
+    },
+    "email": {
+      "user": "ellaabouaff123@gmail.com",
+      "pass": "bkbs qjea ryfk xley",
+      "clientUrl": "http://localhost:5173"
+    }
+}
