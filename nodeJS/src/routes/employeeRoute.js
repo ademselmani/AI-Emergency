@@ -3,6 +3,88 @@ var router = express.Router();
 const Employee = require("../models/Employee")
 
 
+router.get("/employees", async (req, res) => {
+  try {
+    // Récupérer tous les employés sauf ceux avec le rôle "admin" et les trier par rôle
+    const employees = await Employee.find({ role: { $ne: "admin" } }).sort({
+      role: 1,
+    }) // 1 pour tri ascendant
+    res.json(employees)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+router.get("/employees/:id", async (req, res) => {
+  try {
+    // Récupérer l'ID de l'employé à partir des paramètres de la requête
+    const { id } = req.params
+
+    // Récupérer l'employé par ID
+    const employee = await Employee.findById(id)
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employé non trouvé" })
+    }
+
+    // Retourner l'employé trouvé
+    res.json(employee)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+router.delete("/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params
+    const employee = await Employee.findByIdAndDelete(id)
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employé non trouvé" })
+    }
+
+    res.status(204).send() 
+  } catch (err) {
+    console.error("Error during deletion:", err) 
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la suppression de l'employé" })
+  }
+})
+router.put("/employees/:id", async (req, res) => {
+  const { id } = req.params
+  const updatedData = req.body
+
+  try {
+    // Recherche de l'employé par son ID
+    const employee = await Employee.findById(id)
+
+    // Si l'employé n'est pas trouvé
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" })
+    }
+
+    // Mise à jour des informations de l'employé
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      id,
+      {
+        $set: updatedData,
+      },
+      { new: true } // Retourne l'employé mis à jour
+    )
+
+    if (!updatedEmployee) {
+      throw new Error("Failed to update employee")
+    }
+
+    // Retour des données mises à jour
+    res.status(200).json(updatedEmployee)
+  } catch (error) {
+    console.error("Error updating employee:", error.message || error)
+    res
+      .status(500)
+      .json({ message: "Error updating employee data", error: error.message })
+  }
+})
+
 
 router.post("/addEmployee", async (req, res, next) => {
   try {
@@ -17,6 +99,7 @@ router.post("/addEmployee", async (req, res, next) => {
       role,
       email,
       password,
+      image,
       joinDate,
       adresse,
       status,
@@ -33,6 +116,7 @@ router.post("/addEmployee", async (req, res, next) => {
       phone,
       role,
       email,
+      image,
       password,
       joinDate,
       adresse,
