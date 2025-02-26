@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const Employee = require("../models/Employee")
+const Employee = require("../models/employee.model")
 
 
 router.get("/employees", async (req, res) => {

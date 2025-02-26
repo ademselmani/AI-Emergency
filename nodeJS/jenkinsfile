@@ -1,0 +1,26 @@
+pipeline { 
+    agent any 
+    stages { 
+        stage('Install dependencies') { 
+            steps { 
+                script { 
+                    sh 'cd nodejs && npm install'  // Move into the correct directory
+                } 
+            } 
+        } 
+        stage('Unit Test') { 
+            steps { 
+                script { 
+                    sh 'cd nodejs && npm test'  
+                } 
+            } 
+        } 
+        stage('Build application') { 
+            steps { 
+                script { 
+                    sh 'cd nodejs && npm run build-dev'  
+                } 
+            } 
+        } 
+    } 
+}

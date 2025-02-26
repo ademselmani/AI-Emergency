@@ -31,9 +31,9 @@ const EmployeeStats = () => {
     const fetchStats = async () => {
       try {
         const [statusRes, roleRes, genderRes] = await Promise.all([
-          fetch("http://localhost:3001/user/stats/status"),
-          fetch("http://localhost:3001/user/stats/role"),
-          fetch("http://localhost:3001/user/stats/gender"),
+          fetch("http://localhost:3000/user/stats/status"),
+          fetch("http://localhost:3000/user/stats/role"),
+          fetch("http://localhost:3000/user/stats/gender"),
         ])
 
         const statusData = await statusRes.json()

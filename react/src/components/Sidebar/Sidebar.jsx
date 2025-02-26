@@ -67,6 +67,17 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Add Employee</div>
               </NavLink>
             </li>
+            <li className="menu-item">
+              <NavLink
+                to="/users"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">Show Employees</div>
+              </NavLink>
+            </li>
           </>
         )}
 

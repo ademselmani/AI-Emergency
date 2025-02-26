@@ -10,7 +10,8 @@ const session = require("express-session");
 const passport = require("passport"); // 🔥 Import Passport
 require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
-
+const employeeRoute = require("./src/routes/employeeRoute")
+const multer = require("multer")
 
 const configDB = require("./src/config/db.json");
 const faceapi = require("face-api.js");
@@ -50,12 +51,42 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+// Configuration de Multer pour l'upload d'images
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = "./uploads/"
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true })
+    }
+    cb(null, uploadPath)
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)) // Nom unique pour éviter les conflits
+  },
+})
+
+const upload = multer({ storage: storage });
+
+// Route pour l'upload d'image
+app.post('/upload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('Aucun fichier uploadé.');
+  }
+
+  // Retourne l'URL de l'image uploadée
+  const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
+  res.json({ imageUrl });
+});
+
+// Servir les fichiers statiques depuis le dossier 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ **Routes**
 app.use("/api/auth", authRoute);
-
+app.use("/user", employeeRoute)
 
 
 // ✅ **Central Error Handling**

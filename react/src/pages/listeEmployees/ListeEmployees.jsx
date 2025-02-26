@@ -11,7 +11,7 @@ const ListeEmployees = () => {
 
   // Chargement des employés depuis l'API
   useEffect(() => {
-    fetch("http://localhost:3001/user/employees")
+    fetch("http://localhost:3000/user/employees")
       .then((response) => response.json())
       .then((data) => {
         const formattedData = data.map((employee) => ({
@@ -32,7 +32,7 @@ const ListeEmployees = () => {
   const deleteEmployee = async (id) => {
     try {
       // Appel de l'API pour supprimer l'employé
-      await fetch(`http://localhost:3001/user/employees/${id}`, {
+      await fetch(`http://localhost:3000/user/employees/${id}`, {
         method: "DELETE",
       })
 

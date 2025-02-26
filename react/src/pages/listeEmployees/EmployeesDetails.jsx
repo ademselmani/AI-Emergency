@@ -32,7 +32,7 @@ const EmployeesDetails = () => {
     const fetchEmployeeData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3001/user/employees/${id}`
+          `http://localhost:3000/user/employees/${id}`
         )
         const data = await response.json()
         setProfileData({
@@ -67,7 +67,7 @@ const EmployeesDetails = () => {
       formData.append("image", file)
 
       try {
-        const response = await fetch("http://localhost:3001/upload", {
+        const response = await fetch("http://localhost:3000/upload", {
           method: "POST",
           body: formData,
         })
@@ -108,7 +108,7 @@ const EmployeesDetails = () => {
       }
 
       const response = await fetch(
-        `http://localhost:3001/user/employees/${id}`,
+        `http://localhost:3000/user/employees/${id}`,
         {
           method: "PUT",
           headers: {

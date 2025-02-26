@@ -5,6 +5,7 @@ const employeeSchema = mongoose.Schema({
   cin: Number,
   name: String,
   familyName: String,
+  image : String,
   birthday: Date,
   gender: String,
   phone: String,
