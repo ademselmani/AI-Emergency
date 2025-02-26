@@ -1,0 +1,80 @@
+.widget-card {
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.widget-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-header.text-bg-primary {
+  background-color: #0d6efd;
+  color: white;
+  font-weight: 500;
+}
+
+.badge {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.img-fluid.rounded-circle {
+  border: 3px solid #f8f9fa;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Amélioration des transitions pour les onglets */
+.nav-link {
+  transition: all 0.2s ease-in-out;
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+/* Ajoutez ceci à votre fichier CSS */
+.icon-hover {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.icon-hover:hover {
+  transform: scale(1.2); /* Agrandit l'icône au survol */
+  color: #007bff; /* Change la couleur au survol (bleu par exemple) */
+}
+
+.card-body a {
+  margin: 0 10px;
+}
+.youtube-icon {
+  color: #ff0000; /* Rouge YouTube */
+}
+
+.twitter-icon {
+  color: #1da1f2; /* Bleu Twitter */
+}
+
+.facebook-icon {
+  color: #1877f2; /* Bleu Facebook */
+}
+
+.linkedin-icon {
+  color: #0a66c2; /* Bleu LinkedIn */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+}
