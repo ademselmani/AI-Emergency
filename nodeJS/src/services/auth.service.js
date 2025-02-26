@@ -7,6 +7,7 @@ const path = require("path");
 const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const jwt = require('jsonwebtoken');
+const { image } = require("@tensorflow/tfjs-core");
 // Configuration de node-canvas pour face-api.js
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -108,6 +109,7 @@ const signup = async (data) => {
     }
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
+    
     // Créer un nouvel utilisateur avec le descripteur facial (sans sauvegarder l'image)
     user = new User({
       name: data.name,
@@ -116,6 +118,7 @@ const signup = async (data) => {
       role: data.role,
       phone: data.phone,
       password :data.password,
+      image: "http://localhost:3000/"+data.imageFile.path,
       faceDescriptor, // Stocke uniquement le descripteur facial
     });
 

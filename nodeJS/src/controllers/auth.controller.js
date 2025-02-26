@@ -14,6 +14,7 @@ const {loginface,
   try {
     const { name,familyName , email, role, phone, password } = req.body;
     const imageFile = req.file;
+    
 
     // Appel du service d'inscription
     const { userId, email: userEmail, name: userName, role: userRole, token } = await signup({ 
@@ -23,7 +24,7 @@ const {loginface,
       role, 
       phone, 
       password, 
-      imageFile 
+      imageFile ,
     });
 
     // Réponse en cas de succès
