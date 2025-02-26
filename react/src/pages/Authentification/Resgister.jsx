@@ -6,6 +6,8 @@ const Register = () => {
   // State variables to store form data
   const [formData, setFormData] = useState({
     name: "",
+    familyName: "",
+    gender: "",
     email: "",
     role: "",
     phone: "",
@@ -102,7 +104,7 @@ const Register = () => {
             <div className="app-brand justify-content-center">
               <a href="index.html" className="app-brand-link gap-2">
                 <span className="app-brand-logo demo"></span>
-                <span className="app-brand-text demo text-body fw-bolder">Create employee</span>
+                <span className="app-brand-text demo text-body fw-bolder">Create an employee</span>
               </a>
             </div>
            
@@ -111,7 +113,7 @@ const Register = () => {
 
             <form id="formAuthentication" className="mb-3" onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label htmlFor="name" className="form-label">Username</label>
+                <label htmlFor="name" className="form-label">First Name</label>
                 <input
                   type="text"
                   className="form-control"
@@ -123,21 +125,37 @@ const Register = () => {
                   required
                   autoFocus
                 />
-              </div>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email</label>
+                <label htmlFor="familyName" className="form-label">Last Name</label>
                 <input
-                  type="email"
+                  type="text"
                   className="form-control"
-                  id="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
+                  id="familyName"
+                  name="familyName"
+                  placeholder="Enter your last name"
+                  value={formData.familyName}
                   onChange={handleChange}
                   required
+                  autoFocus
                 />
+
+                <div className="mb-3">
+                <label htmlFor="gender" className="form-label">gender</label>
+                <select
+                  className="form-control"
+                  id="gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a gender</option>
+                  <option value="doctor">Man</option>
+                  <option value="admin">Woman</option>
+                </select>
               </div>
-              <div className="mb-3">
+
+                <div className="mb-3">
                 <label htmlFor="role" className="form-label">Role</label>
                 <select
                   className="form-control"
@@ -156,6 +174,21 @@ const Register = () => {
                   <option value="ambulance_driver">Ambulance_driver</option>
                 </select>
               </div>
+              </div>
+              <div className="mb-3">
+                <label htmlFor="email" className="form-label">Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
               <div className="mb-3">
                 <label htmlFor="phone" className="form-label">Phone</label>
                 <input
@@ -229,6 +262,7 @@ const Register = () => {
               <button className="btn btn-primary d-grid w-100" type="submit">
                 Sign up
               </button>
+           </div>
             </form>
 
          

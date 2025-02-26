@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require('bcrypt');
 
+
 const employeeSchema = mongoose.Schema({
   cin: Number,
   name: String,
@@ -62,6 +63,7 @@ const employeeSchema = mongoose.Schema({
 // );
 
 employeeSchema.pre("save", async function (next) {
+  if(!this.image === ""  || this.image === null) this.image = "../../uploads/anonyme.jpg"
   if (!this.isModified("password")) {
     return next();
   }

@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css"; // Global styles
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Authentification/Login";
-import Profile from "./pages/Profile/Profile";
+import Profile from "./pages/Profile/AuthentificatedUserprofile";
 import Register from "./pages/Authentification/Resgister";
 import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";

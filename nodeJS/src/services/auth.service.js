@@ -111,6 +111,7 @@ const signup = async (data) => {
     // Créer un nouvel utilisateur avec le descripteur facial (sans sauvegarder l'image)
     user = new User({
       name: data.name,
+      familyName : data.familyName,
       email: data.email,
       role: data.role,
       phone: data.phone,

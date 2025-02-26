@@ -31,7 +31,7 @@ const Login = () => {
         localStorage.setItem("role", response.data.role);
         localStorage.setItem("user_id", response.data.userId);
         if (response.data.role === "admin") navigate("/dashboard");
-        else navigate("/showPatients");
+        else navigate("/profile");
       } else {
         setError("An unknown error occurred");
       }
@@ -76,7 +76,7 @@ const Login = () => {
 
           // Redirect the user based on their role
           if (role === "admin") navigate("/dashboard");
-          else navigate("/showPatients");
+          else navigate("/profile");
         })
         .catch((err) => {
           setError("Failed to fetch user details");

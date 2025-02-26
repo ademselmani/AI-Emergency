@@ -54,7 +54,7 @@ const FaceRecognition = () => {
         localStorage.setItem("role", response.data.role);
         localStorage.setItem("user_id", response.data.userId);
         if (response.data.role === "admin") navigate("/dashboard");
-        else navigate("/showPatients");
+        else navigate("/profile");
       } else {
         alert("Reconnaissance faciale échouée.");
       }
