@@ -60,7 +60,6 @@ const loginFaceController = async (req, res) => {
 
     console.log("🔑 Tentative de login via reconnaissance faciale...");
     const loginResult = await loginface(imageData);
-
     return res.status(200).json({ success: true, message: "Login réussi", ...loginResult });
   } catch (error) {
     console.error("🚨 Erreur lors du login par reconnaissance faciale :", error);

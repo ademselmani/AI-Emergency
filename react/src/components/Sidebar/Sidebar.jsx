@@ -1,19 +1,25 @@
-
 import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 const Sidebar = () => {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
-  if(role==="") navigate("/login");
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (!role) {
+      navigate("/login");
+    } else {
+      setRole(role);
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
-    // Clear localStorage
     localStorage.clear();
-    
-    // Redirect to login page
     navigate("/login");
   };
 
-
+ 
   return (
     <aside
       id="layout-menu"

@@ -13,7 +13,7 @@
     "axios": "^1.7.9",
     "face-api.js": "^0.22.2",
     "lucide-react": "^0.476.0",
-    "react": "^18.3.1",
+    "react": "file:",
     "react-dom": "^18.3.1",
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.21.1",
