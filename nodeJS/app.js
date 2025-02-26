@@ -10,25 +10,26 @@ const session = require("express-session");
 const passport = require("passport"); // 🔥 Import Passport
 require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
-const authRoute = require("./src/routes/index.route");
+
 
 const configDB = require("./src/config/db.json");
 const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
+const authRoute = require("./src/routes/index.route");
 
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 
-// ✅ **Connect to MongoDB**
+
 mongoose
   .connect(configDB.mongo.uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("✅ Connecté à MongoDB"))
-  .catch((err) => console.error("❌ Erreur de connexion MongoDB:", err));
+  // .then(() => console.log("✅ Connecté à MongoDB"))
+  // .catch((err) => console.error("", err));
 
 const app = express();
 const server = http.createServer(app);
@@ -53,11 +54,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ **Routes**
- 
-// ✅ **Handle 404 Errors**
-app.use((req, res, next) => {
-  next(createError(404));
-});
+app.use("/api/auth", authRoute);
+
+
 
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
@@ -80,9 +79,14 @@ Promise.all([
   .catch((error) => {
     console.error("❌ Erreur lors du chargement des modèles face-api.js :", error);
   });
-   app.use("/api/auth", authRoute);
+ 
+
+  // ✅ **Handle 404 Errors**
+app.use((req, res, next) => {
+  next(createError(404));
+});
   
-// ✅ **Start Server**
+
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });

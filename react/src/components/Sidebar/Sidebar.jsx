@@ -1,7 +1,18 @@
-import { NavLink } from "react-router-dom";
 
+import { NavLink, useNavigate } from "react-router-dom";
 const Sidebar = () => {
+  const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  if(role==="") navigate("/login");
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.clear();
+    
+    // Redirect to login page
+    navigate("/login");
+  };
+
 
   return (
     <aside
@@ -142,15 +153,10 @@ const Sidebar = () => {
 
         {/* Log out */}
         <li className="menu-item">
-          <NavLink
-            to="/login"
-            className={({ isActive }) =>
-              `menu-link ${isActive ? "active" : ""}`
-            }
-          >
+          <button onClick={handleLogout} className="menu-link" style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", width: "100%" }}>
             <i className="menu-icon tf-icons bx bx-log-out"></i>
             <div data-i18n="Analytics">Log out</div>
-          </NavLink>
+          </button>
         </li>
       </ul>
     </aside>

@@ -85,6 +85,7 @@ const Register = () => {
           "Content-Type": "multipart/form-data",
         },
       });
+      console.log(response)
       if (response.status === 201) {
         alert("User created successfully!");
       }
