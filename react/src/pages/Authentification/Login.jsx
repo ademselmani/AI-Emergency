@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -13,12 +15,11 @@ const Login = () => {
     setError(""); // Réinitialise l'erreur avant chaque tentative de connexion
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
-        { email, password }
-      );
+      const response = await axios.post("http://localhost:3000/api/auth/login", {
+        email,
+        password,
+      });
 
-      // Si la connexion est réussie, on enregistre le token et redirige l'utilisateur
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.role);
@@ -29,16 +30,12 @@ const Login = () => {
         setError("Une erreur inconnue est survenue");
       }
     } catch (err) {
-      if (err.response) {
-        setError(err.response.data.message || "Erreur lors de la connexion");
-      } else {
-        setError("Impossible de se connecter au serveur");
-      }
+      setError(err.response?.data?.message || "Impossible de se connecter au serveur");
     }
   };
 
   const handleFaceRecognitionClick = () => {
-    navigate("/face-recognition"); // Naviguer vers la page de reconnaissance faciale
+    navigate("/face-recognition");
   };
 
   return (
@@ -52,41 +49,39 @@ const Login = () => {
 
             <form id="formAuthentication" className="mb-3" onSubmit={handleLogin}>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label">
-                  Email
-                </label>
+                <label htmlFor="email" className="form-label">Email</label>
                 <input
                   type="text"
                   className="form-control"
                   id="email"
-                  name="email-username"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoFocus
+                  required
                 />
               </div>
-              <div className="mb-3 form-password-toggle">
+
+              {/* Password Field */}
+              <div className="mb-3">
                 <div className="d-flex justify-content-between">
-                  <label className="form-label" htmlFor="password">
-                    Password
-                  </label>
-                  <a href="forget-password">
-                    <small>Forgot Password?</small>
-                  </a>
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <a href="/forget-password"><small>Forgot Password?</small></a>
                 </div>
-                <div className="input-group input-group-merge">
+                <div className="input-group">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     className="form-control"
-                    name="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
+                  
                 </div>
               </div>
+
               <div className="mb-3">
                 <button
                   type="button"
@@ -96,6 +91,7 @@ const Login = () => {
                   Use Face Recognition
                 </button>
               </div>
+
               <div className="mb-3">
                 <button className="btn btn-primary d-grid w-100" type="submit">
                   Sign in
@@ -104,10 +100,8 @@ const Login = () => {
             </form>
 
             <p className="text-center">
-              <span>New on our platform?</span>
-              <a href="register">
-                <span>Create an account</span>
-              </a>
+              <span>New on our platform? </span>
+              <a href="/register"><span>Create an account</span></a>
             </p>
           </div>
         </div>

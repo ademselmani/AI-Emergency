@@ -78,3 +78,8 @@ Promise.all([
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });
+
+
+
+// Exporter à la fois l'app et le serveur
+module.exports = { app, server };

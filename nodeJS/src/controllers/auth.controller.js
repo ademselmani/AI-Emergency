@@ -46,8 +46,7 @@ const loginController = async (req, res, next) => {
         const loginService = await login(req.body);
         return res.json(loginService);
     } catch (error) {
-        return res.status(400).json({ error: error.message });
-    }
+      return res.status(error.status || 500).json({ message: error.message || "Erreur serveur" });    }
 };
 const loginFaceController = async (req, res) => {
   try {
