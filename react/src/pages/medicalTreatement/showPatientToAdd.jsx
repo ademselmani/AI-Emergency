@@ -49,17 +49,15 @@ const ShowPatientToAdd = () => {
     fetchDoctors();
   }, []);
 
-  // Handle form field changes
-  const handleChange = (event) => {
+   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setTreatment((prevTreatment) => ({
-      ...prevTreatment, // Preserve existing fields
+      ...prevTreatment, 
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  // Handle doctor selection
-  const handleDoctorSelect = (selectedOption) => {
+   const handleDoctorSelect = (selectedOption) => {
     setTreatment((prevTreatment) => ({
       ...prevTreatment,
       treatedBy: selectedOption ? selectedOption.value : '', // Store the selected doctor's ID
@@ -69,19 +67,18 @@ const ShowPatientToAdd = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
   
-    // Check if patientId is available
  
   
-    // Make sure the treatment object is correctly structured with the patientId
-    const treatmentWithPatient = { ...treatment, patient: selectedPatient._id };
+     const treatmentWithPatient = { ...treatment, patient: selectedPatient._id };
   
     try {
       // Send the treatment data to the backend with the correct patientId in the request body
       await axios.post(`http://localhost:3000/api/treatments/${treatment.patient}`, treatment);
   
-      // On success, navigate to the treatments page for the patient
-      navigate(`/medical-treatments/patient/show/${treatment.patient}`);  //should navigate sending full object
-      
+      navigate(`/medical-treatments/patient/show/${treatment.patient}`, {
+        state: { patient: selectedPatient }
+      });
+
     } catch (error) {
       console.error('Erreur lors de l\'ajout du traitement:', error);
   
