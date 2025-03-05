@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";  // Pour effectuer des requêtes HTTP
-import "./FaceRecognition.css";  // Ajouter le fichier CSS pour les styles
+import axios from "axios"; // Pour effectuer des requêtes HTTP
+import "./FaceRecognition.css"; // Ajouter le fichier CSS pour les styles
 
 const FaceRecognition = () => {
   const videoRef = useRef(null);
@@ -13,7 +13,9 @@ const FaceRecognition = () => {
   useEffect(() => {
     const startVideo = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         videoRef.current.srcObject = stream;
       } catch (error) {
         setHasError(true);
@@ -27,7 +29,7 @@ const FaceRecognition = () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject;
         const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
+        tracks.forEach((track) => track.stop());
       }
     };
   }, []);
@@ -36,28 +38,37 @@ const FaceRecognition = () => {
     const context = canvas.getContext("2d");
     context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     const imageData = canvas.toDataURL("image/jpeg");
-  
+
     try {
-      setLoading(true);  // Indiquer que la requête est en cours
-  
+      setLoading(true); // Indiquer que la requête est en cours
+
       // Envoi de l'image au backend pour la reconnaissance faciale
-      const response = await axios.post("http://localhost:3000/api/auth/loginface", { imageData }); // Vérifie que l'URL est correcte
-  
+      const response = await axios.post(
+        "http://localhost:3000/api/auth/loginface",
+        { imageData }
+      ); // Vérifie que l'URL est correcte
+
       // Si la reconnaissance faciale réussie, rediriger vers le dashboard
       if (response.data.success) {
-        navigate("/dashboard");  // Remplacer par l'URL de votre page après connexion
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("role", response.data.role);
+        localStorage.setItem("user_id", response.data.userId);
+        if (response.data.role === "admin") navigate("/dashboard");
+        else navigate("/profile");
       } else {
         alert("Reconnaissance faciale échouée.");
       }
-  
     } catch (error) {
-      console.error("Erreur lors de la connexion via reconnaissance faciale:", error);
+      console.error(
+        "Erreur lors de la connexion via reconnaissance faciale:",
+        error
+      );
       alert("Erreur lors de la connexion.");
     } finally {
-      setLoading(false);  // Revenir à l'état normal
+      setLoading(false); // Revenir à l'état normal
     }
   };
-  
+
   return (
     <div className="face-recognition-container">
       <h2>Reconnaissance Faciale</h2>
@@ -68,10 +79,19 @@ const FaceRecognition = () => {
       ) : (
         <div className="camera-container">
           <video ref={videoRef} autoPlay muted className="video" />
-          <canvas ref={canvasRef} width="320" height="240" style={{ display: "none" }} />
+          <canvas
+            ref={canvasRef}
+            width="320"
+            height="240"
+            style={{ display: "none" }}
+          />
         </div>
       )}
-      <button className="capture-button" onClick={captureAndLogin} disabled={loading}>
+      <button
+        className="capture-button"
+        onClick={captureAndLogin}
+        disabled={loading}
+      >
         {loading ? "Chargement..." : "Se connecter"}
       </button>
     </div>

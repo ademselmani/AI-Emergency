@@ -3,6 +3,8 @@ const User = require("../models/employee.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { googleAuth } = require("../services/authgoogleService"); // Importation du service Google
+
 const {loginface,
     signup,
     login
@@ -10,17 +12,19 @@ const {loginface,
   
   const signUpController = async (req, res) => {
   try {
-    const { name, email, role, phone, password } = req.body;
+    const { name,familyName , email, role, phone, password } = req.body;
     const imageFile = req.file;
+    
 
     // Appel du service d'inscription
     const { userId, email: userEmail, name: userName, role: userRole, token } = await signup({ 
       name, 
+      familyName ,
       email, 
       role, 
       phone, 
       password, 
-      imageFile 
+      imageFile ,
     });
 
     // Réponse en cas de succès
@@ -57,7 +61,6 @@ const loginFaceController = async (req, res) => {
 
     console.log("🔑 Tentative de login via reconnaissance faciale...");
     const loginResult = await loginface(imageData);
-
     return res.status(200).json({ success: true, message: "Login réussi", ...loginResult });
   } catch (error) {
     console.error("🚨 Erreur lors du login par reconnaissance faciale :", error);
@@ -135,7 +138,19 @@ const forgetPasswordController = async (req, res) => {
   };
 
 
+
+  const googleAuthController = async (req, res) => {
+    try {
+      const userData = await googleAuth(req);
+      const { token, email } = userData;
   
+      // Redirect to the frontend with token and email as query parameters
+      res.redirect(`http://localhost:5173/login?token=${token}&email=${email}`);
+    } catch (error) {
+      // Redirect to the frontend with an error message if something goes wrong
+      res.redirect(`http://localhost:5173/login?error=${error.message}`);
+    }
+  };
 
 
 
@@ -145,5 +160,6 @@ const forgetPasswordController = async (req, res) => {
     forgetPasswordController,
     resetPasswordController,
     loginFaceController,
+    googleAuthController
 
 };
