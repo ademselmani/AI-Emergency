@@ -68,6 +68,76 @@ const Sidebar = () => {
           </NavLink>
         </li> </> )}
 
+
+
+
+            
+        {role === "doctor" && (
+          <>
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+
+{role === "nurse" && (
+          <>
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+
+{role === "admin" && (
+          <>
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+        {role === "Doctor" && (
+          <>
+            <li className="menu-item">
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">My Patients</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+
+
+
+
         {/* Conditionally render Add Employee */}
         {role === "admin" && (
           <>

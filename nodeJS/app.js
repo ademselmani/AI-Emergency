@@ -12,6 +12,8 @@ require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
 const employeeRoute = require("./src/routes/employeeRoute")
 const employeeFind = require("./src/routes/employee.route")
+const patientRoutes = require('./src/routes/patientRoutes');
+
 const multer = require("multer")
 
 const configDB = require("./src/config/db.json");
@@ -23,6 +25,8 @@ const authRoute = require("./src/routes/index.route");
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
+ const treatmentRoutes = require('./src/routes/treatmentRoutes');
+const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
 
 
 mongoose
@@ -30,8 +34,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  // .then(() => console.log("✅ Connecté à MongoDB"))
-  // .catch((err) => console.error("", err));
+   .then(() => console.log("✅ Connecté à MongoDB"))
+   .catch((err) => console.error("", err));
 
 const app = express();
 const server = http.createServer(app);
@@ -89,8 +93,10 @@ app.use(passport.session());
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
 app.use("/employee", employeeFind)
-
-
+app.use('/api/treatments', treatmentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/patients', patientRoutes);
+ 
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
@@ -107,7 +113,7 @@ Promise.all([
   faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL),
 ])
   .then(() => {
-    console.log("✅ Modèles face-api.js chargés avec succès !");
+   // console.log("✅ Modèles face-api.js chargés avec succès !");
   })
   .catch((error) => {
     console.error("❌ Erreur lors du chargement des modèles face-api.js :", error);
