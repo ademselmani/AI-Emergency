@@ -12,6 +12,9 @@ require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
 const employeeRoute = require("./src/routes/employeeRoute")
 const employeeFind = require("./src/routes/employee.route")
+const areaRoutes = require("./src/routes/areaRoute")
+const roomRoutes = require("./src/routes/roomRoute")
+const equipmentRoutes = require("./src/routes/equipmentRoute")
 const multer = require("multer")
 
 const configDB = require("./src/config/db.json");
@@ -89,6 +92,9 @@ app.use(passport.session());
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
 app.use("/employee", employeeFind)
+app.use("/areas", areaRoutes)
+app.use("/rooms", roomRoutes)
+app.use("/equipments", equipmentRoutes)
 
 
 // ✅ **Central Error Handling**

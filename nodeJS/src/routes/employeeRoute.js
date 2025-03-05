@@ -151,10 +151,15 @@ router.post("/addEmployee", async (req, res, next) => {
       })
     }
   );
-  // Statistiques des employés par rôle
+// Statistiques des employés par rôle
 router.get("/stats/role", async (req, res) => {
   try {
     const roleStats = await Employee.aggregate([
+      {
+        $match: {
+          role: { $ne: "admin" }, // Exclude employees with role "admin"
+        },
+      },
       {
         $group: {
           _id: "$role",
@@ -176,6 +181,11 @@ router.get("/stats/gender", async (req, res) => {
   try {
     const genderStats = await Employee.aggregate([
       {
+        $match: {
+          role: { $ne: "admin" }, // Exclude employees with role "admin"
+        },
+      },
+      {
         $group: {
           _id: "$gender",
           count: { $sum: 1 },
@@ -190,10 +200,16 @@ router.get("/stats/gender", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // Endpoint pour récupérer les statistiques des employés par statut
 router.get("/stats/status", async (req, res) => {
   try {
     const statusStats = await Employee.aggregate([
+      {
+        $match: {
+          role: { $ne: "admin" }, // Exclude employees with role "admin"
+        },
+      },
       {
         $group: {
           _id: "$status", // Grouper par statut
@@ -214,6 +230,5 @@ router.get("/stats/status", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
-
 
   module.exports = router;

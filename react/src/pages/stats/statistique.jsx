@@ -1,7 +1,6 @@
 /** @format */
 
 import React, { useState, useEffect } from "react"
-import { Card, Button, Image } from 'semantic-ui-react';
 
 import {
   PieChart,

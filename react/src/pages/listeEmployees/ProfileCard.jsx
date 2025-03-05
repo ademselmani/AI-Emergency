@@ -72,8 +72,7 @@ const ProfileCard = ({ employee = {}, onDelete }) => {
       <img
         className='round'
         src={
-          image ||
-          "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg"
+          image
         }
         alt='user'
       />
