@@ -1,6 +1,7 @@
 import { useState } from "react";
+import axios from "axios";
 
-const LeaveRequestForm = () => {
+const LeaveRequestForm = ({ onSuccess, onClose }) => {
   const [formData, setFormData] = useState({
     startDate: "",
     endDate: "",
@@ -8,100 +9,200 @@ const LeaveRequestForm = () => {
     leaveType: "",
   });
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [errors, setErrors] = useState({});
+
+  const validateDates = () => {
+    const newErrors = {};
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (!formData.startDate) {
+      newErrors.startDate = "Start date is required";
+    } else if (formData.startDate < today) {
+      newErrors.startDate = "Start date cannot be in the past";
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = "End date is required";
+    } else if (formData.endDate < formData.startDate) {
+      newErrors.endDate = "End date cannot be before start date";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({...errors, [e.target.name]: ""});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    if (!validateDates()) return;
+
+    setMessage({ text: "", type: "" });
 
     try {
-      const response = await fetch("http://localhost:3000/api/leaves/request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Récupération du token JWT
+      const response = await axios.post(
+        "http://localhost:3000/api/leaves/request",
+        {
+          ...formData,
+          startDate: new Date(formData.startDate).toISOString(),
+          endDate: new Date(formData.endDate).toISOString()
         },
-        body: JSON.stringify(formData),
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("Demande envoyée avec succès !");
+      if (response.status === 200) {
+        setMessage({
+          text: "Leave request submitted successfully! 🎉",
+          type: "success"
+        });
+        onSuccess();
         setFormData({ startDate: "", endDate: "", reason: "", leaveType: "" });
-      } else {
-        setMessage(data.error || "Erreur lors de l'envoi");
       }
     } catch (error) {
-      console.error("Erreur :", error);
-      setMessage("Erreur serveur, veuillez réessayer.");
+      setMessage({
+        text: error.response?.data?.error || "Submission failed 😢",
+        type: "error"
+      });
     }
   };
 
+  const getMinEndDate = () => {
+    return formData.startDate || new Date().toISOString().split('T')[0];
+  };
+
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-bold mb-4">Leave Request</h2>
-      {message && <p className="text-red-500">{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <label className="block mb-2">
-        Start Date :
+    <div style={{ position: 'relative' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '24px' }}>✈️ New Leave Request</h2>
+        <button 
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '24px',
+            color: '#666',
+            padding: '5px'
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {message.text && (
+        <div style={{ 
+          padding: '10px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          background: message.type === "success" ? '#e8f5e9' : '#ffebee',
+          color: message.type === "success" ? '#2e7d32' : '#c62828'
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Start Date</label>
           <input
             type="date"
             name="startDate"
             value={formData.startDate}
             onChange={handleChange}
-            className="w-full p-2 border rounded mt-1"
-            required
+            min={new Date().toISOString().split('T')[0]}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: errors.startDate ? '2px solid #f44336' : '1px solid #ddd'
+            }}
           />
-        </label>
-        <label className="block mb-2">
-          End Date:
+          {errors.startDate && <span style={{ color: '#f44336', fontSize: '14px' }}>{errors.startDate}</span>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>End Date</label>
           <input
             type="date"
             name="endDate"
             value={formData.endDate}
             onChange={handleChange}
-            className="w-full p-2 border rounded mt-1"
-            required
+            min={getMinEndDate()}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: errors.endDate ? '2px solid #f44336' : '1px solid #ddd'
+            }}
           />
-        </label>
-        <label className="block mb-2">
-          Request Type :
+          {errors.endDate && <span style={{ color: '#f44336', fontSize: '14px' }}>{errors.endDate}</span>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Leave Type</label>
           <select
             name="leaveType"
             value={formData.leaveType}
             onChange={handleChange}
-            className="w-full p-2 border rounded mt-1"
-            required
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ddd'
+            }}
           >
-            <option value="">Sélectionner...</option>
-            <option value="sick">sick</option>
-            <option value="vacation">vacation</option>
-            <option value="personal">personal</option>
-            <option value="maternity">maternity</option>
-            <option value="other">other</option>
-
+            <option value="">Select leave type...</option>
+            <option value="sick">🏥 Sick Leave</option>
+            <option value="vacation">🌴 Vacation</option>
+            <option value="personal">👤 Personal Leave</option>
+            <option value="maternity">👶 Maternity Leave</option>
+            <option value="other">❓ Other</option>
           </select>
-        </label>
-        <label className="block mb-4">
-          Reason :
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Reason</label>
           <textarea
             name="reason"
             value={formData.reason}
             onChange={handleChange}
-            className="w-full p-2 border rounded mt-1"
-            required
+            rows="4"
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ddd'
+            }}
+            placeholder="Please provide details for your request..."
           />
-        </label>
+        </div>
+
         <button
           type="submit"
-          className="bg-blue-500 text-white p-2 rounded w-full hover:bg-blue-600"
+          style={{
+            background: '#2196F3',
+            color: 'white',
+            padding: '12px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
         >
-          Soumettre
+          Submit Request
         </button>
       </form>
     </div>

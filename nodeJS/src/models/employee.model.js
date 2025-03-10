@@ -51,17 +51,7 @@ const employeeSchema = mongoose.Schema({
   },
 });
 
-// employeeSchema.pre(
-//   'save',
-//   async function(next) {
-//     // this refers to the current document about to be saved.
-//     const empl = this;
-//     const hash = await bcrypt.hash(this.password, 10);
 
-//     this.password = hash;
-//     next();
-//   }
-// );
 
 employeeSchema.pre("save", async function (next) {
   if(!this.image === ""  || this.image === null) this.image = "../../uploads/anonyme.jpg"
@@ -73,12 +63,7 @@ employeeSchema.pre("save", async function (next) {
   next();
 });
 
-// employeeSchema.methods.isValidPassword = async function(password) {
-//   const user = this;
-//   const compare = await bcrypt.compare(password, user.password);
 
-//   return compare;
-// }
 
 const Employee = mongoose.model("employees", employeeSchema);
 

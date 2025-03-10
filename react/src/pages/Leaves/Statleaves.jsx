@@ -1,112 +1,163 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Bar } from "react-chartjs-2";
+import { Link } from "react-router-dom";
+import "chart.js/auto";
+import "./Stats.css";
 
 const Statleaves = () => {
-  // State pour stocker les statistiques des congés
-  const [stats, setStats] = useState({
-    pending: 0,
-    approved: 0,
-    rejected: 0
-  });
-
-  // State pour gérer l'erreur
+  const [currentLeaves, setCurrentLeaves] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Fonction pour récupérer les statistiques des congés depuis l'API
-    const fetchLeaveStats = async () => {
-      try {
-        // Effectuer une requête GET pour récupérer les statistiques des congés
-        const response = await axios.get("http://localhost:3000/api/leaves/stat", {
-          headers: {
-            "Authorization": "Bearer YOUR_TOKEN_HERE" // Remplacez par votre token JWT
-          }
-        });
-
-        // Transformation des données reçues et mise à jour du state
-        const statsData = response.data;
-        const updatedStats = {
-          pending: statsData.find(stat => stat._id === "pending")?.count || 0,
-          approved: statsData.find(stat => stat._id === "approved")?.count || 0,
-          rejected: statsData.find(stat => stat._id === "rejected")?.count || 0
-        };
-        setStats(updatedStats); // Mise à jour de l'état avec les nouvelles données
-      } catch (error) {
-        setError("Une erreur s'est produite lors du chargement des statistiques.");
+  // Options du graphique améliorées
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+        labels: { 
+          color: '#2d3748',
+          font: { size: 12 }
+        }
       }
-    };
-
-    // Appel de la fonction au montage du composant
-    fetchLeaveStats();
-  }, []); // La fonction est appelée une seule fois, au montage du composant
-
-  // Styles en ligne
-  const styles = {
-    container: {
-      padding: "20px",
-      backgroundColor: "#f4f4f4",
-      borderRadius: "8px",
-      width: "50%",
-      margin: "auto",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)"
     },
-    header: {
-      textAlign: "center",
-      color: "#333",
-      marginBottom: "20px"
-    },
-    error: {
-      color: "red",
-      textAlign: "center",
-      fontSize: "16px",
-      marginBottom: "20px"
-    },
-    list: {
-      listStyleType: "none",
-      paddingLeft: "0"
-    },
-    listItem: {
-      fontSize: "18px",
-      margin: "10px 0",
-      padding: "10px",
-      backgroundColor: "#fff",
-      borderRadius: "5px",
-      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-      display: "flex",
-      alignItems: "center"
-    },
-    icon: {
-      marginRight: "10px",
-      fontSize: '18px',
-    },
-    approvedIcon: {
-      color: 'green', // Green for approved
-    },
-    rejectedIcon: {
-      color: 'red', // Red for rejected
+    scales: {
+      y: {
+        title: {
+          display: true,
+          text: 'Number of Leaves',
+          color: '#4a5568',
+          font: { size: 14 }
+        },
+        beginAtZero: true,
+        grid: { 
+          color: 'rgba(0,0,0,0.05)' 
+        },
+        ticks: {
+          stepSize: 1,
+          precision: 0,
+          color: '#4a5568',
+          font: { size: 12 },
+          callback: (value) => Number.isInteger(value) ? value : ''
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Roles',
+          color: '#4a5568',
+          font: { size: 14 }
+        },
+        grid: { 
+          display: false 
+        },
+        ticks: { 
+          color: '#4a5568',
+          font: { size: 12 } 
+        }
+      }
     }
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/leaves/current-leaves-by-role",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            }
+          }
+        );
+
+        if (response.status === 200) {
+          setCurrentLeaves(response.data);
+        }
+      } catch (error) {
+        setError("Error loading data");
+        console.error("Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const chartData = {
+    labels: currentLeaves.map(stat => stat._id),
+    datasets: [{
+      label: "Current Leaves",
+      backgroundColor: "#f0c5d6",
+      borderRadius: 4,
+      data: currentLeaves.map(stat => stat.count),
+    }]
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
   return (
-    <div style={styles.container}>
-      <h1 style={styles.header}>Leaves Statistics</h1>
-      {error && <p style={styles.error}>{error}</p>}
-      <div>
-        <h3>Leaves status</h3>
-        <ul style={styles.list}>
-          <li style={styles.listItem}>
-            <i className="fas fa-clock" style={styles.icon}></i>
-            <strong>Pending:</strong> {stats.pending}
-          </li>
-          <li style={styles.listItem}>
-          <i className="fas fa-check-circle" style={{ ...styles.icon, ...styles.approvedIcon }}></i>
-            <strong>Approved:</strong> {stats.approved}
-          </li>
-          <li style={styles.listItem}>
-          <i className="fas fa-times-circle" style={{ ...styles.icon, ...styles.rejectedIcon }}></i>
-            <strong>Rejected:</strong> {stats.rejected}
-          </li>
-        </ul>
+    <div className="stats-container">
+      <div className="header-container">
+        <h1 className="title">Leave Statistics</h1>
+        <Link 
+          to="/leaves" 
+          className="view-all-button"
+          style={{
+            backgroundColor: '#f5f5f9',
+            color: '#03c3ec',
+            padding: '0.5rem 1rem',
+            border: '1px solid #03c3ec',
+            borderRadius: '6px',
+            borderColor:'#03c3ec',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          View all leaves
+        </Link>
+      </div>
+      
+      {error && <div className="error-message">{error}</div>}
+
+      <div className="charts-wrapper">
+        {currentLeaves.length > 0 && (
+          <div className="chart-card">
+            <div className="chart-header">
+              <h2>Current Leaves by Role ({new Date().toLocaleDateString()})</h2>
+            </div>
+            
+            <div className="chart-wrapper">
+              <Bar
+                data={chartData}
+                options={chartOptions}
+              />
+            </div>
+
+            <div className="leaves-list">
+              {currentLeaves.map(role => (
+                <div key={role._id} className="role-group">
+                  <h3>{role._id} ({role.count})</h3>
+                  <ul>
+                    {role.employees.map((employee, index) => (
+                      <li key={index}>
+                        {employee.name} - 
+                        {new Date(employee.startDate).toLocaleDateString()} to 
+                        {new Date(employee.endDate).toLocaleDateString()}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

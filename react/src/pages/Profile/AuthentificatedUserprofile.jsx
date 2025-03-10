@@ -55,6 +55,7 @@ const  Profile = () => {
             {currentUser.role === "receptionnist" && "I'm a receptionnist "}
           </h1>
         </>
+        
       ) : (
         <p>Loading user information...</p>
       )}

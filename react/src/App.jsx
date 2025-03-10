@@ -8,11 +8,7 @@ import Profile from "./pages/Profile/AuthentificatedUserprofile";
 import Register from "./pages/Authentification/Resgister";
 import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";
-import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 
-import Listofleaves from "./pages/Leaves/Listleaves";
-import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
-import Statleaves from "./pages/Leaves/Statleaves"
 import NotFound from "./pages/Exceptions/NotFound";
 import Layout from "./layout/Layout";
 import Head from "./components/head";
@@ -30,7 +26,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+ import Treatments from "./pages/medicalTreatement";
+import ShowPatientTreatments from "./pages/medicalTreatement/showPatientTreatements";
+import ShowPatientToAdd from "./pages/medicalTreatement/showPatientToAdd";
+import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 
+import Listofleaves from "./pages/Leaves/Listleaves";
+import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
+import Statleaves from "./pages/Leaves/Statleaves"
+   
 function App() {
   return (
     <>
@@ -67,12 +71,35 @@ function App() {
           />
           <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/forget-password" element={<Passwordforget />} />
-          <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
+        
+        
+          <Route path="/medical-treatments" element={
+            <Layout>
+              <Treatments />
+            </Layout>
+
+          } />
+
+<Route path="/medical-treatments/patient/show/:id" element={
+            <Layout>
+              <ShowPatientTreatments />
+            </Layout>
+
+          } />
+
+          <Route path="/medical-treatments/patient/add/:id" element={
+            <Layout>
+              <ShowPatientToAdd />
+            </Layout>
+
+          } />
+
+         <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
           <Route path="/leaves" element={<Layout><Listofleaves/></Layout>}      />
           <Route path="/MyLeaveRequests" element={<Layout><MyLeaveRequests/></Layout>}/>
           <Route path="statleaves" element={<Layout><Statleaves/></Layout>} />
+ 
 
-          
           <Route
             path="/profile"
             element={

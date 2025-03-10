@@ -5,23 +5,102 @@ const Employee = require('../models/employee.model')
 const router = express.Router();
 
 
-
-router.get("/stat", async (req, res) => {
+router.get("/stat-by-role", async (req, res) => {
     try {
-    const leaveStatusStats = await LeaveRequest.aggregate([
-        { 
-            $group: { 
-              _id: "$status",
-              count: { $sum: 1 } 
-            } 
-          },
-        {
-        $sort: { count: -1 }, // Tri des résultats par le nombre de congés en ordre décroissant
-        },
-    ]);
-    res.json(leaveStatusStats); // Envoi des statistiques sous forme de JSON
+        const roleStats = await LeaveRequest.aggregate([
+            {
+                $lookup: {
+                    from: "employees", // Verify collection name matches your DB
+                    localField: "employee",
+                    foreignField: "_id",
+                    as: "employeeData"
+                }
+            },
+            { $unwind: { path: "$employeeData", preserveNullAndEmptyArrays: true } },
+            {
+                $group: {
+                    _id: { 
+                        role: { 
+                            $ifNull: ["$employeeData.role", "Unknown"] 
+                        },
+                        status: "$status"
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id.role",
+                    statuses: {
+                        $push: {
+                            status: "$_id.status",
+                            count: "$count"
+                        }
+                    }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        console.log("Generated statistics:", JSON.stringify(roleStats, null, 2));
+        
+        if (!roleStats || roleStats.length === 0) {
+            return res.status(404).json({ 
+                error: "No leave requests found for statistics generation" 
+            });
+        }
+
+        res.json(roleStats);
     } catch (err) {
-    res.status(500).json({ error: err.message }); // En cas d'erreur, réponse avec un message d'erreur
+        console.error("Statistics Error:", err);
+        res.status(500).json({ 
+            error: "Failed to generate statistics",
+            details: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
+    }
+});
+
+
+router.get("/current-leaves-by-role", async (req, res) => {
+    try {
+      const currentDate = new Date();
+      const result = await LeaveRequest.aggregate([
+        {
+          $match: {
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate },
+            status: "approved"
+          }
+        },
+        {
+          $lookup: {
+            from: "employees",
+            localField: "employee",
+            foreignField: "_id",
+            as: "employeeData"
+          }
+        },
+        { $unwind: "$employeeData" },
+        {
+          $group: {
+            _id: "$employeeData.role",
+            count: { $sum: 1 },
+            employees: {
+              $push: {
+                name: "$employeeData.name",
+                startDate: "$startDate",
+                endDate: "$endDate"
+              }
+            }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+  
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   });
 
@@ -171,8 +250,45 @@ router.delete("/:id", async (req, res) => {
         .status(500)
         .json({ message: "Erreur serveur lors de la suppression de leave" })
     }
-  })
-
+  });
   
+  router.get("/", authMiddleware, async (req, res) => {
+    const { status } = req.query;
+
+    if (!status) {
+        return res.status(400).json({ error: "Le paramètre 'status' est requis" });
+    }
+
+    try {
+        // Recherche des demandes de congé avec le statut spécifié
+        const leaveRequests = await LeaveRequest.find({ status })
+            .populate("employee", "name email");
+
+        if (leaveRequests.length === 0) {
+            return res.status(404).json({ error: "Aucune demande de congé trouvée pour ce statut" });
+        }
+
+        // Vérification des droits d'accès pour un utilisateur non administrateur
+        if (req.user.role !== "admin") {
+            const filteredRequests = leaveRequests.filter(request =>
+                request.employee._id.toString() === req.user.id
+            );
+
+            if (filteredRequests.length === 0) {
+                return res.status(403).json({ error: "Accès refusé : aucune demande de congé trouvée pour vous" });
+            }
+
+            return res.json(filteredRequests);
+        }
+
+        // Si l'utilisateur est un administrateur, retourne toutes les demandes de congé
+        res.json(leaveRequests);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erreur du serveur" });
+    }
+});
+
+
 
 module.exports = router;
