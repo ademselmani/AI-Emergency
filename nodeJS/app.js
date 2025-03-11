@@ -21,6 +21,7 @@ const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
 const authRoute = require("./src/routes/index.route");
+const leaveRoute = require("./src/routes/leaveRoute")
 
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -92,11 +93,17 @@ app.use(passport.session());
 // ✅ **Routes**
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
-app.use("/employee", employeeFind)
+
+app.use("/employee", employeeFind);
+app.use("/api/leaves", leaveRoute);
+
+
+
 app.use('/api/treatments', treatmentRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/patients', patientRoutes);
  
+
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
@@ -129,3 +136,8 @@ app.use((req, res, next) => {
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });
+
+
+
+// Exporter à la fois l'app et le serveur
+module.exports = { app, server };

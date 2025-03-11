@@ -85,6 +85,19 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Medical treatments</div>
               </NavLink>
             </li>
+             
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
+ 
           </>
         )}
 
@@ -163,6 +176,20 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Show Employees</div>
               </NavLink>
             </li>
+
+
+            <li className="menu-item">
+          <NavLink
+            to="/statleaves"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -190,6 +217,19 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Show patients</div>
               </NavLink>
             </li>
+           
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+         <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -206,6 +246,18 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Triage Patients</div>
               </NavLink>
             </li>
+           
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -222,6 +274,18 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Patients in my area</div>
               </NavLink>
             </li>
+           
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -238,6 +302,18 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">My Patients</div>
               </NavLink>
             </li>
+           
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -252,6 +328,7 @@ const Sidebar = () => {
             <div data-i18n="Analytics">My profile</div>
           </NavLink>
         </li>
+        
 
         {/* Log out */}
         <li className="menu-item">
@@ -271,6 +348,7 @@ const Sidebar = () => {
             <div data-i18n="Analytics">Log out</div>
           </button>
         </li>
+       
       </ul>
     </aside>
   );

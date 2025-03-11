@@ -8,10 +8,13 @@ import Profile from "./pages/Profile/AuthentificatedUserprofile";
 import Register from "./pages/Authentification/Resgister";
 import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";
+
 import NotFound from "./pages/Exceptions/NotFound";
 import Layout from "./layout/Layout";
 import Head from "./components/head";
-import FaceRecognition from "./pages/Authentification/FaceRecognition"; // Importer la page de reconnaissance faciale
+import FaceRecognition from "./pages/Authentification/FaceRecognition"; 
+// Importer la page de reconnaissance faciale
+//import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 /** @format */
 
 import "./App.css"; // Style global
@@ -26,6 +29,12 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
  import Treatments from "./pages/medicalTreatement";
 import ShowPatientTreatments from "./pages/medicalTreatement/showPatientTreatements";
 import ShowPatientToAdd from "./pages/medicalTreatement/showPatientToAdd";
+import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
+
+import Listofleaves from "./pages/Leaves/Listleaves";
+import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
+import Statleaves from "./pages/Leaves/Statleaves"
+ 
    
 function App() {
   return (
@@ -86,7 +95,11 @@ function App() {
 
           } />
 
-
+          <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
+          <Route path="/leaves" element={<Layout><Listofleaves/></Layout>}      />
+          <Route path="/MyLeaveRequests" element={<Layout><MyLeaveRequests/></Layout>}/>
+          <Route path="statleaves" element={<Layout><Statleaves/></Layout>} />
+ 
 
           <Route
             path="/profile"
