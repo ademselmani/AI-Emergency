@@ -100,7 +100,7 @@ const employeeSchema = mongoose.Schema({
     minlength: [6, "Password must be at least 6 characters long"],
   },
   resetToken: { type: String, default: "" },
-  joinDate: {
+   joinDate: {
     type: Date,
     required: [true, "Join date is required"],
     validate: {
@@ -155,6 +155,7 @@ const employeeSchema = mongoose.Schema({
   },
 })
 
+
 employeeSchema.pre("save", async function (next) {
   // Fix image default logic
   if (!this.image || this.image === "") {
@@ -180,6 +181,7 @@ employeeSchema.pre("save", async function (next) {
 //   const compare = await bcrypt.compare(password, user.password);
 //   return compare;
 // };
+ 
 
 const Employee = mongoose.model("employees", employeeSchema)
 

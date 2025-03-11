@@ -157,8 +157,7 @@ const Login = () => {
   )
 }
 
-export default Login
-
+ 
 // Styles CSS
 const styles = `
   .login-container {
@@ -312,3 +311,5 @@ const styleSheet = document.createElement("style")
 styleSheet.type = "text/css"
 styleSheet.innerText = styles
 document.head.appendChild(styleSheet)
+export default Login;
+ 

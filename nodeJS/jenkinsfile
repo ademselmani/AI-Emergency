@@ -4,21 +4,21 @@ pipeline {
         stage('Install dependencies') { 
             steps { 
                 script { 
-                    sh 'cd nodejs && npm install'  // Move into the correct directory
+                    sh 'cd nodeJS && npm install' 
                 } 
             } 
         } 
         stage('Unit Test') { 
             steps { 
                 script { 
-                    sh 'cd nodejs && npm test'  
+                    sh 'npm test' 
                 } 
             } 
         } 
         stage('Build application') { 
             steps { 
                 script { 
-                    sh 'cd nodejs && npm run build-dev'  
+                    sh 'npm run build-dev' 
                 } 
             } 
         } 

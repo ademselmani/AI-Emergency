@@ -152,19 +152,18 @@ const login = async (data) => {
   try {
     console.log("🔑 Tentative de connexion :", data.email);
 
-    // Vérifier si l'utilisateur existe
     const user = await User.findOne({ email: data.email });
     if (!user) {
-      throw new Error("❌ Email ou mot de passe incorrect !");
+      console.error("❌ Utilisateur introuvable");
+      throw { status: 404, message: "Utilisateur non trouvé" };
     }
 
-    // Vérifier si le mot de passe est correct
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
-      throw new Error("❌ Email ou mot de passe incorrect !");
+      console.error("❌ Mot de passe incorrect");
+      throw { status: 401, message: "Email ou mot de passe incorrect" };
     }
 
-    // Générer un token JWT
     const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret", { expiresIn: "7d" });
 
     console.log(`✅ Connexion réussie pour : ${user.email}`);
@@ -177,7 +176,7 @@ const login = async (data) => {
       token,
     };
   } catch (error) {
-    console.error("❌ Erreur lors de la connexion :", error.message);
+    console.error("❌ Erreur lors de la connexion :", error.message || error);
     throw error;
   }
 };
