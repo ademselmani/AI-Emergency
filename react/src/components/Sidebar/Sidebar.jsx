@@ -85,7 +85,7 @@ const Sidebar = () => {
                 <div data-i18n="Analytics">Medical treatments</div>
               </NavLink>
             </li>
-            
+             
         <li className="menu-item">
           <NavLink
             to="/MyLeaveRequests"
@@ -97,6 +97,7 @@ const Sidebar = () => {
             <div data-i18n="Analytics">Leaves</div>
           </NavLink>
         </li>
+ 
           </>
         )}
 

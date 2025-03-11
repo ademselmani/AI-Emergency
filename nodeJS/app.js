@@ -98,6 +98,7 @@ app.use("/employee", employeeFind);
 app.use("/api/leaves", leaveRoute);
 
 
+
 app.use('/api/treatments', treatmentRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/patients', patientRoutes);

@@ -34,6 +34,7 @@ import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 import Listofleaves from "./pages/Leaves/Listleaves";
 import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
 import Statleaves from "./pages/Leaves/Statleaves"
+ 
    
 function App() {
   return (
@@ -94,7 +95,7 @@ function App() {
 
           } />
 
-         <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
+          <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
           <Route path="/leaves" element={<Layout><Listofleaves/></Layout>}      />
           <Route path="/MyLeaveRequests" element={<Layout><MyLeaveRequests/></Layout>}/>
           <Route path="statleaves" element={<Layout><Statleaves/></Layout>} />
