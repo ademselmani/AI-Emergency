@@ -32,17 +32,20 @@ exports.createEquipment = async (req, res) => {
           "This serial number is already in use. Please enter a unique serial number.",
       })
     } else {
-      res.status(400).json({ error: err.message })
+      console.error("Error creating equipment:", err) // Add logging
+      res.status(500).json({ error: "Internal server error" })
     }
   }
 }
+
 // Get all equipments
 exports.getEquipments = async (req, res) => {
   try {
     const equipments = await Equipment.find().populate("room")
     res.json(equipments)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error("Error fetching equipments:", err) // Add logging
+    res.status(500).json({ error: "Internal server error" })
   }
 }
 
@@ -54,7 +57,8 @@ exports.getEquipmentById = async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" })
     res.json(equipment)
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error("Error fetching equipment by ID:", err) // Add logging
+    res.status(500).json({ error: "Internal server error" })
   }
 }
 
@@ -62,41 +66,6 @@ exports.getEquipmentById = async (req, res) => {
 exports.updateEquipment = async (req, res) => {
   try {
     const { room, ...rest } = req.body
-
-    // Date validation BEFORE updating
-    const purchaseDate = rest.purchaseDate ? new Date(rest.purchaseDate) : null
-    const lastMaintenanceDate = rest.lastMaintenanceDate
-      ? new Date(rest.lastMaintenanceDate)
-      : null
-    const nextMaintenanceDate = rest.nextMaintenanceDate
-      ? new Date(rest.nextMaintenanceDate)
-      : null
-
-    if (
-      purchaseDate &&
-      lastMaintenanceDate &&
-      lastMaintenanceDate < purchaseDate
-    ) {
-      return res.status(400).json({
-        errors: {
-          lastMaintenanceDate:
-            "Last maintenance date must be after purchase date",
-        },
-      })
-    }
-
-    if (
-      purchaseDate &&
-      nextMaintenanceDate &&
-      nextMaintenanceDate < purchaseDate
-    ) {
-      return res.status(400).json({
-        errors: {
-          nextMaintenanceDate:
-            "Next maintenance date must be after purchase date",
-        },
-      })
-    }
 
     const equipment = await Equipment.findByIdAndUpdate(
       req.params.id,
@@ -122,11 +91,11 @@ exports.updateEquipment = async (req, res) => {
           "This serial number is already in use. Please enter a unique serial number.",
       })
     } else {
-      res.status(400).json({ error: err.message })
+      console.error("Error updating equipment:", err)
+      res.status(500).json({ error: "Internal server error" })
     }
   }
 }
-
 // Delete equipment
 exports.deleteEquipment = async (req, res) => {
   try {
@@ -135,6 +104,7 @@ exports.deleteEquipment = async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" })
     res.json({ message: "Equipment deleted" })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.error("Error deleting equipment:", err) // Add logging
+    res.status(500).json({ error: "Internal server error" })
   }
 }
