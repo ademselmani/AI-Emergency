@@ -32,8 +32,15 @@ pipeline {
                     sh 'cd nodeJS && npm run build-dev' 
                 } 
             } 
-        } 
-     
+        }
+        
+        stage('Building images (node and mongo)') { 
+            steps { 
+                script { 
+                    sh 'cd nodeJS && docker-compose build' 
+                } 
+            } 
+        }
 
     } 
 }
