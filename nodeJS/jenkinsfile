@@ -15,13 +15,7 @@ pipeline {
                 } 
             } 
         } 
-        stage('Build application') { 
-            steps { 
-                script { 
-                    sh 'npm run build-dev' 
-                } 
-            } 
-        } 
+
         stage('SonarQube Analysis') {
             steps {
                 script {   
@@ -32,6 +26,14 @@ pipeline {
                 }  
             }   
         } 
+        stage('Build application') { 
+            steps { 
+                script { 
+                    sh 'npm run build-dev' 
+                } 
+            } 
+        } 
+     
 
     } 
 }
