@@ -23,6 +23,7 @@ const authRoute = require("./src/routes/index.route");
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
+const patientRoutes = require('./src/routes/patientRoutes');
 
 
 mongoose
@@ -89,6 +90,7 @@ app.use(passport.session());
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
 app.use("/employee", employeeFind)
+app.use('/api', patientRoutes);
 
 
 // ✅ **Central Error Handling**

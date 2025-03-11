@@ -13,11 +13,15 @@ import Layout from "./layout/Layout";
 import Head from "./components/head";
 import FaceRecognition from "./pages/Authentification/FaceRecognition"; // Importer la page de reconnaissance faciale
 /** @format */
-
 import "./App.css"; // Style global
+import ListePatients from "./pages/receptionnist/ListePatients";
+import ListePatientTriage from "./pages/Triage-nurse/ListePatientTriage";
+import AddPatientForm from "./pages/receptionnist/AddPatientForm";
+import UpdatePatientTriage from "./pages/Triage-nurse/UpdatePatientTriage";
 
 import EmployeeStats from "./pages/stats/statistique";
 import ListeEmployees from "./pages/listeEmployees/listeEmployees";
+import UpdatePatientForm from "./pages/receptionnist/UpdatePatientForm"
 import EmployeesDetails from "./pages/listeEmployees/EmployeesDetails";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -49,6 +53,24 @@ function App() {
               </Layout>
             }
           />
+<Route
+  path="/Addpatient"
+  element={
+    <Layout>
+      <AddPatientForm />
+    </Layout>
+  }
+/>
+<Route
+  path="/showPatients"
+  element={
+    <Layout>
+      <ListePatients/>
+    </Layout>
+  }
+/>
+<Route path="/UpdatePatient/:id" element={<UpdatePatientForm />} />
+<Route path="/UpdatePatientTriage/:id" element={<UpdatePatientTriage />} />
 
           <Route
             path="/register"
@@ -97,11 +119,14 @@ function App() {
               </Layout>
             }
           />
+<Route path="/showTriagePatients" element={<ListePatientTriage filterByTriage={true} />} />
+
           <Route path="*" element={<NotFound />} /> {/* Page 404 */}
         </Routes>
         ;
       </Router>
     </>
+    
   );
 }
 

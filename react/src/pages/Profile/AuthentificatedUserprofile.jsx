@@ -52,6 +52,9 @@ const  Profile = () => {
             {currentUser.role === "nurse" && "I'm a Nurse 🏥"}
             {currentUser.role === "admin" && "I'm an Admin 🔧"}
             {currentUser.role === "doctor" && "I'm a Doctor 🩺"}
+            {currentUser.role === "receptionnist" && "I'm a receptionnist 👨‍💻"}
+            {currentUser.role === "triage_nurse" && "I'm a Triage-nurse 👨‍💻"}
+
           </h1>
         </>
       ) : (

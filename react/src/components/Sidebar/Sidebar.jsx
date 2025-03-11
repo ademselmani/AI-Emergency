@@ -123,21 +123,32 @@ const Sidebar = () => {
           </>
         )}
 
-        {role === "Triage-nurse" && (
-          <>
-            <li className="menu-item">
-              <NavLink
-                to="/profile"
-                className={({ isActive }) =>
-                  `menu-link ${isActive ? "active" : ""}`
-                }
-              >
-                <i className="menu-icon tf-icons bx bx-user-plus"></i>
-                <div data-i18n="Analytics">Triage Patients</div>
-              </NavLink>
-            </li>
-          </>
-        )}
+{role === "triage_nurse" && (
+  <>
+  <li className="menu-item">
+    <NavLink
+      to="/ModifyStatus"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-user-plus"></i>
+      <div data-i18n="Analytics">Do the sorting</div>
+    </NavLink>
+  </li>
+  <li className="menu-item">
+    <NavLink
+      to="/showTriagePatients"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-group"></i>
+      <div data-i18n="Analytics">Show Triage patients</div>
+    </NavLink>
+  </li>
+</>
+)}
 
         {role === "nurse" && (
           <>
@@ -203,7 +214,9 @@ const Sidebar = () => {
         </li>
       </ul>
     </aside>
+
   );
+
 };
 
 export default Sidebar;

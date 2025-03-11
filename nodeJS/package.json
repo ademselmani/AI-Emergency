@@ -7,11 +7,11 @@
   },
   "dependencies": {
     "@tensorflow/tfjs-core": "^4.22.0",
-    "@tensorflow/tfjs-node": "^3.0.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "canvas": "^3.1.0",
+    "chai-http": "^4.3.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",
@@ -35,5 +35,13 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.0.1",
+    "@types/chai-http": "^4.2.4",
+    "chai": "^4.3.6",
+    "mocha": "^11.1.0",
+    "sinon": "^19.0.2",
+    "supertest": "^7.0.0"
   }
 }

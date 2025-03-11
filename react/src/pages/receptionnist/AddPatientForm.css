@@ -1,0 +1,84 @@
+/* src/components/AddPatientForm.css */
+
+.patient-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 20px;
+  }
+  
+  .patient-form-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .patient-form-card h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .patient-form fieldset {
+    border: none;
+    margin-bottom: 15px;
+    padding: 0;
+  }
+  
+  .patient-form legend {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+  }
+  
+  .patient-form label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .patient-form input,
+  .patient-form select,
+  .patient-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .patient-form textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .patient-form button {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .patient-form button:hover {
+    background-color: #0056b3;
+  }
+  
+  .patient-form p {
+    text-align: center;
+    color: green;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  
