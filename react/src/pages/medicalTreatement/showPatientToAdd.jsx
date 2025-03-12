@@ -19,11 +19,13 @@ const AddMedicalTreatment = () => {
     details: '',
     startDate: '',
     endDate: '',
-    treatedBy: '',
+    treatedBy: [],
     patient: patientId || (selectedPatient ? selectedPatient._id : ''),
+    equipment: [],
   });
 
   const [doctors, setDoctors] = useState([]);
+  const [equipmentOptions, setEquipmentOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [useCustomCategory, setUseCustomCategory] = useState(false);
 
@@ -40,15 +42,35 @@ const AddMedicalTreatment = () => {
     const fetchDoctors = async () => {
       try {
         const response = await axios.get('http://localhost:3000/employee/employees/doctor');
-        setDoctors(response.data.map(doctor => ({ value: doctor._id, label: `${doctor.name} (${doctor.specialization})` })));
+        const availableDoctors = response.data.filter(doctor => doctor.status === "active");
+
+        setDoctors(availableDoctors.map(doctor => ({ value: doctor._id, label: `${doctor.name} (${doctor.specialization})` })));
       } catch (error) {
         console.error('Error fetching doctors:', error);
         toast.error('Failed to fetch doctors. Please try again.');
-      } finally {
-        setLoading(false);
       }
     };
+
+    const fetchEquipment = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/equipments');
+        const availableEquipment = response.data.filter(equip => equip.status === "AVAILABLE");
+
+        setEquipmentOptions(
+          availableEquipment.map(equip => ({
+            value: equip._id,
+            label: `${equip.name} (in ${equip.room.name} with  serial number : ${equip.serialNumber}, model : ${equip.model})`,
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching equipment:', error);
+        toast.error('Failed to fetch equipment.');
+      }
+    };
+
     fetchDoctors();
+    fetchEquipment();
+    setLoading(false);
   }, []);
 
   const handleChange = (event) => {
@@ -69,8 +91,18 @@ const AddMedicalTreatment = () => {
     }));
   };
 
-  const handleDoctorSelect = (selectedOption) => {
-    setTreatment((prev) => ({ ...prev, treatedBy: selectedOption ? selectedOption.value : '' }));
+  const handleDoctorSelect = (selectedOptions) => {
+    setTreatment((prev) => ({
+      ...prev,
+      treatedBy: selectedOptions ? selectedOptions.map(option => option.value) : [],
+    }));
+  };
+
+  const handleEquipmentSelect = (selectedOptions) => {
+    setTreatment((prev) => ({
+      ...prev,
+      equipment: selectedOptions ? selectedOptions.map(option => option.value) : [],
+    }));
   };
 
   const validateForm = () => {
@@ -79,7 +111,7 @@ const AddMedicalTreatment = () => {
     if (!treatment.details.trim() || treatment.details.length < 10) return toast.error('Details must be at least 10 characters.');
     if (!treatment.startDate) return toast.error('Please select a start date.');
     if (treatment.endDate && new Date(treatment.endDate) < new Date(treatment.startDate)) return toast.error('End date cannot be before start date.');
-    if (!treatment.treatedBy) return toast.error('Please select a doctor.');
+    if (treatment.treatedBy.length === 0) return toast.error('Please select at least one doctor.');
     return true;
   };
 
@@ -95,6 +127,7 @@ const AddMedicalTreatment = () => {
       endDate: treatment.endDate ? new Date(treatment.endDate) : null,
       treatedBy: treatment.treatedBy,
       patient: treatment.patient,
+      equipment: treatment.equipment,
     };
 
     try {
@@ -111,7 +144,7 @@ const AddMedicalTreatment = () => {
     <div className="container mt-5">
       <ToastContainer />
       <h1 className="text-center mb-4 card p-3">Add Medical Treatment</h1>
-      <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-light">
+      <form onSubmit={handleSubmit} noValidate className="border p-4 rounded shadow-sm bg-light">
         <div className="mb-3">
           <label className="form-label">Category</label>
           <select className="form-select" name="category" value={treatment.category} onChange={handleCategoryChange} disabled={useCustomCategory}>
@@ -123,16 +156,19 @@ const AddMedicalTreatment = () => {
           </select>
         </div>
         {useCustomCategory && <input type="text" className="form-control mb-3" name="customCategory" value={treatment.customCategory} onChange={handleChange} placeholder="Enter new category" required />}
-        <div className="mb-3 form-check">
-          <input type="checkbox" className="form-check-input" name="status" checked={treatment.status} onChange={handleChange} />
-          <label className="form-check-label">Active Treatment</label>
-        </div>
+        
         <div className="mb-3">
           <textarea className="form-control" name="details" rows="3" value={treatment.details} onChange={handleChange} placeholder="Enter treatment details" required />
         </div>
         <input type="date" className="form-control mb-3" name="startDate" value={treatment.startDate} onChange={handleChange} required />
         <input type="date" className="form-control mb-3" name="endDate" value={treatment.endDate} onChange={handleChange} />
-        <Select id="treatedBy" options={doctors} isLoading={loading} onChange={handleDoctorSelect} placeholder="Search for a doctor..." isSearchable required />
+
+        <label className="form-label">Doctor</label>
+        <Select options={doctors} isLoading={loading} onChange={handleDoctorSelect} placeholder="Search for a doctor..." isSearchable isMulti required />
+
+        <label className="form-label mt-3">Equipment</label>
+        <Select options={equipmentOptions} isLoading={loading} isMulti onChange={handleEquipmentSelect} placeholder="Select equipment..." isSearchable />
+
         <button type="submit" className="btn btn-primary d-block mt-3">Add Treatment</button>
       </form>
     </div>

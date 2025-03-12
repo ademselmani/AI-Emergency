@@ -6,8 +6,10 @@ const treatmentSchema = new mongoose.Schema({
   details: { type: String, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date },
-  treatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Référence à un utilisateur
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true }, // Référence au patient
+  patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true }, 
+
+   treatedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }], 
+  equipment: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Equipment' }], 
 });
 
 module.exports = mongoose.model('Treatment', treatmentSchema);

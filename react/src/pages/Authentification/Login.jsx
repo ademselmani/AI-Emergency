@@ -88,8 +88,21 @@ const Login = () => {
   }, [location, navigate])
 
   return (
-    <div className='login-container'>
-      <div className='login-card'>
+    <div className='login-container'
+    
+    
+    style={{ 
+      backgroundImage: `url('/Hospital2.gif')`, 
+      backgroundSize: '100% 100%', // Étire l'image pour remplir complètement l'élément
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      minHeight: '100vh' // Ensures it covers the full screen
+    }}
+    >
+      <div className='login-card'
+      
+      style={{ backdropFilter: 'blur(10px)', background: 'rgba(255, 255, 255, 0.2)' }}
+      >
         <h2 className='login-title'>Welcome to RescueOn! 👋</h2>
         <p className='login-subtitle'>Please sign in to continue</p>
 

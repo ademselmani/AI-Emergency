@@ -6,80 +6,93 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const EditMedicalTreatment = () => {
-  const { id } = useParams(); // ID du traitement
+  const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const selectedPatient = location.state?.patient || null; // Access selectedPatient
-  const patientId = selectedPatient?._id || null; // Extract patientId
+  const selectedPatient = location.state?.patient || null;
+  const patientId = selectedPatient?._id || null;
 
   const predefinedCategories = ['TRAUMA', 'SURGICAL', 'PSYCHIATRIC', 'RESPIRATORY', 'CARDIAC'];
 
   const [treatment, setTreatment] = useState({
     category: '',
     customCategory: '',
-    status: false,
     details: '',
     startDate: '',
     endDate: '',
-    treatedBy: '',
-    patient: patientId, // Set patient ID from selectedPatient
+    treatedBy: [],
+    equipment: [],
+    patient: patientId,
   });
 
   const [doctors, setDoctors] = useState([]);
+  const [equipmentList, setEquipmentList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [useCustomCategory, setUseCustomCategory] = useState(false);
 
   useEffect(() => {
-    const fetchTreatment = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/treatments/${id}`);
-        console.log("Données récupérées:", response.data);
+        const [treatmentRes, doctorsRes, equipmentRes] = await Promise.all([
+          axios.get(`http://localhost:3000/api/treatments/${id}`),
+          axios.get('http://localhost:3000/employee/employees/doctor'),
+          axios.get('http://localhost:3000/equipments'),
+        ]);
 
-        const data = response.data;
-        setTreatment({
-          category: predefinedCategories.includes(data.category) ? data.category : '',
-          customCategory: predefinedCategories.includes(data.category) ? '' : data.category,
-          status: data.status,
-          details: data.details,
-          startDate: data.startDate ? new Date(data.startDate).toISOString().substr(0, 10) : '',
-          endDate: data.endDate ? new Date(data.endDate).toISOString().substr(0, 10) : '',
-          treatedBy: data.treatedBy,
-          patient: data.patient,
-        });
+        const treatmentData = treatmentRes.data;
 
-        if (!predefinedCategories.includes(data.category)) {
-          setUseCustomCategory(true);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement du traitement:', error);
-        toast.error('Erreur de chargement des données.');
-      }
-    };
-
-    const fetchDoctors = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/employee/employees/doctor');
-        const formattedDoctors = response.data.map((doctor) => ({
+        // Format doctors for react-select
+        const formattedDoctors = doctorsRes.data.map((doctor) => ({
           value: doctor._id,
           label: `${doctor.name} (${doctor.specialization})`,
         }));
         setDoctors(formattedDoctors);
+
+        // Format equipment for react-select
+        const formattedEquipment = equipmentRes.data.map((eq) => ({
+          value: eq._id,
+          label: eq.name,
+        }));
+        setEquipmentList(formattedEquipment);
+
+        // Set treatment state
+        setTreatment({
+          category: predefinedCategories.includes(treatmentData.category)
+            ? treatmentData.category
+            : '',
+          customCategory: predefinedCategories.includes(treatmentData.category)
+            ? ''
+            : treatmentData.category,
+          details: treatmentData.details,
+          startDate: treatmentData.startDate
+            ? new Date(treatmentData.startDate).toISOString().substr(0, 10)
+            : '',
+          endDate: treatmentData.endDate
+            ? new Date(treatmentData.endDate).toISOString().substr(0, 10)
+            : '',
+          treatedBy: treatmentData.treatedBy.map((doctor) => doctor._id),
+          equipment: treatmentData.equipment?.map((eq) => eq._id) || [],
+          patient: treatmentData.patient,
+        });
+
+        if (!predefinedCategories.includes(treatmentData.category)) {
+          setUseCustomCategory(true);
+        }
       } catch (error) {
-        console.error('Erreur lors de la récupération des médecins:', error);
-        toast.error('Erreur de chargement des médecins.');
+        console.error('Error loading data:', error);
+        toast.error('Error loading data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTreatment();
-    fetchDoctors();
+    fetchData();
   }, [id]);
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setTreatment((prevTreatment) => ({
-      ...prevTreatment,
+    setTreatment((prev) => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
@@ -95,10 +108,17 @@ const EditMedicalTreatment = () => {
     }
   };
 
-  const handleDoctorSelect = (selectedOption) => {
-    setTreatment((prevTreatment) => ({
-      ...prevTreatment,
-      treatedBy: selectedOption ? selectedOption.value : '',
+  const handleDoctorsSelect = (selectedOptions) => {
+    setTreatment((prev) => ({
+      ...prev,
+      treatedBy: selectedOptions ? selectedOptions.map((option) => option.value) : [],
+    }));
+  };
+
+  const handleEquipmentSelect = (selectedOptions) => {
+    setTreatment((prev) => ({
+      ...prev,
+      equipment: selectedOptions ? selectedOptions.map((option) => option.value) : [],
     }));
   };
 
@@ -107,83 +127,74 @@ const EditMedicalTreatment = () => {
 
     if (!validateForm()) return;
 
-    let categoryToSend = useCustomCategory ? treatment.customCategory.trim().toUpperCase() : treatment.category;
+    const categoryToSend = useCustomCategory
+      ? treatment.customCategory.trim().toUpperCase()
+      : treatment.category;
 
     const treatmentData = {
       category: categoryToSend,
-      status: treatment.status,
       details: treatment.details,
       startDate: new Date(treatment.startDate),
       endDate: treatment.endDate ? new Date(treatment.endDate) : null,
       treatedBy: treatment.treatedBy,
+      equipment: treatment.equipment,
       patient: treatment.patient,
     };
 
     try {
       await axios.put(`http://localhost:3000/api/treatments/${id}`, treatmentData);
-      toast.success('Traitement mis à jour avec succès!');
+      toast.success('Treatment updated successfully!');
 
-      // Navigate to the patient's treatment list using patientId
       if (patientId) {
         navigate(`/medical-treatments/patient/show/${patientId}`, {
-          state: { patient: selectedPatient }, // Pass selectedPatient if needed
+          state: { patient: selectedPatient },
         });
       } else {
         console.error('Patient ID is missing');
-        toast.error('Erreur: ID du patient manquant.');
+        toast.error('Error: Missing patient ID');
       }
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du traitement:', error);
-      if (error.response) {
-        console.error('Server response:', error.response.data);
-        toast.error(`Erreur: ${error.response.data.message || 'Données invalides'}`);
-      } else {
-        toast.error('Erreur réseau. Veuillez réessayer.');
-      }
+      console.error('Error updating treatment:', error);
+      toast.error(error.response?.data?.error || 'Error updating treatment');
     }
   };
 
   const validateForm = () => {
-    let isValid = true;
     if (!treatment.category && !useCustomCategory) {
-      toast.error("Veuillez sélectionner une catégorie.");
-      isValid = false;
+      toast.error('Please select a category');
+      return false;
     }
     if (useCustomCategory && (!treatment.customCategory.trim() || treatment.customCategory.length < 3)) {
-      toast.error("La catégorie personnalisée doit contenir au moins 3 caractères.");
-      isValid = false;
+      toast.error('Custom category must be at least 3 characters');
+      return false;
     }
     if (!treatment.details.trim() || treatment.details.length < 10) {
-      toast.error("Les détails doivent contenir au moins 10 caractères.");
-      isValid = false;
+      toast.error('Details must be at least 10 characters');
+      return false;
     }
     if (!treatment.startDate) {
-      toast.error("Veuillez sélectionner une date de début.");
-      isValid = false;
+      toast.error('Please select a start date');
+      return false;
     }
-    if (treatment.endDate) {
-      const startDate = new Date(treatment.startDate);
-      const endDate = new Date(treatment.endDate);
-      if (endDate < startDate) {
-        toast.error("La date de fin ne peut pas être antérieure à la date de début.");
-        isValid = false;
-      }
+    if (treatment.endDate && new Date(treatment.endDate) < new Date(treatment.startDate)) {
+      toast.error('End date cannot be before start date');
+      return false;
     }
-    if (!treatment.treatedBy) {
-      toast.error("Veuillez sélectionner un médecin.");
-      isValid = false;
+    if (!treatment.treatedBy.length) {
+      toast.error('Please select at least one doctor');
+      return false;
     }
-    return isValid;
+    return true;
   };
 
   return (
     <div className="container mt-5">
       <ToastContainer />
-      <h1 className="text-center mb-4 card p-3">Modifier le traitement</h1>
-      <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-light">
-        {/* Catégorie */}
+      <h1 className="text-center mb-4 card p-3">Edit Treatment</h1>
+      <form onSubmit={handleSubmit} noValidate className="border p-4 rounded shadow-sm bg-light">
+        {/* Category */}
         <div className="mb-3">
-          <label htmlFor="category" className="form-label">Catégorie</label>
+          <label htmlFor="category" className="form-label">Category</label>
           <select
             className="form-select"
             id="category"
@@ -193,18 +204,20 @@ const EditMedicalTreatment = () => {
             required={!useCustomCategory}
             disabled={useCustomCategory}
           >
-            <option value="">Sélectionnez une catégorie</option>
+            <option value="">Select a category</option>
             {predefinedCategories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
-            <option value="CUSTOM">Autre...</option>
+            <option value="CUSTOM">Other...</option>
           </select>
         </div>
 
-        {/* Champ pour la nouvelle catégorie */}
+        {/* Custom Category */}
         {useCustomCategory && (
           <div className="mb-3">
-            <label htmlFor="customCategory" className="form-label">Nouvelle Catégorie</label>
+            <label htmlFor="customCategory" className="form-label">New Category</label>
             <input
               type="text"
               className="form-control"
@@ -217,22 +230,9 @@ const EditMedicalTreatment = () => {
           </div>
         )}
 
-        {/* Statut */}
-        <div className="mb-3 form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            id="status"
-            name="status"
-            checked={treatment.status}
-            onChange={handleChange}
-          />
-          <label htmlFor="status" className="form-check-label">Traitement actif</label>
-        </div>
-
-        {/* Détails */}
+        {/* Details */}
         <div className="mb-3">
-          <label htmlFor="details" className="form-label">Détails du Traitement</label>
+          <label htmlFor="details" className="form-label">Treatment Details</label>
           <textarea
             className="form-control"
             id="details"
@@ -244,9 +244,9 @@ const EditMedicalTreatment = () => {
           />
         </div>
 
-        {/* Date de début */}
+        {/* Start Date */}
         <div className="mb-3">
-          <label htmlFor="startDate" className="form-label">Date de début</label>
+          <label htmlFor="startDate" className="form-label">Start Date</label>
           <input
             type="date"
             className="form-control"
@@ -258,9 +258,9 @@ const EditMedicalTreatment = () => {
           />
         </div>
 
-        {/* Date de fin */}
+        {/* End Date */}
         <div className="mb-3">
-          <label htmlFor="endDate" className="form-label">Date de fin (optionnelle)</label>
+          <label htmlFor="endDate" className="form-label">End Date (optional)</label>
           <input
             type="date"
             className="form-control"
@@ -271,23 +271,40 @@ const EditMedicalTreatment = () => {
           />
         </div>
 
-        {/* Médecin traitant */}
+        {/* Doctors */}
         <div className="mb-3">
-          <label className="form-label">Médecin traitant</label>
+          <label className="form-label">Treating Doctors</label>
           <Select
+            isMulti
             options={doctors}
             isLoading={loading}
-            onChange={handleDoctorSelect}
-            placeholder="Sélectionner un médecin..."
+            onChange={handleDoctorsSelect}
+            value={doctors.filter((doctor) => treatment.treatedBy.includes(doctor.value))}
+            placeholder="Select doctors..."
             isSearchable
             required
-            value={doctors.find((d) => d.value === treatment.treatedBy)}
           />
         </div>
 
-        {/* Bouton de soumission */}
+        {/* Equipment */}
+        <div className="mb-3">
+          <label className="form-label">Equipment</label>
+          <Select
+            isMulti
+            options={equipmentList}
+            isLoading={loading}
+            onChange={handleEquipmentSelect}
+            value={equipmentList.filter((eq) => treatment.equipment.includes(eq.value))}
+            placeholder="Select equipment..."
+            isSearchable
+          />
+        </div>
+
+        {/* Submit Button */}
         <div className="d-grid">
-          <button type="submit" className="btn btn-primary">Mettre à jour</button>
+          <button type="submit" className="btn btn-primary">
+            Update Treatment
+          </button>
         </div>
       </form>
     </div>

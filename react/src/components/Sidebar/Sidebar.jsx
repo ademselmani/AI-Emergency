@@ -167,6 +167,17 @@ const Sidebar = () => {
               <i className='menu-icon tf-icons bx bx-home-circle'></i>
               <div data-i18n='Analytics'>Dashboard</div>
             </NavLink>
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
           </li>
             <li className='menu-item'>
               <NavLink

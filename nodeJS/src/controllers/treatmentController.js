@@ -2,33 +2,45 @@ const Treatment = require('../models/Treatment');
 
  
 // Créer un traitement
+// Créer un traitement
 exports.createTreatment = async (req, res) => {
   try {
-    const { category, status, details, startDate, endDate, treatedBy } = req.body;
-    const { patientId } = req.params; // Get patientId from the route
+    const { category, details, startDate, endDate, treatedBy, equipment } = req.body;
+    const { patientId } = req.params;
+    const status = endDate ? false : true;
 
-    // Validate that necessary fields are present
+    // Vérification des champs requis
     if (!category || !treatedBy || !patientId) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Champs requis manquants' });
     }
 
-    // Create a new treatment and associate it with the patientId
+    // Vérification que treatedBy et equipment sont des ObjectId valides
+    if (!treatedBy.every(id => mongoose.Types.ObjectId.isValid(id))) {
+      return res.status(400).json({ error: 'ID de médecin invalide' });
+    }
+    if (equipment && !equipment.every(id => mongoose.Types.ObjectId.isValid(id))) {
+      return res.status(400).json({ error: 'ID d\'équipement invalide' });
+    }
+
+    // Création du traitement
     const treatment = new Treatment({
       category,
       status,
       details,
       startDate,
       endDate,
-      treatedBy,
-      patient: patientId, // Use patientId from the URL
+      treatedBy,  // Liste des médecins
+      patient: patientId,
+      equipment,  // Liste des équipements
     });
 
     await treatment.save();
     res.status(201).json(treatment);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
+
 
  
 
@@ -59,7 +71,8 @@ exports.getTreatmentById = async (req, res) => {
 exports.updateTreatment = async (req, res) => {
   try {
     // Extract allowed fields from req.body
-    const { category, status, details, startDate, endDate, treatedBy, patient } = req.body;
+    const { category, details, startDate, endDate, treatedBy, patient } = req.body;
+    const status = endDate ? false : true;
 
     // Create an object with only the fields that can be updated
     const updateData = {
