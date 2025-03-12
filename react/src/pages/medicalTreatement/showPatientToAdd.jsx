@@ -1,208 +1,142 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import Select from 'react-select'; // Import react-select
+import Select from 'react-select';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const ShowPatientToAdd = () => {
-  const { patientId } = useParams();  // Retrieve patientId from the URL
-  const location = useLocation();  // Access the state passed via NavLink
+const AddMedicalTreatment = () => {
+  const { patientId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-
-  // If state is passed through NavLink, we can also access selectedPatient here
+  
   const selectedPatient = location.state ? location.state.patient : null;
-  useEffect(() => {
-     console.log('Selected Patient from state:', selectedPatient._id );
-  }, [patientId, selectedPatient]);
 
-   // State for treatment form
   const [treatment, setTreatment] = useState({
     category: '',
+    customCategory: '',
     status: false,
     details: '',
     startDate: '',
     endDate: '',
-    treatedBy: '', // Will store the selected doctor's ID
-    patient: selectedPatient._id , // Set the patient ID from selectedPatient
+    treatedBy: '',
+    patient: patientId || (selectedPatient ? selectedPatient._id : ''),
   });
 
-  // State for doctors list
   const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state for doctors fetch
+  const [loading, setLoading] = useState(true);
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
 
-  // Fetch doctors from the API
+  useEffect(() => {
+    if (selectedPatient || patientId) {
+      setTreatment((prev) => ({
+        ...prev,
+        patient: selectedPatient ? selectedPatient._id : patientId,
+      }));
+    }
+  }, [selectedPatient, patientId]);
+
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         const response = await axios.get('http://localhost:3000/employee/employees/doctor');
-        const formattedDoctors = response.data.map((doctor) => ({
-          value: doctor._id, // Use the doctor's ID as the value
-          label: `${doctor.name} (${doctor.specialization})`, // Display name and specialization
-        }));
-        setDoctors(formattedDoctors);
+        setDoctors(response.data.map(doctor => ({ value: doctor._id, label: `${doctor.name} (${doctor.specialization})` })));
       } catch (error) {
-        console.error('Erreur lors de la récupération des médecins:', error);
+        console.error('Error fetching doctors:', error);
+        toast.error('Failed to fetch doctors. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchDoctors();
   }, []);
 
-   const handleChange = (event) => {
+  const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setTreatment((prevTreatment) => ({
-      ...prevTreatment, 
+    setTreatment((prev) => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
-   const handleDoctorSelect = (selectedOption) => {
-    setTreatment((prevTreatment) => ({
-      ...prevTreatment,
-      treatedBy: selectedOption ? selectedOption.value : '', // Store the selected doctor's ID
+  const handleCategoryChange = (event) => {
+    const value = event.target.value;
+    setUseCustomCategory(value === 'CUSTOM');
+    setTreatment((prev) => ({
+      ...prev,
+      category: value === 'CUSTOM' ? '' : value,
+      customCategory: '',
     }));
+  };
+
+  const handleDoctorSelect = (selectedOption) => {
+    setTreatment((prev) => ({ ...prev, treatedBy: selectedOption ? selectedOption.value : '' }));
+  };
+
+  const validateForm = () => {
+    if (!treatment.category && !useCustomCategory) return toast.error('Please select a treatment category.');
+    if (useCustomCategory && (!treatment.customCategory.trim() || treatment.customCategory.length < 3)) return toast.error('Custom category must be at least 3 characters.');
+    if (!treatment.details.trim() || treatment.details.length < 10) return toast.error('Details must be at least 10 characters.');
+    if (!treatment.startDate) return toast.error('Please select a start date.');
+    if (treatment.endDate && new Date(treatment.endDate) < new Date(treatment.startDate)) return toast.error('End date cannot be before start date.');
+    if (!treatment.treatedBy) return toast.error('Please select a doctor.');
+    return true;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
- 
-  
-     const treatmentWithPatient = { ...treatment, patient: selectedPatient._id };
-  
-    try {
-      // Send the treatment data to the backend with the correct patientId in the request body
-      await axios.post(`http://localhost:3000/api/treatments/${treatment.patient}`, treatment);
-  
-      navigate(`/medical-treatments/patient/show/${treatment.patient}`, {
-        state: { patient: selectedPatient }
-      });
+    if (!validateForm()) return;
 
+    const treatmentData = {
+      category: useCustomCategory ? treatment.customCategory.trim().toUpperCase() : treatment.category,
+      status: treatment.status,
+      details: treatment.details,
+      startDate: new Date(treatment.startDate),
+      endDate: treatment.endDate ? new Date(treatment.endDate) : null,
+      treatedBy: treatment.treatedBy,
+      patient: treatment.patient,
+    };
+
+    try {
+      await axios.post(`http://localhost:3000/api/treatments/${treatment.patient}`, treatmentData);
+      toast.success('Treatment added successfully!');
+      navigate(`/medical-treatments/patient/show/${treatment.patient}`, { state: { patient: selectedPatient } });
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du traitement:', error);
-  
-      if (error.response) {
-        console.error('Server response:', error.response.data);
-        alert(`Erreur: ${error.response.data.message || 'Données invalides'}`);
-      }
+      console.error('Error adding treatment:', error);
+      toast.error(`Error: ${error.response?.data?.message || 'Failed to add treatment'}`);
     }
   };
-  
+
   return (
     <div className="container mt-5">
-      <h1 className="text-center mb-4">Ajouter un Traitement Médical</h1>
-      <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm">
-        {/* Catégorie */}
+      <ToastContainer />
+      <h1 className="text-center mb-4 card p-3">Add Medical Treatment</h1>
+      <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-light">
         <div className="mb-3">
-          <label htmlFor="category" className="form-label">
-            Catégorie
-          </label>
-          <select
-            className="form-select"
-            id="category"
-            name="category"
-            value={treatment.category}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Sélectionnez une catégorie</option>
-            <option value="TRAUMA">Trauma</option>
-            <option value="SURGICAL">Chirurgical</option>
-            <option value="PSYCHIATRIC">Psychiatrique</option>
-            <option value="RESPIRATORY">Respiratoire</option>
-            <option value="CARDIAC">Cardiaque</option>
+          <label className="form-label">Category</label>
+          <select className="form-select" name="category" value={treatment.category} onChange={handleCategoryChange} disabled={useCustomCategory}>
+            <option value="">Select a category</option>
+            {['TRAUMA', 'SURGICAL', 'PSYCHIATRIC', 'RESPIRATORY', 'CARDIAC'].map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+            <option value="CUSTOM">Other...</option>
           </select>
         </div>
-
-        {/* Statut */}
+        {useCustomCategory && <input type="text" className="form-control mb-3" name="customCategory" value={treatment.customCategory} onChange={handleChange} placeholder="Enter new category" required />}
         <div className="mb-3 form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            id="status"
-            name="status"
-            checked={treatment.status}
-            onChange={handleChange}
-          />
-          <label htmlFor="status" className="form-check-label">
-            Traitement actif
-          </label>
+          <input type="checkbox" className="form-check-input" name="status" checked={treatment.status} onChange={handleChange} />
+          <label className="form-check-label">Active Treatment</label>
         </div>
-
-        {/* Détails */}
         <div className="mb-3">
-          <label htmlFor="details" className="form-label">
-            Détails du Traitement
-          </label>
-          <textarea
-            className="form-control"
-            id="details"
-            name="details"
-            rows="3"
-            value={treatment.details}
-            onChange={handleChange}
-            required
-          />
+          <textarea className="form-control" name="details" rows="3" value={treatment.details} onChange={handleChange} placeholder="Enter treatment details" required />
         </div>
-
-        {/* Date de début */}
-        <div className="mb-3">
-          <label htmlFor="startDate" className="form-label">
-            Date de début
-          </label>
-          <input
-            type="date"
-            className="form-control"
-            id="startDate"
-            name="startDate"
-            value={treatment.startDate}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Date de fin */}
-        <div className="mb-3">
-          <label htmlFor="endDate" className="form-label">
-            Date de fin (optionnelle)
-          </label>
-          <input
-            type="date"
-            className="form-control"
-            id="endDate"
-            name="endDate"
-            value={treatment.endDate}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Traité par (Searchable Dropdown) */}
-        <div className="mb-3">
-          <label htmlFor="treatedBy" className="form-label">
-            Traité par
-          </label>
-          <Select
-            id="treatedBy"
-            name="treatedBy"
-            options={doctors}
-            isLoading={loading} // Show loading indicator while fetching doctors
-            onChange={handleDoctorSelect} // Handle doctor selection
-            placeholder="Rechercher un médecin..."
-            isSearchable // Enable search functionality
-            required
-          />
-        </div>
-
-        {/* Bouton de soumission */}
-        <div className="d-grid">
-          <button type="submit" className="btn btn-primary">
-            Ajouter le Traitement
-          </button>
-        </div>
+        <input type="date" className="form-control mb-3" name="startDate" value={treatment.startDate} onChange={handleChange} required />
+        <input type="date" className="form-control mb-3" name="endDate" value={treatment.endDate} onChange={handleChange} />
+        <Select id="treatedBy" options={doctors} isLoading={loading} onChange={handleDoctorSelect} placeholder="Search for a doctor..." isSearchable required />
+        <button type="submit" className="btn btn-primary d-block mt-3">Add Treatment</button>
       </form>
     </div>
   );
 };
 
-export default ShowPatientToAdd;
+export default AddMedicalTreatment;

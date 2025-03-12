@@ -55,8 +55,8 @@ const Dashboard = () => {
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                                        <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                        <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                        <a class="dropdown-item" href=";">View More</a>
+                                        <a class="dropdown-item" href=";">Delete</a>
                                     </div>
                                 </div>
                             </div>
@@ -89,8 +89,8 @@ const Dashboard = () => {
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                                        <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                        <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                        <a class="dropdown-item" href=";">View More</a>
+                                        <a class="dropdown-item" href=";">Delete</a>
                                     </div>
                                 </div>
                             </div>

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const treatmentSchema = new mongoose.Schema({
-  category: { type: String, enum: ['TRAUMA', 'SURGICAL', 'PSYCHIATRIC', 'RESPIRATORY', 'CARDIAC'], required: true },
+  category: { type: String, required: true },
   status: { type: Boolean, default: false },
   details: { type: String, required: true },
   startDate: { type: Date, required: true },

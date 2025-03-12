@@ -26,6 +26,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
  import Treatments from "./pages/medicalTreatement";
 import ShowPatientTreatments from "./pages/medicalTreatement/showPatientTreatements";
 import ShowPatientToAdd from "./pages/medicalTreatement/showPatientToAdd";
+import EditMedicalTreatment from "./pages/medicalTreatement/edit";
    
 function App() {
   return (
@@ -86,7 +87,12 @@ function App() {
 
           } />
 
+<Route path="/medical-treatments/edit/:id" element={
+            <Layout>
+              <EditMedicalTreatment />
+            </Layout>
 
+          } />
 
           <Route
             path="/profile"
