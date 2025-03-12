@@ -26,14 +26,14 @@ pipeline {
                 }  
             }   
         } 
-        stage('Build application') { 
-            steps { 
-                script { 
+       // stage('Build application') { 
+         //   steps { 
+            //    script { 
                    // sh 'cd nodeJS && npm run build-dev' 
-                    sh 'cd nodeJS && npm start' 
-                } 
-            } 
-        }
+                 //   sh 'cd nodeJS && npm start' 
+             //   } 
+           // } 
+     //   }
         
         stage('Building images (node and mongo)') { 
             steps { 
