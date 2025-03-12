@@ -29,7 +29,8 @@ pipeline {
         stage('Build application') { 
             steps { 
                 script { 
-                    sh 'cd nodeJS && npm run build-dev' 
+                   // sh 'cd nodeJS && npm run build-dev' 
+                    sh 'cd nodeJS && npm run start' 
                 } 
             } 
         }
