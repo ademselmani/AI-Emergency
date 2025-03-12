@@ -30,7 +30,7 @@ pipeline {
             steps { 
                 script { 
                    // sh 'cd nodeJS && npm run build-dev' 
-                    sh 'cd nodeJS && npm run start' 
+                    sh 'cd nodeJS && npm start' 
                 } 
             } 
         }
