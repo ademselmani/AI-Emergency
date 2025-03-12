@@ -2,20 +2,23 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import "./App.css"; // Global styles
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Authentification/Login";
 import Profile from "./pages/Profile/AuthentificatedUserprofile";
 import Register from "./pages/Authentification/Resgister";
 import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";
+
 import NotFound from "./pages/Exceptions/NotFound";
 import Layout from "./layout/Layout";
 import Head from "./components/head";
-import FaceRecognition from "./pages/Authentification/FaceRecognition"; // Importer la page de reconnaissance faciale
+ // Importer la page de reconnaissance faciale
+ import FaceRecognition from "./pages/Authentification/FaceRecognition"; 
+// Importer la page de reconnaissance faciale
+//import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 /** @format */
 
 import "./App.css"; // Style global
-
+ 
 import EmployeeStats from "./pages/stats/statistique";
 import ListeEmployees from "./pages/listeEmployees/listeEmployees";
 import EmployeesDetails from "./pages/listeEmployees/EmployeesDetails";
@@ -23,10 +26,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
- import Treatments from "./pages/medicalTreatement";
+ import "semantic-ui-css/semantic.min.css";
+import Area from "./pages/ressources/area.jsx";
+import Room from "./pages/ressources/room.jsx";
+import Equipment from "./pages/ressources/equipment.jsx";
+  import Treatments from "./pages/medicalTreatement";
 import ShowPatientTreatments from "./pages/medicalTreatement/showPatientTreatements";
 import ShowPatientToAdd from "./pages/medicalTreatement/showPatientToAdd";
 import EditMedicalTreatment from "./pages/medicalTreatement/edit";
+import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
+ 
+import Listofleaves from "./pages/Leaves/Listleaves";
+import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
+import Statleaves from "./pages/Leaves/Statleaves";
+ 
    
 function App() {
   return (
@@ -34,11 +47,11 @@ function App() {
       <Head />
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
+          <Route path='/' element={<Login />} />
+          <Route path='/login' element={<Login />} />
           {/* Routes protégées (wrappées dans Layout) */}
           <Route
-            path="/dashboard"
+            path='/dashboard'
             element={
               <Layout>
                 <EmployeeStats />
@@ -46,22 +59,46 @@ function App() {
             }
           />
           <Route
-            path="/users"
+            path='/areas'
+            element={
+              <Layout>
+                <Area />
+              </Layout>
+            }
+          />
+          <Route
+            path='/rooms'
+            element={
+              <Layout>
+                <Room />
+              </Layout>
+            }
+          />
+          <Route
+            path='/equipments'
+            element={
+              <Layout>
+                <Equipment />
+              </Layout>
+            }
+          />
+          <Route
+            path='/users'
             element={
               <Layout>
                 <ListeEmployees />
               </Layout>
             }
           />
-
           <Route
-            path="/register"
+            path='/register'
             element={
               <Layout>
                 <Register />
               </Layout>
             }
           />
+ 
           <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/forget-password" element={<Passwordforget />} />
         
@@ -87,6 +124,7 @@ function App() {
 
           } />
 
+
 <Route path="/medical-treatments/edit/:id" element={
             <Layout>
               <EditMedicalTreatment />
@@ -94,8 +132,16 @@ function App() {
 
           } />
 
-          <Route
-            path="/profile"
+  
+
+          <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />
+          <Route path="/leaves" element={<Layout><Listofleaves/></Layout>}      />
+          <Route path="/MyLeaveRequests" element={<Layout><MyLeaveRequests/></Layout>}/>
+          <Route path="statleaves" element={<Layout><Statleaves/></Layout>} />
+ 
+
+           <Route
+            path='/profile'
             element={
               <Layout>
                 <Profile />
@@ -103,7 +149,7 @@ function App() {
             }
           />
           {/* Ajouter la route pour la reconnaissance faciale */}
-          <Route path="/face-recognition" element={<FaceRecognition />} />
+          <Route path='/face-recognition' element={<FaceRecognition />} />
           {/* 404 - Page non trouvée */}
           {/* <Route
             path="*"
@@ -116,7 +162,7 @@ function App() {
           {/* <Route path="/" element={<Layout> <EmployeeStats /> </Layout>} /> */}
           {/* Route indépendante pour EmployeesDetails */}
           <Route
-            path="/user"
+            path='/user'
             element={
               <Layout>
                 <ListeEmployees />
@@ -124,19 +170,19 @@ function App() {
             }
           />
           <Route
-            path="/user/profile/:id"
+            path='/user/profile/:id'
             element={
               <Layout>
                 <EmployeesDetails />
               </Layout>
             }
           />
-          <Route path="*" element={<NotFound />} /> {/* Page 404 */}
+          <Route path='*' element={<NotFound />} /> {/* Page 404 */}
         </Routes>
         ;
       </Router>
     </>
-  );
+  )
 }
 
 export default App;

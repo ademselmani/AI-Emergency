@@ -1,0 +1,212 @@
+import { useState } from "react";
+import axios from "axios";
+
+const LeaveRequestForm = ({ onSuccess, onClose }) => {
+  const [formData, setFormData] = useState({
+    startDate: "",
+    endDate: "",
+    reason: "",
+    leaveType: "",
+  });
+
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [errors, setErrors] = useState({});
+
+  const validateDates = () => {
+    const newErrors = {};
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (!formData.startDate) {
+      newErrors.startDate = "Start date is required";
+    } else if (formData.startDate < today) {
+      newErrors.startDate = "Start date cannot be in the past";
+    }
+
+    if (!formData.endDate) {
+      newErrors.endDate = "End date is required";
+    } else if (formData.endDate < formData.startDate) {
+      newErrors.endDate = "End date cannot be before start date";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({...errors, [e.target.name]: ""});
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateDates()) return;
+
+    setMessage({ text: "", type: "" });
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/leaves/request",
+        {
+          ...formData,
+          startDate: new Date(formData.startDate).toISOString(),
+          endDate: new Date(formData.endDate).toISOString()
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setMessage({
+          text: "Leave request submitted successfully! 🎉",
+          type: "success"
+        });
+        onSuccess();
+        setFormData({ startDate: "", endDate: "", reason: "", leaveType: "" });
+      }
+    } catch (error) {
+      setMessage({
+        text: error.response?.data?.error || "Submission failed 😢",
+        type: "error"
+      });
+    }
+  };
+
+  const getMinEndDate = () => {
+    return formData.startDate || new Date().toISOString().split('T')[0];
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '24px' }}>✈️ New Leave Request</h2>
+        <button 
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '24px',
+            color: '#666',
+            padding: '5px'
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {message.text && (
+        <div style={{ 
+          padding: '10px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          background: message.type === "success" ? '#e8f5e9' : '#ffebee',
+          color: message.type === "success" ? '#2e7d32' : '#c62828'
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            min={new Date().toISOString().split('T')[0]}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: errors.startDate ? '2px solid #f44336' : '1px solid #ddd'
+            }}
+          />
+          {errors.startDate && <span style={{ color: '#f44336', fontSize: '14px' }}>{errors.startDate}</span>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>End Date</label>
+          <input
+            type="date"
+            name="endDate"
+            value={formData.endDate}
+            onChange={handleChange}
+            min={getMinEndDate()}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: errors.endDate ? '2px solid #f44336' : '1px solid #ddd'
+            }}
+          />
+          {errors.endDate && <span style={{ color: '#f44336', fontSize: '14px' }}>{errors.endDate}</span>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Leave Type</label>
+          <select
+            name="leaveType"
+            value={formData.leaveType}
+            onChange={handleChange}
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ddd'
+            }}
+          >
+            <option value="">Select leave type...</option>
+            <option value="sick">🏥 Sick Leave</option>
+            <option value="vacation">🌴 Vacation</option>
+            <option value="personal">👤 Personal Leave</option>
+            <option value="maternity">👶 Maternity Leave</option>
+            <option value="other">❓ Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Reason</label>
+          <textarea
+            name="reason"
+            value={formData.reason}
+            onChange={handleChange}
+            rows="4"
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ddd'
+            }}
+            placeholder="Please provide details for your request..."
+          />
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            background: '#2196F3',
+            color: 'white',
+            padding: '12px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Submit Request
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default LeaveRequestForm;
