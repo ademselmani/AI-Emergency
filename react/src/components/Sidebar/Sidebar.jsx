@@ -30,8 +30,8 @@ const Sidebar = () => {
 
     ],
     triage_nurse: [
-      { to: "/ModifyStatus", icon: "bx bx-user-plus", label: "Do the sorting" },
-      { to: "/showTriagePatients", icon: "bx bx-group", label: "Show Triage patients" },
+      
+       { to: "/showTriagePatients", icon: "bx bx-group", label: "Show Triage patients" },
       { to: "/MyLeaveRequests", icon: "fas fa-calendar-check", label: "Leaves" },
 
     ],
@@ -41,7 +41,7 @@ const Sidebar = () => {
       { to: "/MyLeaveRequests", icon: "fas fa-calendar-check", label: "Leaves" },
 
     ],
-    Doctor: [
+    doctor: [
       { to: "/profile", icon: "bx bx-user-plus", label: "My Patients" },
       { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
       { to: "/MyLeaveRequests", icon: "fas fa-calendar-check", label: "Leaves" },
@@ -74,7 +74,18 @@ const Sidebar = () => {
               <div>{label}</div>
             </NavLink>
           </li>
+          
         ))}
+
+
+
+
+<li className='menu-item'>
+<NavLink to='/profile' className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}>   
+            <i className='menu-icon tf-icons bx bx-user'></i>
+            <div data-i18n='Analytics'>My profile</div>
+          </NavLink>
+        </li>
         <li className="menu-item">
           <button onClick={handleLogout} className="menu-link" style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", width: "100%" }}>
             <i className="menu-icon tf-icons bx bx-log-out"></i>

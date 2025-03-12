@@ -103,11 +103,10 @@ const Login = () => {
       
       style={{ backdropFilter: 'blur(10px)', background: 'rgba(255, 255, 255, 0.2)' }}
       >
-        <h2 className='login-title'>Welcome to RescueOn! 👋</h2>
+        <h2 className='login-title'>Welcome to RescueOn! </h2>
         <p className='login-subtitle'>Please sign in to continue</p>
-
+        
         {error && <p className='error-message'>{error}</p>}
-
         <form className='login-form' onSubmit={handleLogin}>
           <div className='form-group'>
             <label htmlFor='email' className='form-label'>

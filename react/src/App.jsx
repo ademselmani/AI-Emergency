@@ -112,8 +112,30 @@ function App() {
     </Layout>
   }
 />
-<Route path="/UpdatePatient/:id" element={<UpdatePatientForm />} />
-<Route path="/UpdatePatientTriage/:id" element={<UpdatePatientTriage />} />
+<Route path="/UpdatePatient/:id"
+
+
+element={
+
+  <Layout>
+  <UpdatePatientForm/>
+</Layout>
+ 
+
+} />
+
+
+
+ 
+<Route path="/UpdatePatientTriage/:id" element={
+    <Layout>
+    <UpdatePatientTriage/>
+  </Layout>
+   
+  
+   
+  
+  } />
 
            <Route
             path='/register'
@@ -203,7 +225,17 @@ function App() {
             }
           />
  
-<Route path="/showTriagePatients" element={<ListePatientTriage filterByTriage={true} />} />
+<Route path="/showTriagePatients" element={
+  
+  
+  
+  <Layout>
+  <ListePatientTriage filterByTriage={true} />
+  </Layout>
+ 
+  
+  
+  } />
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
  
