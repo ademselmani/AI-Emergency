@@ -38,7 +38,7 @@ pipeline {
         stage('Building images (node and mongo)') { 
             steps { 
                 script { 
-                    sh 'cd nodeJS && docker-compose build' 
+                    sh 'cd nodeJS && docker compose build' 
                 } 
             } 
         }
