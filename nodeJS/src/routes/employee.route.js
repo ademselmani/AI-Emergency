@@ -1,12 +1,23 @@
 const User = require("../models/employee.model");
 const { profileController , employeesController } = require("../controllers/employees.controller")
 const authMiddleware = require("../middlewares/auth/auth");
+const Employee = require("../models/employee.model");
 const router = require("express").Router();
 
 
 router.get("/profile", authMiddleware, profileController );
 router.get("/finduser/:id", authMiddleware, employeesController );
-
+router.get("/employees/doctor", async (req, res) => {
+    try {
+      // Récupérer tous les employés avec le rôle "admin"
+      const employees = await Employee.find({ role: "doctor" }).sort({
+        role: 1,
+      }); // 1 pour tri ascendant
+      res.json(employees);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  });
 
 // router.delete(
 //   "/deleteEmployees/:id",

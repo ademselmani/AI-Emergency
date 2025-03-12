@@ -12,9 +12,11 @@ require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
 const employeeRoute = require("./src/routes/employeeRoute")
 const employeeFind = require("./src/routes/employee.route")
-const areaRoutes = require("./src/routes/areaRoute")
+ const areaRoutes = require("./src/routes/areaRoute")
 const roomRoutes = require("./src/routes/roomRoute")
 const equipmentRoutes = require("./src/routes/equipmentRoute")
+ const patientRoutes = require('./src/routes/patientRoutes');
+ 
 const multer = require("multer")
 
 const configDB = require("./src/config/db.json");
@@ -22,10 +24,13 @@ const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
 const authRoute = require("./src/routes/index.route");
+const leaveRoute = require("./src/routes/leaveRoute")
 
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
+ const treatmentRoutes = require('./src/routes/treatmentRoutes');
+const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
 
 
 mongoose
@@ -33,8 +38,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  // .then(() => console.log("✅ Connecté à MongoDB"))
-  // .catch((err) => console.error("", err));
+   .then(() => console.log("✅ Connecté à MongoDB"))
+   .catch((err) => console.error("", err));
 
 const app = express();
 const server = http.createServer(app);
@@ -91,11 +96,19 @@ app.use(passport.session());
 // ✅ **Routes**
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
-app.use("/employee", employeeFind)
+ app.use("/employee", employeeFind)
 app.use("/areas", areaRoutes)
 app.use("/rooms", roomRoutes)
 app.use("/equipments", equipmentRoutes)
+ 
+app.use("/api/leaves", leaveRoute);
 
+
+
+app.use('/api/treatments', treatmentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/patients', patientRoutes);
+ 
 
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
@@ -113,7 +126,7 @@ Promise.all([
   faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL),
 ])
   .then(() => {
-    console.log("✅ Modèles face-api.js chargés avec succès !");
+   // console.log("✅ Modèles face-api.js chargés avec succès !");
   })
   .catch((error) => {
     console.error("❌ Erreur lors du chargement des modèles face-api.js :", error);
@@ -129,3 +142,8 @@ app.use((req, res, next) => {
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });
+
+
+
+// Exporter à la fois l'app et le serveur
+module.exports = { app, server };

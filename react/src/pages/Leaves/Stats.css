@@ -1,0 +1,35 @@
+/* Stats.css */
+.chart-card {
+    background: #fff;
+    padding: 4rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chart-header h2 {
+    color: #1F2937;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .chartjs-scale-x-title, 
+  .chartjs-scale-y-title {
+    font-weight: 600;
+  }
+  
+  .chartjs-tick {
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .view-all-button:hover {
+    background-color: #03c3ec !important;
+    color: white !important;
+    border-color: #03c3ec !important;
+  }

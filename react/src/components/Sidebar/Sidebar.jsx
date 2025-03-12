@@ -59,8 +59,105 @@ const Sidebar = () => {
 
       <ul className='menu-inner py-1'>
         {/* Dashboard */}
-        {role === "admin" && (
-          <li className='menu-item'>
+       
+
+
+            
+        {role === "doctor" && (
+          <>
+            
+       
+            <li className="menu-item">
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">My Patients</div>
+              </NavLink>
+            </li>
+          
+        
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
+             
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
+ 
+          </>
+        )}
+
+{role === "nurse" && (
+          <>
+
+
+<li className="menu-item">
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">Patients in my area</div>
+              </NavLink>
+            </li>
+
+
+            <li className="menu-item">
+              <NavLink
+                to="/medical-treatments"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-capsule"></i>
+                <div data-i18n="Analytics">Medical treatments</div>
+              </NavLink>
+            </li>
+            <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
+          </>
+        )}
+
+
+         
+    
+
+
+        {/* Conditionally render Add Employee */}
+         {role === "admin" && (
+          <>
+            <li className='menu-item'>
             <NavLink
               to='/dashboard'
               className={({ isActive }) =>
@@ -71,11 +168,6 @@ const Sidebar = () => {
               <div data-i18n='Analytics'>Dashboard</div>
             </NavLink>
           </li>
-        )}
-
-        {/* Conditionally render Add Employee and other admin-only options */}
-        {role === "admin" && (
-          <>
             <li className='menu-item'>
               <NavLink
                 to='/register'
@@ -131,6 +223,20 @@ const Sidebar = () => {
                 <div data-i18n='Analytics'>Equipment</div>
               </NavLink>
             </li>
+
+
+            <li className="menu-item">
+          <NavLink
+            to="/statleaves"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
@@ -158,50 +264,61 @@ const Sidebar = () => {
                 <div data-i18n='Analytics'>Show patients</div>
               </NavLink>
             </li>
+           
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+         <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
           </>
         )}
 
-        {role === "Triage-nurse" && (
-          <li className='menu-item'>
-            <NavLink
-              to='/profile'
-              className={({ isActive }) =>
-                `menu-link ${isActive ? "active" : ""}`
-              }
-            >
-              <i className='menu-icon tf-icons bx bx-user-plus'></i>
-              <div data-i18n='Analytics'>Triage Patients</div>
-            </NavLink>
-          </li>
-        )}
+{role === "triage_nurse" && (
+  <>
+  <li className="menu-item">
+    <NavLink
+      to="/ModifyStatus"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-user-plus"></i>
+      <div data-i18n="Analytics">Do the sorting</div>
+    </NavLink>
+  </li>
+  <li className="menu-item">
+    <NavLink
+      to="/showTriagePatients"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-group"></i>
+      <div data-i18n="Analytics">Show Triage patients</div>
+    </NavLink>
+  </li>
+  <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
 
-        {role === "nurse" && (
-          <li className='menu-item'>
-            <NavLink
-              to='/profile'
-              className={({ isActive }) =>
-                `menu-link ${isActive ? "active" : ""}`
-              }
-            >
-              <i className='menu-icon tf-icons bx bx-user-plus'></i>
-              <div data-i18n='Analytics'>Patients in my area</div>
-            </NavLink>
-          </li>
-        )}
+</>
+)}
 
-        {role === "Doctor" && (
-          <li className='menu-item'>
-            <NavLink
-              to='/profile'
-              className={({ isActive }) =>
-                `menu-link ${isActive ? "active" : ""}`
-              }
-            >
-              <i className='menu-icon tf-icons bx bx-user-plus'></i>
-              <div data-i18n='Analytics'>My Patients</div>
-            </NavLink>
-          </li>
-        )}
 
         <li className='menu-item'>
           <NavLink
@@ -214,6 +331,7 @@ const Sidebar = () => {
             <div data-i18n='Analytics'>My profile</div>
           </NavLink>
         </li>
+        
 
         {/* Log out */}
         <li className='menu-item'>
@@ -233,6 +351,7 @@ const Sidebar = () => {
             <div data-i18n='Analytics'>Log out</div>
           </button>
         </li>
+       
       </ul>
     </aside>
   )
