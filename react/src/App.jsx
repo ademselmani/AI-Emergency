@@ -16,11 +16,16 @@ import Head from "./components/head";
 // Importer la page de reconnaissance faciale
 //import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 /** @format */
-
 import "./App.css"; // Style global
  
-import EmployeeStats from "./pages/stats/statistique";
+import ListePatients from "./pages/receptionnist/ListePatients";
+import ListePatientTriage from "./pages/Triage-nurse/ListePatientTriage";
+import AddPatientForm from "./pages/receptionnist/AddPatientForm";
+import UpdatePatientTriage from "./pages/Triage-nurse/UpdatePatientTriage";
+
+ import EmployeeStats from "./pages/stats/statistique";
 import ListeEmployees from "./pages/listeEmployees/listeEmployees";
+import UpdatePatientForm from "./pages/receptionnist/UpdatePatientForm"
 import EmployeesDetails from "./pages/listeEmployees/EmployeesDetails";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -90,7 +95,27 @@ function App() {
               </Layout>
             }
           />
-          <Route
+ 
+<Route
+  path="/Addpatient"
+  element={
+    <Layout>
+      <AddPatientForm />
+    </Layout>
+  }
+/>
+<Route
+  path="/showPatients"
+  element={
+    <Layout>
+      <ListePatients/>
+    </Layout>
+  }
+/>
+<Route path="/UpdatePatient/:id" element={<UpdatePatientForm />} />
+<Route path="/UpdatePatientTriage/:id" element={<UpdatePatientTriage />} />
+
+           <Route
             path='/register'
             element={
               <Layout>
@@ -177,12 +202,17 @@ function App() {
               </Layout>
             }
           />
-          <Route path='*' element={<NotFound />} /> {/* Page 404 */}
+ 
+<Route path="/showTriagePatients" element={<ListePatientTriage filterByTriage={true} />} />
+<Route path='*' element={<NotFound />} /> {/* Page 404 */}
+
+ 
         </Routes>
         ;
       </Router>
     </>
-  )
+   )
+ 
 }
 
 export default App;

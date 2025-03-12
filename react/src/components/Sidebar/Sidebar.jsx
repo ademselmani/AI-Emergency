@@ -62,9 +62,79 @@ const Sidebar = () => {
        
 
 
-            
-        {role === "doctor" && (
+ 
+        {role === "receptionnist" && (
           <>
+            <li className="menu-item">
+              <NavLink
+                to="/AddPatient"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">Add patient</div>
+              </NavLink>
+            </li>
+            <li className="menu-item">
+              <NavLink
+                to="/showPatients"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-group"></i>
+                <div data-i18n="Analytics">Show patients</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+
+{role === "triage_nurse" && (
+  <>
+  <li className="menu-item">
+    <NavLink
+      to="/ModifyStatus"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-user-plus"></i>
+      <div data-i18n="Analytics">Do the sorting</div>
+    </NavLink>
+  </li>
+  <li className="menu-item">
+    <NavLink
+      to="/showTriagePatients"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-group"></i>
+      <div data-i18n="Analytics">Show Triage patients</div>
+    </NavLink>
+  </li>
+</>
+)}
+
+        {role === "nurse" && (
+          <>
+            <li className="menu-item">
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className="menu-icon tf-icons bx bx-user-plus"></i>
+                <div data-i18n="Analytics">Patients in my area</div>
+              </NavLink>
+            </li>
+          </>
+        )}
+
+        {role === "Doctor" && (
+           <>
             
        
             <li className="menu-item">
@@ -365,7 +435,8 @@ const Sidebar = () => {
        
       </ul>
     </aside>
-  )
+   )
 }
+ 
 
 export default Sidebar
