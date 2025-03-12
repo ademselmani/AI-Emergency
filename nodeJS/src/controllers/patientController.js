@@ -10,14 +10,7 @@ const patientController = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
-exports.getAllPatients = async (req, res) => {
-  try {
-    const patients = await Patient.find();
-    res.status(200).json(patients);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+
 
 
 // Récupérer tous les patients
@@ -65,9 +58,17 @@ const getPatientByIdController = async (req, res) => {
     res.status(404).json({ success: false, error: error.message });
   }
 };
-
+const getAllPatientss = async (req, res) => {
+  try {
+    const patients = await Patient.find();
+    res.status(200).json(patients);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   patientController,
+  getAllPatientss,
   getPatientsController,
   deletePatientController,
   updatePatientController,

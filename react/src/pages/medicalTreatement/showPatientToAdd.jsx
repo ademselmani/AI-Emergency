@@ -132,18 +132,18 @@ const AddMedicalTreatment = () => {
 
     try {
       await axios.post(`http://localhost:3000/api/treatments/${treatment.patient}`, treatmentData);
-      toast.success('Treatment added successfully!');
+      toast.success('  Medical Monitoring added successfully!');
       navigate(`/medical-treatments/patient/show/${treatment.patient}`, { state: { patient: selectedPatient } });
     } catch (error) {
-      console.error('Error adding treatment:', error);
-      toast.error(`Error: ${error.response?.data?.message || 'Failed to add treatment'}`);
+      console.error('Error adding Medical Monitoring:', error);
+      toast.error(`Error: ${error.response?.data?.message || 'Failed to add Medical Monitoring'}`);
     }
   };
 
   return (
     <div className="container mt-5">
       <ToastContainer />
-      <h1 className="text-center mb-4 card p-3">Add Medical Treatment</h1>
+      <h1 className="text-center mb-4 card p-3">Add Medical monitoring</h1>
       <form onSubmit={handleSubmit} noValidate className="border p-4 rounded shadow-sm bg-light">
         <div className="mb-3">
           <label className="form-label">Category</label>
@@ -169,7 +169,8 @@ const AddMedicalTreatment = () => {
         <label className="form-label mt-3">Equipment</label>
         <Select options={equipmentOptions} isLoading={loading} isMulti onChange={handleEquipmentSelect} placeholder="Select equipment..." isSearchable />
 
-        <button type="submit" className="btn btn-primary d-block mt-3">Add Treatment</button>
+        <button type="submit" className="btn btn-primary d-block mt-3">Add Medical Monitoring
+        </button>
       </form>
     </div>
   );

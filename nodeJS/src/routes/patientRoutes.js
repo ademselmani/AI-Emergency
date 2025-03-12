@@ -6,9 +6,10 @@ const {
   getPatientsController,
   updatePatientController,
   deletePatientController,
+  getAllPatientss,
   getPatientByIdController
 } = require('../controllers/patientController');
-router.get('/', patientController.getAllPatients);
+router.get('/', getAllPatientss);
 
 // Route pour créer un patient
 router.post('/patients', patientController);

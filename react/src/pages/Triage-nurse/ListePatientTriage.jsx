@@ -66,14 +66,14 @@ const ListePatientTriage = () => {
     return age;
   };
 
-  let filteredPatients = patients
-    .filter(patient => patient.status === 'Triage')
-    .filter(patient =>
-      patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.emergencyReason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.arrivalMode.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+let filteredPatients = patients
+  .filter(patient => patient.status === 'Triage')
+  .filter(patient =>
+    (patient.firstName && typeof patient.firstName === 'string' && patient.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.lastName && typeof patient.lastName === 'string' && patient.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.emergencyReason && typeof patient.emergencyReason === 'string' && patient.emergencyReason.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.arrivalMode && typeof patient.arrivalMode === 'string' && patient.arrivalMode.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   if (sortOption === 'recent') {
     filteredPatients.sort((a, b) => new Date(b.birthDate) - new Date(a.birthDate));

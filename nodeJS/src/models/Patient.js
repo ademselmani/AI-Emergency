@@ -1,25 +1,44 @@
 const mongoose = require('mongoose');
 
-const medicalRecordSchema = new mongoose.Schema({
-  date: { type: Date, required: true },
-  triageLevel: { type: Number, enum: [1, 2, 3, 4, 5], required: true },
-  primaryComplaint: { type: String, required: true },
-  arrivalMode: { type: String, enum: ['AMBULANCE', 'WALK_IN', 'WHEELCHAIR', 'OTHER'], required: true },
-  airway: { type: String, enum: ['CLEAR', 'PARTIALLY_OBSTRUCTED', 'FULLY_OBSTRUCTED', 'ARTIFICIAL_AIRWAY'], required: true },
-  breathing: { type: String, enum: ['NORMAL', 'LABORED', 'SHALLOW', 'ABSENT', 'ASSISTED'], required: true },
-  circulation: { type: String, enum: ['NORMAL', 'DECREASED', 'WEAK', 'ABSENT'], required: true },
-  disability: { type: String, enum: ['ALERT', 'VOICE_RESPONSIVE', 'PAIN_RESPONSIVE', 'UNRESPONSIVE'], required: true },
-  exposure: { type: String, enum: ['NO_TRAUMA', 'MINOR_TRAUMA', 'MAJOR_TRAUMA', 'BURNS', 'HYPOTHERMIA'], required: true },
-});
-
 const patientSchema = new mongoose.Schema({
-  cin: { type: Number, required: true, unique: true },
-  name: { type: String, required: true },
-  familyName: { type: String, required: true },
-  dateOfBirth: { type: Date, required: true },
-  gender: { type: String, enum: ['male', 'female'], required: true },
-  status: { type: String, enum: ['RESUSCITATION', 'URGENT', 'LESS_URGENT', 'DISCHARGED', 'DECEASED'], required: true },
-  medicalRecords: [medicalRecordSchema],
-});
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  birthDate: { type: Date, required: true },
+  birthPlace: { type: String },
+  sex: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+  address: { type: String },
+  phone: { type: String },
+  // Informations sur le mode d’arrivée
+  arrivalMode: { type: String, enum: ['Ambulance', 'On foot', 'Other'], required: true },
+  arrivalTime: { type: Date, default: Date.now },
+  // Motif de l’urgence
+  emergencyReason: { type: String, required: true },
+  // Informations d’assurance
+  insurance: {
+    cardNumber: { type: String },
+    provider: { type: String }
+  },
+  // Coordonnées de la personne à prévenir
+  contact: {
+    name: { type: String },
+    relation: { type: String },
+    phone: { type: String },
+    email: { type: String }
+  },
+  // Observations initiales (optionnelles)
+  observations: { type: String },
 
+  // Nouveau champ : Statut du patient
+  status: { 
+    type: String, 
+    enum: ['Triage', 'Critical', 'Stable', 'Recovered'], 
+    default: 'Triage' 
+  },
+
+  // Nouveau champ : Zone d’urgence
+  emergencyArea: { 
+    type: String, 
+    required: true 
+  }
+}, { timestamps: true });
 module.exports = mongoose.model('Patient', patientSchema);

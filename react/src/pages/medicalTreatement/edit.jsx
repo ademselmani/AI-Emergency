@@ -190,7 +190,7 @@ const EditMedicalTreatment = () => {
   return (
     <div className="container mt-5">
       <ToastContainer />
-      <h1 className="text-center mb-4 card p-3">Edit Treatment</h1>
+      <h1 className="text-center mb-4 card p-3">Update medical monitoring</h1>
       <form onSubmit={handleSubmit} noValidate className="border p-4 rounded shadow-sm bg-light">
         {/* Category */}
         <div className="mb-3">

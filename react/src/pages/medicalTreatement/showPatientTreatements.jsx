@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Select from 'react-select';
-import { Spinner, Card, Button, Container, Row, Col, Form, Badge } from 'react-bootstrap';
+import { Card, Container, Row, Col, Button, Collapse, Spinner, Form, Badge } from 'react-bootstrap';
 import { motion } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,6 +21,9 @@ const ShowPatientTreatments = () => {
   const [doctors, setDoctors] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openSections, setOpenSections] = useState({});
+  const [patientDetails, setPatientDetails] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [treatmentsPerPage] = useState(6);
 
@@ -36,6 +39,7 @@ const ShowPatientTreatments = () => {
         setDoctors(doctorsRes.data);
         setEquipment(equipmentRes.data);
         setTreatments(treatmentsRes.data);
+        setPatientDetails(selectedPatient); // Set patient details from the selected patient
       } catch (error) {
         toast.error('Error loading data.');
       } finally {
@@ -44,7 +48,7 @@ const ShowPatientTreatments = () => {
     };
 
     fetchData();
-  }, [patientId]);
+  }, [patientId, selectedPatient]);
 
   useEffect(() => {
     let results = [...treatments];
@@ -106,6 +110,10 @@ const ShowPatientTreatments = () => {
     setSortCriteria('');
   };
 
+  const toggleSection = (section) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const indexOfLastTreatment = currentPage * treatmentsPerPage;
   const indexOfFirstTreatment = indexOfLastTreatment - treatmentsPerPage;
   const currentTreatments = filteredTreatments.slice(indexOfFirstTreatment, indexOfLastTreatment);
@@ -116,23 +124,75 @@ const ShowPatientTreatments = () => {
   return (
     <Container className="mt-5">
       <ToastContainer />
-      <Card className="patient-header mb-4 shadow-sm">
-        <Card.Body>
-          <h2 className="display-5">{selectedPatient?.name} {selectedPatient?.familyName}</h2>
-          <p className="text-muted"><strong>CIN:</strong> {selectedPatient?.cin}</p>
-          <p className="text-muted"><strong>Gender:</strong> {selectedPatient?.gender}</p>
-          <p className="text-muted"><strong>Status:</strong> {selectedPatient?.status}</p>
-          <p className="text-muted"><strong>Date of Birth:</strong> {new Date(selectedPatient?.dateOfBirth).toLocaleDateString()}</p>
-          <NavLink to={`/medical-treatments/patient/add/${selectedPatient?._id}`} state={{ patient: selectedPatient }} className="btn btn-success">
-            Add Treatment
-          </NavLink>
-        </Card.Body>
-      </Card>
+      {patientDetails && (
+        <Card className="mb-4 shadow-sm">
+          <Card.Body>
+            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('basicInfo')} className="clickable-title">
+              Basic Information <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
+            </motion.h2>
+            <Collapse in={openSections['basicInfo']}>
+              <div>
+                <p><strong>Name:</strong> {patientDetails.firstName} {patientDetails.lastName}</p>
+                <p><strong>Birth Date:</strong> {new Date(patientDetails.birthDate).toLocaleDateString()}</p>
+                <p><strong>Birth Place:</strong> {patientDetails.birthPlace}</p>
+                <p><strong>Sex:</strong> {patientDetails.sex}</p>
+                <p><strong>Phone:</strong> {patientDetails.phone}</p>
+              </div>
+            </Collapse>
+
+            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('emergencyInfo')} className="clickable-title">
+              Emergency Information <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
+            </motion.h2>
+            <Collapse in={openSections['emergencyInfo']}>
+              <div>
+                <p><strong>Arrival Mode:</strong> {patientDetails.arrivalMode}</p>
+                <p><strong>Emergency Reason:</strong> {patientDetails.emergencyReason}</p>
+                <p><strong>Observations:</strong> {patientDetails.observations}</p>
+                <p><strong>Status:</strong> {patientDetails.status}</p>
+                <p><strong>Emergency Area:</strong> {patientDetails.emergencyArea}</p>
+              </div>
+            </Collapse>
+
+            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('insuranceInfo')} className="clickable-title">
+              Insurance Details <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
+            </motion.h2>
+            <Collapse in={openSections['insuranceInfo']}>
+              <div>
+                <p><strong>Card Number:</strong> {patientDetails.insurance?.cardNumber || 'N/A'}</p>
+                <p><strong>Provider:</strong> {patientDetails.insurance?.provider || 'N/A'}</p>
+              </div>
+            </Collapse>
+
+            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('contactInfo')} className="clickable-title">
+              Contact Person <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
+            </motion.h2>
+            <Collapse in={openSections['contactInfo']}>
+              <div>
+                <p><strong>Name:</strong> {patientDetails.contact?.name}</p>
+                <p><strong>Relation:</strong> {patientDetails.contact?.relation}</p>
+                <p><strong>Phone:</strong> {patientDetails.contact?.phone}</p>
+                <p><strong>Email:</strong> {patientDetails.contact?.email}</p>
+              </div>
+            </Collapse>
+
+            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('timestamps')} className="clickable-title">
+              Timestamps <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
+            </motion.h2>
+            <Collapse in={openSections['timestamps']}>
+              <div>
+                <p><strong>Arrival Time:</strong> {new Date(patientDetails.arrivalTime).toLocaleString()}</p>
+                <p><strong>Created At:</strong> {new Date(patientDetails.createdAt).toLocaleString()}</p>
+                <p><strong>Updated At:</strong> {new Date(patientDetails.updatedAt).toLocaleString()}</p>
+              </div>
+            </Collapse>
+          </Card.Body>
+        </Card>
+      )}
       {loading ? (
         <div className="d-flex justify-content-center mt-4"><Spinner animation="border" variant="primary" /></div>
       ) : (
         <>
-          <h2 className="my-4">Medical Treatments</h2>
+          <h2 className="my-4">Medical Monitoring</h2>
           <Card className="mb-4 shadow-sm">
             <Card.Body>
               <Row>

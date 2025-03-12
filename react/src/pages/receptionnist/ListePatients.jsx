@@ -75,13 +75,13 @@ const PatientList = () => {
     }
   };
 
-  const filteredPatients = patients.filter(patient => 
-    patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.emergencyReason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.arrivalMode.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPatients = patients.filter(patient =>
+    (patient.firstName && typeof patient.firstName === 'string' && patient.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.lastName && typeof patient.lastName === 'string' && patient.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.emergencyReason && typeof patient.emergencyReason === 'string' && patient.emergencyReason.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (patient.arrivalMode && typeof patient.arrivalMode === 'string' && patient.arrivalMode.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
+  
   if (loading) {
     return <div className="loading">Loading...</div>;
   }

@@ -157,8 +157,8 @@ const Sidebar = () => {
                   `menu-link ${isActive ? "active" : ""}`
                 }
               >
-                <i className="menu-icon tf-icons bx bx-capsule"></i>
-                <div data-i18n="Analytics">Medical treatments</div>
+                <i className="menu-icon tf-icons bx bx-folder"></i>
+                <div data-i18n="Analytics">Medical Monitoring</div>
               </NavLink>
             </li>
              
@@ -201,8 +201,8 @@ const Sidebar = () => {
                   `menu-link ${isActive ? "active" : ""}`
                 }
               >
-                <i className="menu-icon tf-icons bx bx-capsule"></i>
-                <div data-i18n="Analytics">Medical treatments</div>
+                <i className="menu-icon tf-icons bx bx-folder"></i>
+                <div data-i18n="Analytics">Medical Monitoring</div>
               </NavLink>
             </li>
             <li className="menu-item">
@@ -245,7 +245,7 @@ const Sidebar = () => {
                 }
               >
                 <i className="menu-icon tf-icons bx bx-capsule"></i>
-                <div data-i18n="Analytics">Medical treatments</div>
+                <div data-i18n="Analytics">Medical Monitoring</div>
               </NavLink>
             </li>
           </li>
@@ -271,6 +271,62 @@ const Sidebar = () => {
                 <div data-i18n='Analytics'>Show Employees</div>
               </NavLink>
             </li>
+            <li className='menu-item'>
+              <NavLink
+                to='/AddPatient'
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className='menu-icon tf-icons bx bx-user-plus'></i>
+                <div data-i18n='Analytics'>Add patient</div>
+              </NavLink>
+            </li>
+            <li className='menu-item'>
+              <NavLink
+                to='/showPatients'
+                className={({ isActive }) =>
+                  `menu-link ${isActive ? "active" : ""}`
+                }
+              >
+                <i className='menu-icon tf-icons bx bx-group'></i>
+                <div data-i18n='Analytics'>Show patients</div>
+              </NavLink>
+            </li>
+            <li className="menu-item">
+    <NavLink
+      to="/ModifyStatus"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-user-plus"></i>
+      <div data-i18n="Analytics">Do the sorting</div>
+    </NavLink>
+  </li>
+  <li className="menu-item">
+    <NavLink
+      to="/showTriagePatients"
+      className={({ isActive }) =>
+        `menu-link ${isActive ? "active" : ""}`
+      }
+    >
+      <i className="menu-icon tf-icons bx bx-group"></i>
+      <div data-i18n="Analytics">Show Triage patients</div>
+    </NavLink>
+  </li>
+        <li className="menu-item">
+          <NavLink
+            to="/MyLeaveRequests"
+            className={({ isActive }) =>
+              `menu-link ${isActive ? "active" : ""}`
+            }
+          >
+         <i className="menu-icon tf-icons fas fa-calendar-check"></i>
+
+            <div data-i18n="Analytics">Leaves</div>
+          </NavLink>
+        </li>
             <li className='menu-item'>
               <NavLink
                 to='/areas'

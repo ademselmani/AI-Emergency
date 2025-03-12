@@ -31,8 +31,7 @@ faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
   const treatmentRoutes = require('./src/routes/treatmentRoutes');
 const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
- const patientRoutes = require('./src/routes/patientRoutes');
- 
+  
 
 mongoose
   .connect(configDB.mongo.uri, {
