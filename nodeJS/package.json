@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nodemon app.js"
+     "test": "mocha --recursive --exit"
   },
   "dependencies": {
     "@tensorflow/tfjs-core": "^4.22.0",
