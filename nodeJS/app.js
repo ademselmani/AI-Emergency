@@ -29,9 +29,9 @@ const leaveRoute = require("./src/routes/leaveRoute")
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
- const treatmentRoutes = require('./src/routes/treatmentRoutes');
+  const treatmentRoutes = require('./src/routes/treatmentRoutes');
 const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
-
+  
 
 mongoose
   .connect(configDB.mongo.uri, {
@@ -96,12 +96,15 @@ app.use(passport.session());
 // ✅ **Routes**
 app.use("/api/auth", authRoute);
 app.use("/user", employeeRoute)
- app.use("/employee", employeeFind)
+  app.use("/employee", employeeFind)
 app.use("/areas", areaRoutes)
 app.use("/rooms", roomRoutes)
 app.use("/equipments", equipmentRoutes)
  
 app.use("/api/leaves", leaveRoute);
+ 
+ app.use('/api', patientRoutes);
+ 
 
 
 

@@ -1,7 +1,7 @@
 /** @format */
 
-import React, { useState, useEffect } from "react"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import React, { useState, useEffect, useCallback } from "react"
+import { Plus, Edit, Trash2, CheckCircle, Wrench, Users } from "lucide-react"
 import Modal from "../../components/ressourcesComponent/modal"
 import axios from "axios"
 import { ToastContainer, toast } from "react-toastify"
@@ -22,20 +22,36 @@ const Room = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedArea, setSelectedArea] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState("all")
   const [errors, setErrors] = useState({})
 
-  // Define status colors
   const statusColors = {
-    AVAILABLE: { backgroundColor: "#dcfce7", color: "#166534" }, // Green for AVAILABLE
-    OCCUPIED: { backgroundColor: "#fee2e2", color: "#991b1b" }, // Red for OCCUPIED
-    MAINTENANCE: { backgroundColor: "#fef9c3", color: "#854d0e" }, // Yellow for MAINTENANCE
+    AVAILABLE: { backgroundColor: "#dcfce7", color: "#166534" },
+    OCCUPIED: { backgroundColor: "#fee2e2", color: "#991b1b" },
+    MAINTENANCE: { backgroundColor: "#fef9c3", color: "#854d0e" },
+  }
+
+  const statusIcons = {
+    AVAILABLE: <CheckCircle size={16} />,
+    OCCUPIED: <Users size={16} />,
+    MAINTENANCE: <Wrench size={16} />,
+  }
+
+  const areaColors = {
+    TRIAGE: "#f87171",
+    RESUSCITATION_AREA: "#fb923c",
+    MAJOR_TRAUMA: "#facc15",
+    CONSULTATION: "#34d399",
+    OBSERVATION_UNIT: "#60a5fa",
   }
 
   useEffect(() => {
     fetchRooms()
     fetchAreas()
   }, [])
+
+  useEffect(() => {
+    console.log("formData updated:", formData) // Log formData changes
+  }, [formData])
 
   const fetchRooms = async () => {
     try {
@@ -57,50 +73,73 @@ const Room = () => {
     }
   }
 
-  const handleOpenModal = (room) => {
-    if (room) {
-      setCurrentRoom(room)
-      setFormData({
-        name: room.name,
-        area: room.area._id,
-        capacity: room.capacity,
-        type: room.type,
-        status: room.status,
-      })
-    } else {
-      setCurrentRoom(null)
-      setFormData({
-        name: "",
-        area: "",
-        capacity: 0,
-        type: "",
-        status: "AVAILABLE",
-      })
+  const resetFormData = useCallback(() => {
+    return {
+      name: "",
+      area: "",
+      capacity: 0,
+      type: "",
+      status: "AVAILABLE",
     }
-    setIsModalOpen(true)
-    setErrors({}) // Clear errors when opening the modal
-  }
+  }, [])
 
-  const handleCloseModal = () => {
+  const handleOpenModal = useCallback(
+    (room) => {
+      console.log("Opening modal, room:", room)
+      if (room) {
+        setCurrentRoom(room)
+        setFormData({
+          name: room.name || "",
+          area: room.area._id || "",
+          capacity: room.capacity || 0,
+          type: room.type || "",
+          status: room.status || "AVAILABLE",
+        })
+      } else {
+        setCurrentRoom(null)
+        setFormData(resetFormData())
+      }
+      setIsModalOpen(true)
+      setErrors({})
+      console.log("formData after reset:", { ...formData }) // Log current state after reset
+    },
+    [resetFormData]
+  )
+
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false)
     setCurrentRoom(null)
-    setErrors({}) // Clear errors when closing the modal
-  }
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-  }
+    setFormData(resetFormData())
+    setErrors({})
+    console.log("Modal closed, formData reset to:", resetFormData())
+  }, [resetFormData])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setErrors({})
 
+    const requiredFields = ["name", "area", "capacity", "type", "status"]
+    const missingFields = requiredFields.filter(
+      (field) =>
+        !formData[field] ||
+        (typeof formData[field] === "string" && formData[field].trim() === "")
+    )
+    if (missingFields.length > 0) {
+      setErrors({
+        general: `Missing required fields: ${missingFields.join(", ")}`,
+      })
+      console.log("Validation failed, missing fields:", missingFields)
+      return
+    }
+
+    if (formData.capacity < 0) {
+      setErrors({ capacity: "Capacity cannot be negative" })
+      return
+    }
+
+    console.log("Submitting formData:", formData)
     try {
       if (currentRoom) {
-        // Update existing room
         const response = await axios.put(
           `http://localhost:3000/rooms/${currentRoom._id}`,
           formData
@@ -112,7 +151,6 @@ const Room = () => {
         )
         toast.success("Room updated successfully!")
       } else {
-        // Create new room
         const response = await axios.post(
           "http://localhost:3000/rooms",
           formData
@@ -122,12 +160,11 @@ const Room = () => {
       }
       handleCloseModal()
     } catch (err) {
+      console.error("Error in handleSubmit:", err)
       if (err.response && err.response.data.errors) {
-        // Handle validation errors
         setErrors(err.response.data.errors)
       } else if (err.response && err.response.data.error) {
-        // Handle duplicate room name error
-        setErrors({ ...errors, name: err.response.data.error })
+        setErrors({ name: err.response.data.error })
       } else {
         toast.error(
           `Failed to ${currentRoom ? "update" : "create"} room: ${err.message}`
@@ -146,12 +183,10 @@ const Room = () => {
     }
   }
 
-  const filteredRooms = rooms.filter((room) => {
-    const areaMatch = selectedArea === "all" || room.area._id === selectedArea
-    const statusMatch =
-      selectedStatus === "all" || room.status === selectedStatus
-    return areaMatch && statusMatch
-  })
+  const filteredRooms =
+    selectedArea === "all"
+      ? rooms
+      : rooms.filter((room) => room.area._id === selectedArea)
 
   if (loading)
     return (
@@ -168,6 +203,47 @@ const Room = () => {
 
   const roomTypes = ["CONSULTATION", "EMERGENCY", "LABORATORY", "RECOVERY"]
   const roomStatuses = ["AVAILABLE", "OCCUPIED", "MAINTENANCE"]
+
+  const roomFields = [
+    {
+      name: "name",
+      label: "Room Name",
+      type: "text",
+      placeholder: "Enter room name",
+      required: true,
+    },
+    {
+      name: "area",
+      label: "Area",
+      type: "select",
+      options: areas.map((area) => ({ value: area._id, label: area.name })),
+      placeholder: "Select an area",
+      required: true,
+    },
+    {
+      name: "capacity",
+      label: "Capacity",
+      type: "number",
+      placeholder: "Enter capacity",
+      required: true,
+    },
+    {
+      name: "type",
+      label: "Type",
+      type: "select",
+      optionValues: roomTypes,
+      placeholder: "Select Type",
+      required: true,
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      optionValues: roomStatuses,
+      placeholder: "Select a status",
+      required: true,
+    },
+  ]
 
   return (
     <div
@@ -206,7 +282,7 @@ const Room = () => {
         </button>
       </div>
 
-      <div style={{ marginBottom: "20px", display: "flex", gap: "16px" }}>
+      <div style={{ marginBottom: "20px" }}>
         <select
           value={selectedArea}
           onChange={(e) => setSelectedArea(e.target.value)}
@@ -223,472 +299,144 @@ const Room = () => {
             </option>
           ))}
         </select>
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #d1d5db",
-          }}
-        >
-          <option value='all'>All Statuses</option>
-          {roomStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
       </div>
 
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          overflow: "hidden",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Name
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Area
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Capacity
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Type
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRooms.map((room) => {
-              const statusColor = statusColors[room.status] || {
-                backgroundColor: "#d1d5db",
-                color: "#1f2937",
-              } // Default gray for unknown statuses
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+        {areas.map((area) => {
+          const areaRooms = filteredRooms.filter(
+            (room) => room.area._id === area._id
+          )
+          if (selectedArea !== "all" && selectedArea !== area._id) return null
 
-              return (
-                <tr key={room._id} style={{ backgroundColor: "#fff" }}>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {room.name}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {room.area?.name || "N/A"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {room.capacity}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {room.type}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
+          return (
+            <div
+              key={area._id}
+              style={{
+                flex: "1 1 300px",
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                padding: "16px",
+                border: `2px solid ${areaColors[area.name] || "#d1d5db"}`,
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: areaColors[area.name] || "#1f2937",
+                  marginBottom: "12px",
+                }}
+              >
+                {area.name}
+              </h3>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                {areaRooms.map((room) => {
+                  const statusColor = statusColors[room.status] || {
+                    backgroundColor: "#d1d5db",
+                    color: "#1f2937",
+                  }
+                  const statusIcon = statusIcons[room.status] || null
+
+                  return (
                     <div
+                      key={room._id}
                       style={{
-                        display: "inline-block",
-                        padding: "4px 8px",
-                        borderRadius: "12px",
+                        width: "200px",
+                        padding: "12px",
+                        borderRadius: "8px",
                         backgroundColor: statusColor.backgroundColor,
-                        color: statusColor.color,
-                        fontWeight: "500",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        cursor: "pointer",
+                        position: "relative",
+                        border: `1px solid ${statusColor.color}`,
                       }}
-                    >
-                      {room.status}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    <button
                       onClick={() => handleOpenModal(room)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
                     >
-                      <Edit size={18} color='#3b82f6' />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(room._id)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Trash2 size={18} color='#ef4444' />
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            marginRight: "8px",
+                            color: statusColor.color,
+                          }}
+                        >
+                          {statusIcon}
+                        </span>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            color: statusColor.color,
+                          }}
+                        >
+                          {room.name}
+                        </div>
+                      </div>
+                      <div
+                        style={{ fontSize: "12px", color: statusColor.color }}
+                      >
+                        Type: {room.type}
+                      </div>
+                      <div
+                        style={{ fontSize: "12px", color: statusColor.color }}
+                      >
+                        Capacity: {room.capacity}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "4px 8px",
+                          backgroundColor: `${statusColor.color}20`,
+                          color: statusColor.color,
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                          fontWeight: "500",
+                          textAlign: "center",
+                        }}
+                      >
+                        {room.status}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(room._id)
+                        }}
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          right: "8px",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Trash2 size={16} color='#ef4444' />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <Modal
+        key={`${isModalOpen}-${JSON.stringify(formData)}`} // Unique key based on formData
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={currentRoom ? "Edit Room" : "Add New Room"}
-      >
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='name'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Room Name
-            </label>
-            <input
-              type='text'
-              id='name'
-              name='name'
-              value={formData.name}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.name ? "1px solid #dc2626" : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            />
-            {errors.name && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.name}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='area'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Area
-            </label>
-            <select
-              id='area'
-              name='area'
-              value={formData.area}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.area ? "1px solid #dc2626" : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              <option value='' disabled>
-                Select an area
-              </option>
-              {areas.map((area) => (
-                <option key={area._id} value={area._id}>
-                  {area.name}
-                </option>
-              ))}
-            </select>
-            {errors.area && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.area}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='capacity'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Capacity
-            </label>
-            <input
-              type='number'
-              id='capacity'
-              name='capacity'
-              value={formData.capacity}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.capacity
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            />
-            {errors.capacity && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.capacity}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='type'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Type
-            </label>
-            <select
-              id='type'
-              name='type'
-              value={formData.type}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.type ? "1px solid #dc2626" : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              <option value='' disabled>
-                Select a type
-              </option>
-              {roomTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-            {errors.type && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.type}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='status'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Status
-            </label>
-            <select
-              id='status'
-              name='status'
-              value={formData.status}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.status
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              {roomStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.status}
-              </div>
-            )}
-          </div>
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}
-          >
-            <button
-              type='button'
-              onClick={handleCloseModal}
-              style={{
-                padding: "8px 16px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                backgroundColor: "#fff",
-                color: "#1f2937",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#3b82f6",
-                color: "#fff",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              {currentRoom ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+        errors={errors}
+        fields={roomFields}
+      />
     </div>
   )
 }

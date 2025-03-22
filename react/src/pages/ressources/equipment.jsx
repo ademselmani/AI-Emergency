@@ -1,11 +1,30 @@
 /** @format */
 
 import React, { useState, useEffect } from "react"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import PropTypes from "prop-types"
+import {
+  Plus,
+  Trash2,
+  CheckCircle,
+  Wrench,
+  Users,
+  XCircle,
+  Pencil,
+} from "lucide-react"
 import Modal from "../../components/ressourcesComponent/modal"
 import axios from "axios"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import { Tooltip } from "react-tooltip"
+import "react-tooltip/dist/react-tooltip.css"
+import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core"
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { useDroppable } from "@dnd-kit/core"
+import { CSS } from "@dnd-kit/utilities"
 
 const Equipment = () => {
   const [equipments, setEquipments] = useState([])
@@ -28,6 +47,7 @@ const Equipment = () => {
   const [selectedRoom, setSelectedRoom] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [errors, setErrors] = useState({})
+  const [activeId, setActiveId] = useState(null)
 
   const statusColors = {
     AVAILABLE: { backgroundColor: "#dcfce7", color: "#166534" },
@@ -36,48 +56,64 @@ const Equipment = () => {
     OUT_OF_ORDER: { backgroundColor: "#d1d5db", color: "#1f2937" },
   }
 
+  const statusIcons = {
+    AVAILABLE: <CheckCircle size={16} />,
+    IN_USE: <Users size={16} />,
+    MAINTENANCE: <Wrench size={16} />,
+    OUT_OF_ORDER: <XCircle size={16} />,
+  }
+
+  const equipmentStatuses = [
+    "AVAILABLE",
+    "IN_USE",
+    "MAINTENANCE",
+    "OUT_OF_ORDER",
+  ]
+
   useEffect(() => {
+    const fetchEquipments = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/equipments")
+        setEquipments(Array.isArray(response.data) ? response.data : [])
+        setLoading(false)
+      } catch (err) {
+        setError(`Failed to fetch equipments: ${err.message}`)
+        setLoading(false)
+      }
+    }
+
+    const fetchRooms = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/rooms")
+        setRooms(Array.isArray(response.data) ? response.data : [])
+      } catch (err) {
+        console.error("Failed to fetch rooms:", err)
+      }
+    }
+
     fetchEquipments()
     fetchRooms()
   }, [])
 
-  const fetchEquipments = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/equipments")
-      setEquipments(Array.isArray(response.data) ? response.data : [])
-      setLoading(false)
-    } catch (err) {
-      setError(`Failed to fetch equipments: ${err.message}`)
-      setLoading(false)
-    }
-  }
-
-  const fetchRooms = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/rooms")
-      setRooms(Array.isArray(response.data) ? response.data : [])
-    } catch (err) {
-      console.error("Failed to fetch rooms:", err)
-    }
-  }
-
   const handleOpenModal = (equipment) => {
+    console.log("Opening modal for equipment:", equipment)
     if (equipment) {
       setCurrentEquipment(equipment)
       const formatDate = (date) =>
         date ? new Date(date).toISOString().split("T")[0] : ""
-
-      setFormData({
-        name: equipment.name,
-        serialNumber: equipment.serialNumber,
-        room: equipment.room._id,
-        status: equipment.status,
-        purchaseDate: formatDate(equipment.purchaseDate),
-        lastMaintenanceDate: formatDate(equipment.lastMaintenanceDate),
-        nextMaintenanceDate: formatDate(equipment.nextMaintenanceDate),
-        manufacturer: equipment.manufacturer,
-        model: equipment.model,
-      })
+      const newFormData = {
+        name: equipment.name || "",
+        serialNumber: equipment.serialNumber || "",
+        room: equipment.room?._id || "",
+        status: equipment.status || "AVAILABLE",
+        purchaseDate: formatDate(equipment.purchaseDate) || "",
+        lastMaintenanceDate: formatDate(equipment.lastMaintenanceDate) || "",
+        nextMaintenanceDate: formatDate(equipment.nextMaintenanceDate) || "",
+        manufacturer: equipment.manufacturer || "",
+        model: equipment.model || "",
+      }
+      console.log("Setting formData:", newFormData)
+      setFormData(newFormData)
     } else {
       setCurrentEquipment(null)
       setFormData({
@@ -102,20 +138,9 @@ const Equipment = () => {
     setErrors({})
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    // Reset errors
     setErrors({})
-
     const purchaseDate = formData.purchaseDate
       ? new Date(formData.purchaseDate)
       : null
@@ -126,9 +151,7 @@ const Equipment = () => {
       ? new Date(formData.nextMaintenanceDate)
       : null
 
-    // Validate dates before proceeding
     let validationErrors = {}
-
     if (
       purchaseDate &&
       lastMaintenanceDate &&
@@ -137,7 +160,6 @@ const Equipment = () => {
       validationErrors.lastMaintenanceDate =
         "Last maintenance date must be after purchase date"
     }
-
     if (
       purchaseDate &&
       nextMaintenanceDate &&
@@ -146,13 +168,31 @@ const Equipment = () => {
       validationErrors.nextMaintenanceDate =
         "Next maintenance date must be after purchase date"
     }
-
+    if (
+      lastMaintenanceDate &&
+      nextMaintenanceDate &&
+      nextMaintenanceDate <= lastMaintenanceDate
+    ) {
+      validationErrors.nextMaintenanceDate =
+        "Next maintenance date must be after last maintenance date"
+    }
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
-      return // Stop submission if there are validation errors
+      return
     }
 
-    // Proceed with API call only if validation passes
+    const requiredFields = ["name", "serialNumber", "room"]
+    const missingFields = requiredFields.filter((field) => !formData[field])
+    if (missingFields.length > 0) {
+      setErrors({
+        ...errors,
+        general: `Missing required fields: ${missingFields.join(", ")}`,
+      })
+      return
+    }
+
+    console.log("Submitting formData:", formData)
+
     try {
       if (currentEquipment) {
         const response = await axios.put(
@@ -160,8 +200,8 @@ const Equipment = () => {
           formData
         )
         setEquipments(
-          equipments.map((equipment) =>
-            equipment._id === currentEquipment._id ? response.data : equipment
+          equipments.map((eq) =>
+            eq._id === currentEquipment._id ? response.data : eq
           )
         )
         toast.success("Equipment updated successfully!")
@@ -175,6 +215,7 @@ const Equipment = () => {
       }
       handleCloseModal()
     } catch (err) {
+      console.error("Error in handleSubmit:", err)
       if (err.response && err.response.data.error) {
         setErrors({ ...errors, serialNumber: err.response.data.error })
       } else if (err.response && err.response.data.errors) {
@@ -190,12 +231,65 @@ const Equipment = () => {
   }
 
   const handleDelete = async (id) => {
+    const equipmentToDelete = equipments.find((eq) => eq._id === id) || {
+      name: "Unknown",
+    }
+    const confirmDelete = window.confirm(
+      `⚠️ Warning: You are about to permanently delete the equipment "${equipmentToDelete.name}".\n\n` +
+        `This action will remove all associated records and cannot be undone. Are you sure you want to proceed?`
+    )
+    if (!confirmDelete) return
+
     try {
       await axios.delete(`http://localhost:3000/equipments/${id}`)
-      setEquipments(equipment.filter((equipment) => equipment._id !== id))
+      setEquipments(equipments.filter((eq) => eq._id !== id))
       toast.success("Equipment deleted successfully!")
     } catch (err) {
       toast.error(`Failed to delete equipment: ${err.message}`)
+    }
+  }
+
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id)
+  }
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+
+    setActiveId(null)
+
+    if (!over || active.id === over.id) return
+
+    const draggedEquipment = equipments.find((eq) => eq._id === active.id)
+    const newStatus = over.id
+
+    console.log("Drag End:", {
+      activeId: active.id,
+      overId: over.id,
+      newStatus,
+      draggedEquipment,
+    })
+
+    if (draggedEquipment.status === newStatus) return
+
+    const updatedEquipments = equipments.map((eq) =>
+      eq._id === draggedEquipment._id ? { ...eq, status: newStatus } : eq
+    )
+    setEquipments(updatedEquipments)
+    setSelectedStatus("all")
+
+    try {
+      await axios.put(
+        `http://localhost:3000/equipments/${draggedEquipment._id}`,
+        {
+          ...draggedEquipment,
+          status: newStatus,
+        }
+      )
+      toast.success(`Moved ${draggedEquipment.name} to ${newStatus}`)
+    } catch (err) {
+      setEquipments(equipments)
+      toast.error(`Failed to update status: ${err.message}`)
     }
   }
 
@@ -220,12 +314,304 @@ const Equipment = () => {
       </div>
     )
 
-  const equipmentStatuses = [
-    "AVAILABLE",
-    "IN_USE",
-    "MAINTENANCE",
-    "OUT_OF_ORDER",
+  const equipmentFields = [
+    {
+      name: "name",
+      label: "Name",
+      type: "text",
+      placeholder: "Enter equipment name",
+      required: true,
+    },
+    {
+      name: "serialNumber",
+      label: "Serial Number",
+      type: "text",
+      placeholder: "Enter serial number (6-20 alphanumeric)",
+      required: true,
+    },
+    {
+      name: "room",
+      label: "Room",
+      type: "select",
+      options: rooms.map((room) => ({ value: room._id, label: room.name })),
+      placeholder: "Select a room",
+      required: true,
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      optionValues: equipmentStatuses,
+    },
+    { name: "purchaseDate", label: "Purchase Date", type: "date" },
+    {
+      name: "lastMaintenanceDate",
+      label: "Last Maintenance Date",
+      type: "date",
+    },
+    {
+      name: "nextMaintenanceDate",
+      label: "Next Maintenance Date",
+      type: "date",
+    },
+    {
+      name: "manufacturer",
+      label: "Manufacturer",
+      type: "text",
+      placeholder: "Enter manufacturer name",
+    },
+    {
+      name: "model",
+      label: "Model",
+      type: "text",
+      placeholder: "Enter model name",
+    },
   ]
+
+  const SortableItem = ({ equipment }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: equipment._id })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition: `${transition}, opacity 0.2s`,
+      padding: "12px",
+      borderRadius: "8px",
+      backgroundColor: statusColors[equipment.status].backgroundColor,
+      boxShadow: isDragging
+        ? "0 4px 6px rgba(0,0,0,0.2)"
+        : "0 2px 4px rgba(0,0,0,0.1)",
+      opacity: isDragging ? 0.8 : 1,
+      position: "relative",
+      userSelect: "none",
+    }
+
+    const overdue =
+      equipment.nextMaintenanceDate &&
+      new Date(equipment.nextMaintenanceDate) < new Date()
+
+    const dragHandleStyle = {
+      cursor: "move",
+      padding: "4px",
+      marginRight: "8px",
+      display: "inline-block",
+    }
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        onClick={(e) => {
+          if (!isDragging) handleOpenModal(equipment)
+          e.stopPropagation()
+        }}
+      >
+        <div style={dragHandleStyle} {...attributes} {...listeners}>
+          ⋮⋮
+        </div>
+        <div
+          style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+        >
+          <span
+            style={{
+              marginRight: "8px",
+              color: statusColors[equipment.status].color,
+            }}
+          >
+            {statusIcons[equipment.status]}
+          </span>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: "500",
+              color: statusColors[equipment.status].color,
+            }}
+          >
+            {equipment.name}
+          </div>
+        </div>
+        <div
+          style={{
+            fontSize: "12px",
+            color: statusColors[equipment.status].color,
+          }}
+        >
+          Serial: {equipment.serialNumber}
+        </div>
+        <div
+          style={{
+            fontSize: "12px",
+            color: statusColors[equipment.status].color,
+          }}
+        >
+          Room: {equipment.room?.name || "N/A"}
+        </div>
+        {equipment.nextMaintenanceDate && (
+          <div style={{ marginTop: "8px" }}>
+            <div
+              style={{
+                fontSize: "10px",
+                color: statusColors[equipment.status].color,
+              }}
+            >
+              Next Maintenance
+            </div>
+            <div
+              style={{
+                height: "4px",
+                backgroundColor: overdue ? "#dc2626" : "#3b82f6",
+                borderRadius: "2px",
+                width: overdue ? "100%" : "50%",
+              }}
+            />
+            <div
+              style={{
+                fontSize: "10px",
+                color: statusColors[equipment.status].color,
+              }}
+            >
+              {new Date(equipment.nextMaintenanceDate).toLocaleDateString()}
+            </div>
+          </div>
+        )}
+        <div
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            display: "flex",
+            gap: "8px",
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              console.log("Edit icon clicked for:", equipment.name)
+              handleOpenModal(equipment)
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+            title='Edit equipment'
+          >
+            <Pencil size={16} color='#3b82f6' />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              console.log("Delete icon clicked for:", equipment.name)
+              handleDelete(equipment._id)
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+            title='Delete equipment'
+          >
+            <Trash2 size={16} color='#ef4444' />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  SortableItem.propTypes = {
+    equipment: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      serialNumber: PropTypes.string.isRequired,
+      room: PropTypes.shape({
+        _id: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+      }).isRequired,
+      status: PropTypes.oneOf([
+        "AVAILABLE",
+        "IN_USE",
+        "MAINTENANCE",
+        "OUT_OF_ORDER",
+      ]).isRequired,
+      purchaseDate: PropTypes.string,
+      lastMaintenanceDate: PropTypes.string,
+      nextMaintenanceDate: PropTypes.string,
+      manufacturer: PropTypes.string,
+      model: PropTypes.string,
+    }).isRequired,
+  }
+
+  const DroppableColumn = ({ status }) => {
+    const { setNodeRef, isOver } = useDroppable({ id: status })
+
+    const style = {
+      flex: "1 1 250px",
+      backgroundColor: "#fff",
+      borderRadius: "8px",
+      padding: "16px",
+      border: `2px dashed ${isOver ? "#3b82f6" : statusColors[status].color}`,
+      minHeight: "200px",
+      transition: "border-color 0.2s ease",
+    }
+
+    const statusEquipments = filteredEquipments.filter(
+      (eq) => eq.status === status
+    )
+
+    return (
+      <div ref={setNodeRef} style={style}>
+        <h3
+          style={{
+            fontSize: "16px",
+            fontWeight: "600",
+            color: statusColors[status].color,
+            marginBottom: "12px",
+          }}
+        >
+          {status} ({statusEquipments.length})
+        </h3>
+        <SortableContext
+          items={statusEquipments.map((eq) => eq._id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            {statusEquipments.map((equipment) => (
+              <SortableItem key={equipment._id} equipment={equipment} />
+            ))}
+          </div>
+        </SortableContext>
+      </div>
+    )
+  }
+
+  DroppableColumn.propTypes = {
+    status: PropTypes.oneOf([
+      "AVAILABLE",
+      "IN_USE",
+      "MAINTENANCE",
+      "OUT_OF_ORDER",
+    ]).isRequired,
+  }
+
+  const activeEquipment = equipments.find((eq) => eq._id === activeId)
+  const overlayStyle = activeEquipment
+    ? {
+        padding: "12px",
+        borderRadius: "8px",
+        backgroundColor: statusColors[activeEquipment.status].backgroundColor,
+        boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
+        opacity: 0.9,
+        zIndex: 1000,
+      }
+    : {}
 
   return (
     <div
@@ -299,571 +685,34 @@ const Equipment = () => {
         </select>
       </div>
 
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          overflow: "hidden",
-          border: "1px solid #e5e7eb",
-        }}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Name
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Serial Number
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Room
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  fontWeight: "500",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEquipments.map((equipment) => {
-              const statusColor = statusColors[equipment.status] || {
-                backgroundColor: "#d1d5db",
-                color: "#1f2937",
-              }
+        <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+          {equipmentStatuses.map((status) => (
+            <DroppableColumn key={status} status={status} />
+          ))}
+        </div>
+        <DragOverlay>
+          {activeEquipment && (
+            <div style={overlayStyle}>{activeEquipment.name}</div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
-              return (
-                <tr key={equipment._id} style={{ backgroundColor: "#fff" }}>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {equipment.name}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {equipment.serialNumber}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {equipment.room?.name || "N/A"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "inline-block",
-                        padding: "4px 8px",
-                        borderRadius: "12px",
-                        backgroundColor: statusColor.backgroundColor,
-                        color: statusColor.color,
-                        fontWeight: "500",
-                      }}
-                    >
-                      {equipment.status}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontSize: "14px",
-                      color: "#1f2937",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    <button
-                      onClick={() => handleOpenModal(equipment)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        marginRight: "8px",
-                      }}
-                    >
-                      <Edit size={18} color='#3b82f6' />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(equipment._id)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Trash2 size={18} color='#ef4444' />
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
+      <Tooltip id='equipment-tooltip' place='top' effect='solid' />
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={currentEquipment ? "Edit Equipment" : "Add New Equipment"}
-      >
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='name'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Name
-            </label>
-            <input
-              type='text'
-              id='name'
-              name='name'
-              value={formData.name}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.name ? "1px solid #dc2626" : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            />
-            {errors.name && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.name}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='serialNumber'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Serial Number
-            </label>
-            <input
-              type='text'
-              id='serialNumber'
-              name='serialNumber'
-              value={formData.serialNumber}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.serialNumber
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            />
-            {errors.serialNumber && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.serialNumber}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='room'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Room
-            </label>
-            <select
-              id='room'
-              name='room'
-              value={formData.room}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.room ? "1px solid #dc2626" : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              <option value='' disabled>
-                Select a room
-              </option>
-              {rooms.map((room) => (
-                <option key={room._id} value={room._id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-            {errors.room && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.room}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='status'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Status
-            </label>
-            <select
-              id='status'
-              name='status'
-              value={formData.status}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.status
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              {equipmentStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.status}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='purchaseDate'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Purchase Date
-            </label>
-            <input
-              type='date'
-              id='purchaseDate'
-              name='purchaseDate'
-              value={formData.purchaseDate}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.purchaseDate
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {errors.purchaseDate && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.purchaseDate}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='lastMaintenanceDate'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Last Maintenance Date
-            </label>
-            <input
-              type='date'
-              id='lastMaintenanceDate'
-              name='lastMaintenanceDate'
-              value={formData.lastMaintenanceDate}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.lastMaintenanceDate
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {errors.lastMaintenanceDate && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.lastMaintenanceDate}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='nextMaintenanceDate'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Next Maintenance Date
-            </label>
-            <input
-              type='date'
-              id='nextMaintenanceDate'
-              name='nextMaintenanceDate'
-              value={formData.nextMaintenanceDate}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.nextMaintenanceDate
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {errors.nextMaintenanceDate && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.nextMaintenanceDate}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='manufacturer'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Manufacturer
-            </label>
-            <input
-              type='text'
-              id='manufacturer'
-              name='manufacturer'
-              value={formData.manufacturer}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.manufacturer
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {errors.manufacturer && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.manufacturer}
-              </div>
-            )}
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='model'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Model
-            </label>
-            <input
-              type='text'
-              id='model'
-              name='model'
-              value={formData.model}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: errors.model
-                  ? "1px solid #dc2626"
-                  : "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {errors.model && (
-              <div
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {errors.model}
-              </div>
-            )}
-          </div>
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}
-          >
-            <button
-              type='button'
-              onClick={handleCloseModal}
-              style={{
-                padding: "8px 16px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                backgroundColor: "#fff",
-                color: "#1f2937",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#3b82f6",
-                color: "#fff",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              {currentEquipment ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        title={currentEquipment ? "Edit Equipment" : "Add Equipment"}
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+        errors={errors}
+        fields={equipmentFields}
+      />
     </div>
   )
 }

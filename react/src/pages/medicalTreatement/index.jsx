@@ -15,16 +15,20 @@ const Treatments = () => {
     const fetchPatients = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/patients');
-        if (!response.ok) {
-          throw new Error('Failed to fetch patients');
-        }
         const data = await response.json();
-        setPatients(data); // Set the fetched data to the state
-        sortPatients(sortCriteria, data); // Sort the fetched data
+
+        console.log("Raw API Response:", data); // Verify structure of received data
+
+        if (!Array.isArray(data.data)) { // Verify that `data.data` is an array
+          throw new Error('Data received is not an array');
+        }
+
+        setPatients(data.data); // Use `data.data`
+        sortPatients(sortCriteria, data.data); // Sort with the correct array
       } catch (error) {
-        setError(error.message); // Handle errors
+        setError(error.message);
       } finally {
-        setLoading(false); // Set loading to false
+        setLoading(false);
       }
     };
 
@@ -45,8 +49,8 @@ const Treatments = () => {
         break;
       case 'date':
         sortedPatients.sort((a, b) => {
-          const aDate = new Date(a.medicalRecords[0]?.date || 0); // Use the first medical record's date
-          const bDate = new Date(b.medicalRecords[0]?.date || 0);
+          const aDate = new Date(a.arrivalTime || 0); // Use arrival time for sorting
+          const bDate = new Date(b.arrivalTime || 0);
           return aDate - bDate;
         });
         break;
@@ -55,8 +59,8 @@ const Treatments = () => {
           const aTriage = a.medicalRecords[0]?.triageLevel || 0;
           const bTriage = b.medicalRecords[0]?.triageLevel || 0;
           if (aTriage === bTriage) {
-            const aDate = new Date(a.medicalRecords[0]?.date || 0);
-            const bDate = new Date(b.medicalRecords[0]?.date || 0);
+            const aDate = new Date(a.arrivalTime || 0);
+            const bDate = new Date(b.arrivalTime || 0);
             return aDate - bDate;
           }
           return aTriage - bTriage;
@@ -83,7 +87,7 @@ const Treatments = () => {
   // Format patients for react-select
   const patientOptions = patients.map((patient) => ({
     value: patient,
-    label: `${patient.name} ${patient.familyName} (Status: ${patient.status}, CIN: ${patient.cin})`,
+    label: `${patient.firstName} ${patient.lastName} (Status: ${patient.status}, Phone: ${patient.phone})`,
   }));
 
   // Display loading or error messages
@@ -113,13 +117,13 @@ const Treatments = () => {
             className={`btn ${sortCriteria === 'date' ? 'btn-primary' : 'btn-outline-primary'}`}
             onClick={() => handleFilterChange('date')}
           >
-            Date of Medical Record
+            Arrival Time
           </button>
           <button
             className={`btn ${sortCriteria === 'both' ? 'btn-primary' : 'btn-outline-primary'}`}
             onClick={() => handleFilterChange('both')}
           >
-            Both (Urgency and Date)
+            Both (Urgency and Arrival Time)
           </button>
         </div>
       </div>
@@ -142,19 +146,31 @@ const Treatments = () => {
           <div className="card-body">
             <h2 className="card-title">Selected Patient</h2>
             <p>
-              <strong>Name:</strong> {selectedPatient.name} {selectedPatient.familyName}
+              <strong>Name:</strong> {selectedPatient.firstName} {selectedPatient.lastName}
             </p>
             <p>
-              <strong>CIN:</strong> {selectedPatient.cin}
+              <strong>Birth Date:</strong> {new Date(selectedPatient.birthDate).toLocaleDateString()}
             </p>
             <p>
-              <strong>Status:</strong> {selectedPatient.status}
+              <strong>Sex:</strong> {selectedPatient.sex}
             </p>
             <p>
-              <strong>Date of Birth:</strong> {new Date(selectedPatient.dateOfBirth).toLocaleDateString()}
+              <strong>Phone:</strong> {selectedPatient.phone}
             </p>
             <p>
-              <strong>Gender:</strong> {selectedPatient.gender}
+              <strong>Arrival Mode:</strong> {selectedPatient.arrivalMode}
+            </p>
+            <p>
+              <strong>Emergency Reason:</strong> {selectedPatient.emergencyReason}
+            </p>
+            <p>
+              <strong>Observations:</strong> {selectedPatient.observations}
+            </p>
+            <p>
+              <strong>Emergency Area:</strong> {selectedPatient.emergencyArea}
+            </p>
+            <p>
+              <strong>Arrival Time:</strong> {new Date(selectedPatient.arrivalTime).toLocaleString()}
             </p>
             <span className="text-center" style={{ display: 'flex', justifyContent: 'center' }}>
               <NavLink
@@ -166,19 +182,18 @@ const Treatments = () => {
                 style={{ width: 'fit-content' }}
               >
                 <i className="menu-icon tf-icons bx bx-plus"></i>
-                <div data-i18n="Analytics">Add medical treatment</div>
+                <div data-i18n="Analytics">Add Medical Monitoring</div>
               </NavLink>
               <NavLink
                 to={`/medical-treatments/patient/show/${selectedPatient._id}`}
                 state={{ patient: selectedPatient }}
-
                 className={({ isActive }) =>
                   `menu-link btn btn-outline-info ${isActive ? 'active' : ''}`
                 }
                 style={{ width: 'fit-content' }}
               >
                 <i className="menu-icon tf-icons bx bx-band-aid"></i>
-                <div data-i18n="Analytics">Show current medical treatments</div>
+                <div data-i18n="Analytics">Show Current Medical Monitoring</div>
               </NavLink>
             </span>
           </div>
@@ -191,7 +206,7 @@ const Treatments = () => {
         <ul className="list-group">
           {patients.map((patient) => (
             <li key={patient._id} className="list-group-item">
-              {patient.name} {patient.familyName} (Status: {patient.status}, CIN: {patient.cin})
+              {patient.firstName} {patient.lastName} (Status: {patient.status}, Phone: {patient.phone})
             </li>
           ))}
         </ul>
