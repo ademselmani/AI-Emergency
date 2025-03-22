@@ -44,6 +44,8 @@ import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 import Listofleaves from "./pages/Leaves/Listleaves";
 import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
 import Statleaves from "./pages/Leaves/Statleaves";
+
+import {ShiftDashboard} from "./pages/shift/ShiftDashboard.jsx";
  
    
 function App() {
@@ -63,6 +65,16 @@ function App() {
               </Layout>
             }
           />
+
+          <Route
+            path='/shift'
+            element={
+              <Layout>
+                <ShiftDashboard />
+              </Layout>
+            }
+          />
+
           <Route
             path='/areas'
             element={
