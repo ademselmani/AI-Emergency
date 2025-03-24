@@ -13,6 +13,7 @@ const AreaSchema = new mongoose.Schema(
         "MAJOR_TRAUMA",
         "CONSULTATION",
         "OBSERVATION_UNIT",
+        "General_ED"
       ],
     },
     description: {

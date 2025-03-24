@@ -10,36 +10,36 @@ const session = require("express-session");
 const passport = require("passport"); // 🔥 Import Passport
 require("dotenv").config();
 require("./src/config/passport"); // 🔥 Load Passport config
-const employeeRoute = require("./src/routes/employeeRoute")
-const employeeFind = require("./src/routes/employee.route")
- const areaRoutes = require("./src/routes/areaRoute")
-const roomRoutes = require("./src/routes/roomRoute")
-const equipmentRoutes = require("./src/routes/equipmentRoute")
- const patientRoutes = require('./src/routes/patientRoutes');
- 
-const multer = require("multer")
+const employeeRoute = require("./src/routes/employeeRoute");
+const employeeFind = require("./src/routes/employee.route");
+const areaRoutes = require("./src/routes/areaRoute");
+const roomRoutes = require("./src/routes/roomRoute");
+const equipmentRoutes = require("./src/routes/equipmentRoute");
+const patientRoutes = require("./src/routes/patientRoutes");
+const shiftRoutes = require("./src/routes/shifts.route");
+
+const multer = require("multer");
 
 const configDB = require("./src/config/db.json");
 const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const fs = require("fs");
 const authRoute = require("./src/routes/index.route");
-const leaveRoute = require("./src/routes/leaveRoute")
+const leaveRoute = require("./src/routes/leaveRoute");
 
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
-  const treatmentRoutes = require('./src/routes/treatmentRoutes');
-const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
-  
+const treatmentRoutes = require("./src/routes/treatmentRoutes");
+const prescriptionRoutes = require("./src/routes/prescriptionRoutes");
 
 mongoose
   .connect(configDB.mongo.uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-   .then(() => console.log("✅ Connecté à MongoDB"))
-   .catch((err) => console.error("", err));
+  .then(() => console.log("✅ Connecté à MongoDB"))
+  .catch((err) => console.error("", err));
 
 const app = express();
 const server = http.createServer(app);
@@ -64,23 +64,23 @@ app.use(
 // Configuration de Multer pour l'upload d'images
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = "./uploads/"
+    const uploadPath = "./uploads/";
     if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true })
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
-    cb(null, uploadPath)
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)) // Nom unique pour éviter les conflits
+    cb(null, Date.now() + path.extname(file.originalname)); // Nom unique pour éviter les conflits
   },
-})
+});
 
 const upload = multer({ storage: storage });
 
 // Route pour l'upload d'image
-app.post('/upload', upload.single('image'), (req, res) => {
+app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) {
-    return res.status(400).send('Aucun fichier uploadé.');
+    return res.status(400).send("Aucun fichier uploadé.");
   }
 
   // Retourne l'URL de l'image uploadée
@@ -89,29 +89,26 @@ app.post('/upload', upload.single('image'), (req, res) => {
 });
 
 // Servir les fichiers statiques depuis le dossier 'uploads'
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // ✅ **Routes**
 app.use("/api/auth", authRoute);
-app.use("/user", employeeRoute)
-  app.use("/employee", employeeFind)
-app.use("/areas", areaRoutes)
-app.use("/rooms", roomRoutes)
-app.use("/equipments", equipmentRoutes)
- 
+app.use("/user", employeeRoute);
+app.use("/employee", employeeFind);
+app.use("/areas", areaRoutes);
+app.use("/rooms", roomRoutes);
+app.use("/equipments", equipmentRoutes);
+
 app.use("/api/leaves", leaveRoute);
- 
- app.use('/api', patientRoutes);
- 
 
+app.use("/api", patientRoutes);
 
-
-app.use('/api/treatments', treatmentRoutes);
-app.use('/api/prescriptions', prescriptionRoutes);
-app.use('/api/patients', patientRoutes);
- 
+app.use("/shifts", shiftRoutes);
+app.use("/api/treatments", treatmentRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/patients", patientRoutes);
 
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
@@ -129,24 +126,23 @@ Promise.all([
   faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL),
 ])
   .then(() => {
-   // console.log("✅ Modèles face-api.js chargés avec succès !");
+    // console.log("✅ Modèles face-api.js chargés avec succès !");
   })
   .catch((error) => {
-    console.error("❌ Erreur lors du chargement des modèles face-api.js :", error);
+    console.error(
+      "❌ Erreur lors du chargement des modèles face-api.js :",
+      error
+    );
   });
- 
 
-  // ✅ **Handle 404 Errors**
+// ✅ **Handle 404 Errors**
 app.use((req, res, next) => {
   next(createError(404));
 });
-  
 
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });
-
-
 
 // Exporter à la fois l'app et le serveur
 module.exports = { app, server };

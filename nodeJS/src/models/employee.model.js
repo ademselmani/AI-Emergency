@@ -32,6 +32,7 @@ const employeeSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+
   resetToken: { type: String, default: "" },
   joinDate: Date,
   adresse: String,
@@ -40,7 +41,14 @@ const employeeSchema = mongoose.Schema({
     type: String,
     enum: ["active", "on_leave", "retired"],
   },
+
   leaveQuota: { type: Number, default: 25 },
+  
+  shiftCount: {
+    weekStart: { type: Date, default: null }, // Tracks the Monday of the week
+    count: { type: Number, default: 0 }, // Shifts worked this week
+  },
+
   qualifications: {
     degree: String,
     institution: String,

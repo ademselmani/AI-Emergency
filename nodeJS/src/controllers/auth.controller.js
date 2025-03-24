@@ -12,16 +12,17 @@ const {loginface,
   
   const signUpController = async (req, res) => {
   try {
-    const { name,familyName , email, role, phone, password } = req.body;
+    const { name,familyName , email, role, phone, password, status } = req.body;
     const imageFile = req.file;
     
 
     // Appel du service d'inscription
-    const { userId, email: userEmail, name: userName, role: userRole, token } = await signup({ 
+    const { userId, email: userEmail, name: userName, role: userRole, token , status: userStatus } = await signup({ 
       name, 
       familyName ,
       email, 
       role, 
+      status,
       phone, 
       password, 
       imageFile ,
@@ -32,6 +33,7 @@ const {loginface,
       success: true,
       userId,
       email: userEmail,
+      status: userStatus,
       name: userName,
       role: userRole,
       token,

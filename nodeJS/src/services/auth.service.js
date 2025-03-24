@@ -85,28 +85,30 @@ async function extractFaceDescriptor(imageData) {
 
 const signup = async (data) => {
   try {
-    console.log("📦 Données reçues :", data); // Vérifier les données reçues
+    //  Desactivate data validate for Add quickly users to test shift management
 
-    if (!data.imageFile || !data.imageFile.path) {
-      throw new Error("❌ Aucune image fournie !");
-    }
+    // console.log("📦 Données reçues :", data); // Vérifier les données reçues
 
-    // Vérifier si l'email existe déjà
-    let user = await User.findOne({ email: data.email });
-    if (user) {
-      console.error("❌ Email already exists:", data.email);
-      throw new Error("Email already exists");
-    }
+    // if (!data.imageFile || !data.imageFile.path) {
+    //   throw new Error("❌ Aucune image fournie !");
+    // }
 
-    // Lire l'image en mémoire et la convertir en base64
-    const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
-    console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
+    // // Vérifier si l'email existe déjà
+    // let user = await User.findOne({ email: data.email });
+    // if (user) {
+    //   console.error("❌ Email already exists:", data.email);
+    //   throw new Error("Email already exists");
+    // }
 
-    // Extraire le descripteur facial
-    const faceDescriptor = await extractFaceDescriptor(imageData);
-    if (!faceDescriptor || faceDescriptor.length === 0) {
-      throw new Error("❌ Aucun visage détecté dans l'image !");
-    }
+    // // Lire l'image en mémoire et la convertir en base64
+    // const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
+    // console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
+
+    // // Extraire le descripteur facial
+    // const faceDescriptor = await extractFaceDescriptor(imageData);
+    // if (!faceDescriptor || faceDescriptor.length === 0) {
+    //   throw new Error("❌ Aucun visage détecté dans l'image !");
+    // }
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     
@@ -117,9 +119,11 @@ const signup = async (data) => {
       email: data.email,
       role: data.role,
       phone: data.phone,
+      status : data.status,
       password :data.password,
-      image: "http://localhost:3000/"+data.imageFile.path,
-      faceDescriptor, // Stocke uniquement le descripteur facial
+      // Comment the imag validation to test shift management
+  /*     image: "http://localhost:3000/"+data.imageFile.path,
+      faceDescriptor, // Stocke uniquement le descripteur facial */
     });
 
     // Sauvegarder l'utilisateur dans la base de données
@@ -135,6 +139,7 @@ const signup = async (data) => {
       name: user.name,
       role: user.role,
       token: token,
+      status: user.status
     };
 
   } catch (error) {

@@ -242,4 +242,16 @@ router.get("/employees/doctor", async (req, res) => {
     }
   });
 
+  router.get("/active", async (req, res) => {
+    try {
+      const employees = await Employee.find({status: "active"}, {faceDescriptor : 0 , qualifications : 0})
+      res.json(employees);
+    } catch (err) {
+      res.json({ message: err.message });
+    }
+  });
+
+
+
+
   module.exports = router;
