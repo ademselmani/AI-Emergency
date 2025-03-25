@@ -1,6 +1,7 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import timeGridPlugin from '@fullcalendar/timegrid'
 import Popup from "reactjs-popup";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -28,27 +29,36 @@ export function ShiftDashboard() {
   }
 
   async function getShifts() {
-    axios
-      .get("http://localhost:3000/shifts")
-      .then((response) => {
-        setShifts(response.data);
-        console.log("Shifts retrieved:", response.data);
-        for (const shift of shifts) {
-          console.log(shift);
-          shift.title = shift.area;
-          const date = shift.date.toISOString().replace(/T.*$/, '') // YYYY-MM-DD of today 
-          if(shift.shiftType=="Day_shift") {
-            shift.start = date + "T00:00:01"
-            shift.end = date + "T08:00:00"
-          }
-          console.log("add title , start and end date to each " + shift)
-        }
-      })
-      .catch((error) => {
-        console.error("Error retrieving shift:", error.response.data);
-        console.error("Error retrieving shift:", error);
+    try {
+      const response = await axios.get("http://localhost:3000/shifts");
+      const formattedShifts = response.data.map((shift) => {
+        let date = new Date(shift.date).toISOString().split("T")[0]; // Ensure proper date formatting
+  
+        return {
+          id : shift._id,
+          title: shift.area,
+          start:
+            shift.shiftType === "Day_shift"
+              ? `${date}T00:00:01`
+              : shift.shiftType === "Evening_shift"
+              ? `${date}T08:00:01`
+              : `${date}T16:00:01`, // Adjust timing for different shift types
+          end:
+            shift.shiftType === "Day_shift"
+              ? `${date}T08:00:00`
+              : shift.shiftType === "Evening_shift"
+              ? `${date}T16:00:00`
+              : `${date}T23:59:59`, // Ensure night shift end time
+        };
       });
+  
+      setShifts(formattedShifts);
+      console.log("Formatted Shifts:", formattedShifts);
+    } catch (error) {
+      console.error("Error retrieving shifts:", error);
+    }
   }
+  
 
   useEffect(() => {
     getActiveEmployee();
@@ -115,10 +125,17 @@ export function ShiftDashboard() {
     <div>
       <h1>Demo App</h1>
       <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        weekends={false}
+        plugins={[dayGridPlugin,timeGridPlugin ,interactionPlugin]}
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }}
+        initialView="timeGridWeek"
+        weekends={true}
         events={shifts}
+        editable={true}
+        eventDrop={updateShift}
         eventContent={renderEventContent}
         dateClick={handleDateSelect}
       />
@@ -196,4 +213,19 @@ function renderEventContent(eventInfo) {
       <i>{eventInfo.event.title}</i>
     </>
   );
+}
+
+function updateShift(eventDropInfo ) {
+  console.log(eventDropInfo.event.end.toString())
+  let starTime = eventDropInfo.event.start.toString().split(" ")[4];
+  let endTime = eventDropInfo.event.end.toString().split(" ")[4];
+
+  if(starTime == "00:00:01" && endTime== "08:00:00") {
+    console.log("true")
+  } else {
+    console.log("wrong")
+  }
+  console.log(endTime)
+  console.log("updated event " + JSON.stringify(eventDropInfo.event, null, 2))
+  console.log("old event " + JSON.stringify(eventDropInfo.oldEvent, null, 2))
 }
