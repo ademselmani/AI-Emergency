@@ -14,6 +14,7 @@ export function ShiftDashboard() {
   const [selectedEmployees, setSelectedEmployees] = useState({}); // Store selected employees
   const [shifts, setShifts] = useState([]);
 
+
   function handleDateSelect(selectInfo) {
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
@@ -83,10 +84,26 @@ export function ShiftDashboard() {
   }
 
   function handleSubmit() {
+    const [datePart, timePart] = selectedDate.split("T");
+  let hour = timePart.split(":")[0];
+  let date = selectedDate; // Default to selectedDate
+
+  console.log("Hour:", hour);
+  // let formattedDate
+  // Ensure date is correctly formatted
+  if (hour === "00") {
+    date = `${datePart}T01:${timePart.split(":")[1]}:${timePart.split(":")[2]}`+":00";
+    // formattedDate = date.replace(/([+-]\d{2})$/, "$1:00"); 
+
+// console.log("Formatted Date:", formattedDate); // Debugging
+    console.log("date "+ date)
+  }
+
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
       area: document.querySelector("#area").value,
-      date: new Date(selectedDate),
+   
+      date: Date.parse(date),
       employees: [],
     };
 
@@ -215,17 +232,64 @@ function renderEventContent(eventInfo) {
   );
 }
 
-function updateShift(eventDropInfo ) {
-  console.log(eventDropInfo.event.end.toString())
+async function updateShift(eventDropInfo) {
+  console.log(eventDropInfo.event.end.toString());
+  const newDate = eventDropInfo.event.end.toISOString().split("T")[0];
+  
   let starTime = eventDropInfo.event.start.toString().split(" ")[4];
   let endTime = eventDropInfo.event.end.toString().split(" ")[4];
 
-  if(starTime == "00:00:01" && endTime== "08:00:00") {
-    console.log("true")
+  if (
+    (starTime === "00:00:01" && endTime === "08:00:00") ||
+    (starTime === "08:00:01" && (endTime === "16:00:00" || endTime === "15:59:59" )) ||
+    (starTime === "16:00:01" && endTime === "23:59:59" )
+  ) {
+    console.log(eventDropInfo.event.id);
+    
+    // ✅ Await the response
+    const shift = await getShiftById(eventDropInfo.event.id);
+    
+    if (!shift) {
+      console.error("Shift not found or error occurred.");
+      return;
+    }
+
+
+    if (starTime === "00:00:01" && shift.shiftType !== "Day_shift") {
+      shift.shiftType = "Day_shift"; // Fixing incorrect assignment
+    } else if (starTime === "08:00:01" && shift.shiftType !== "Evening_shift") {
+      shift.shiftType = "Evening_shift";
+    } else if (starTime === "16:00:01" && shift.shiftType !== "Night_shift") {
+      shift.shiftType = "Night_shift";
+    } 
+    shift.date = newDate;
+
+   
+    try {
+      const response = await axios.put("http://localhost:3000/shifts", shift);
+      console.log("Shift modified:", response.data);
+    } catch (error) {
+      console.error("Error modifying shift:", error.response?.data || error.message);
+    }
   } else {
-    console.log("wrong")
+    console.log("Wrong shift timing");
+    eventDropInfo.revert();
   }
-  console.log(endTime)
-  console.log("updated event " + JSON.stringify(eventDropInfo.event, null, 2))
-  console.log("old event " + JSON.stringify(eventDropInfo.oldEvent, null, 2))
+
+  console.log(starTime);
+  console.log(endTime);
+  console.log("Updated event: " + JSON.stringify(eventDropInfo.event, null, 2));
+  console.log("Old event: " + JSON.stringify(eventDropInfo.oldEvent, null, 2));
+}
+
+
+async function getShiftById(id) {
+  try {
+    const response = await axios.get(`http://localhost:3000/shifts/${id}`);
+    console.log(response.data); // Debugging
+    return response.data; // Return the shift object
+  } catch (error) {
+    console.error("Error fetching shift:", error.response?.data || error.message);
+    return null; // Return null in case of an error
+  }
 }

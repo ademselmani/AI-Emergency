@@ -55,16 +55,50 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.get("/", async (req, res, next) => {
+router.get("/", async (req, res) => {
   try {
     const shifts = await Shift.find();
-    // Send response
     res.json(shifts);
-
   } catch (error) {
     console.error("Error fetching shifts:", error);
-    res.json({ error: "Internal Server Error" , error});
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+router.put("/", async (req, res) => {
+  const shift = req.body
+
+  try {
+    const updatedShift = await Shift.findByIdAndUpdate(
+      shift._id,
+      {
+        $set: shift,
+      },
+      { new: true } // Retourne l'employé mis à jour
+    )
+    res.json(shift);
+  } catch (error) {
+    console.error("Error updating shift:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shift = await Shift.findById(id); // Use findById for a single document
+
+    if (!shift) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    res.json(shift);
+  } catch (error) {
+    console.error("Error fetching shift:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 module.exports = router;
