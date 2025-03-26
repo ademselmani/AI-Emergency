@@ -13,11 +13,18 @@ export function ShiftDashboard() {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState({}); // Store selected employees
   const [shifts, setShifts] = useState([]);
+  const [showDeleteButton , setShowDeleteButton] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState({});
 
 
   function handleDateSelect(selectInfo) {
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
+  }
+
+  async function handleDeleteEvent() {
+    await deleteShiftId(selectedEvent.id)
+    setShowPopup(false)
   }
 
   async function getActiveEmployee() {
@@ -81,6 +88,12 @@ export function ShiftDashboard() {
       ...prev,
       [role]: { ...(prev[role] || {}), [index]: value },
     }));
+  }
+
+  function handleEventClick(eventClickInfo) {
+    setSelectedEvent(eventClickInfo.event)
+    setShowDeleteButton(true)
+    setShowPopup(true);
   }
 
   function handleSubmit() {
@@ -155,69 +168,113 @@ export function ShiftDashboard() {
         eventDrop={updateShift}
         eventContent={renderEventContent}
         dateClick={handleDateSelect}
+        eventClick={handleEventClick}
       />
 
       {/* Popup */}
       <Popup open={showPopup} onClose={() => setShowPopup(false)} modal>
-        <div className="form">
-          <h2>Add new shift for {selectedDate}</h2>
-          <br />
-          <label>Shift type</label>
-          <select id="siftType">
-            <option value="Day_shift">Day shift</option>
-            <option value="Evening_shift">Event shift</option>
-            <option value="Night_shift">Night shift</option>
-          </select>
+  <div className="bg-white p-[15px]  shadow-xl max-w-lg w-full mx-auto border border-gray-300 ">
+    <h2 className="text-2xl font-bold text-gray-800 mb-4">
+      Shift for {selectedDate.split("T")[0]}
+    </h2>
 
-          <label>Area</label>
-          <select
-            id="area"
-            onChange={(e) => setSelectedArea(e.target.value)}
-            value={selectedArea}
-          >
-            <option value="">Select an area</option>
-            <option value="Triage">Triage</option>
-            <option value="Resuscitation">Resuscitation</option>
-            <option value="Major_Trauma">Major Trauma</option>
-            <option value="General_ED">General ED</option>
-          </select>
+    {/* Shift Type and Area */}
+    <div className="flex gap-4 mb-4">
+      <div className="w-1/2">
+        <label className="block text-sm font-semibold text-gray-700">Shift type</label>
+        <select id="siftType" className="w-full p-2 border rounded-lg bg-gray-50">
+          <option value="Day_shift">Day shift</option>
+          <option value="Evening_shift">Evening shift</option>
+          <option value="Night_shift">Night shift</option>
+        </select>
+      </div>
+      <div className="w-1/2">
+        <label className="block text-sm font-semibold text-gray-700">Area</label>
+        <select
+          id="area"
+          onChange={(e) => setSelectedArea(e.target.value)}
+          value={selectedArea}
+          className="w-full p-2 border rounded-lg bg-gray-50"
+        >
+          <option value="">Select an area</option>
+          <option value="Triage">Triage</option>
+          <option value="Resuscitation">Resuscitation</option>
+          <option value="Major_Trauma">Major Trauma</option>
+          <option value="General_ED">General ED</option>
+        </select>
+      </div>
+    </div>
 
-          {/* Conditionally Render Inputs Based on Area Selection */}
-          {selectedArea &&
-            Object.entries(staffingRules[selectedArea] || {}).map(
-              ([role, count]) => (
-                <div key={role}>
-                  <label>
-                    {role} ({count} required)
-                  </label>
-                  {[...Array(count)].map((_, index) => (
-                    <select
-                      key={index}
-                      className="employee-dropdown"
-                      onChange={(e) =>
-                        handleEmployeeSelection(role, index, e.target.value)
-                      }
-                    >
-                      <option value="">Select {role}</option>
-                      {activeEmployees
-                        .filter((employee) => employee.role === role) // Filter employees by role
-                        .map((employee) => (
-                          <option key={employee._id} value={employee._id}>
-                            {employee.name}
-                          </option>
-                        ))}
-                    </select>
+    {/* Dynamic Role Selection */}
+    {selectedArea &&
+      Object.entries(staffingRules[selectedArea] || {}).map(([role, count]) => (
+        <div key={role} className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">
+            {role} ({count} required)
+          </label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {[...Array(count)].map((_, index) => (
+              <select
+                key={index}
+                className="w-full p-2 border rounded-lg bg-gray-50"
+                onChange={(e) =>
+                  handleEmployeeSelection(role, index, e.target.value)
+                }
+              >
+                <option value="">Select {role}</option>
+                {activeEmployees
+                  .filter((employee) => employee.role === role)
+                  .map((employee) => (
+                    <option key={employee._id} value={employee._id}>
+                      {employee.name}
+                    </option>
                   ))}
-                </div>
-              )
-            )}
-
-          <button type="button" onClick={handleSubmit}>
-            Add Shift
-          </button>
-          <button onClick={() => setShowPopup(false)}>Close</button>
+              </select>
+            ))}
+          </div>
         </div>
-      </Popup>
+      ))}
+
+    {/* Action Buttons */}
+    <div className="flex justify-between mt-4">
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+  
+      >
+        Add Shift
+      </button>
+
+      {showDeleteButton && (
+        <>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
+          >
+            Edit Shift
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteEvent}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+          >
+            Delete Event
+          </button>
+        </>
+      )}
+
+      <button
+        onClick={() => setShowPopup(false)}
+        className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</Popup>
+
     </div>
   );
 }
@@ -242,7 +299,7 @@ async function updateShift(eventDropInfo) {
   if (
     (starTime === "00:00:01" && endTime === "08:00:00") ||
     (starTime === "08:00:01" && (endTime === "16:00:00" || endTime === "15:59:59" )) ||
-    (starTime === "16:00:01" && endTime === "23:59:59" )
+    (starTime === "16:00:01" && (endTime === "23:59:59" || endTime === "00:00:00" ) )
   ) {
     console.log(eventDropInfo.event.id);
     
@@ -286,6 +343,18 @@ async function updateShift(eventDropInfo) {
 async function getShiftById(id) {
   try {
     const response = await axios.get(`http://localhost:3000/shifts/${id}`);
+    console.log(response.data); // Debugging
+    return response.data; // Return the shift object
+  } catch (error) {
+    console.error("Error fetching shift:", error.response?.data || error.message);
+    return null; // Return null in case of an error
+  }
+}
+
+
+async function deleteShiftId(id) {
+  try {
+    const response = await axios.delete(`http://localhost:3000/shifts/${id}`);
     console.log(response.data); // Debugging
     return response.data; // Return the shift object
   } catch (error) {
