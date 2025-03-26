@@ -68,6 +68,7 @@ export function ShiftDashboard() {
   }
   
 
+  // useEffect(())
   useEffect(() => {
     getActiveEmployee();
   }, []);
@@ -92,6 +93,9 @@ export function ShiftDashboard() {
 
   function handleEventClick(eventClickInfo) {
     setSelectedEvent(eventClickInfo.event)
+    console.log(selectedEvent)
+    console.log(eventClickInfo.event); 
+    console.log(selectedEvent.id)
     setShowDeleteButton(true)
     setShowPopup(true);
   }
@@ -112,6 +116,8 @@ export function ShiftDashboard() {
     console.log("date "+ date)
   }
 
+  let eventId = selectedEvent.id;
+
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
       area: document.querySelector("#area").value,
@@ -119,6 +125,8 @@ export function ShiftDashboard() {
       date: Date.parse(date),
       employees: [],
     };
+
+    newShift.id = eventId;
 
     // Get selected employees
     Object.entries(staffingRules[selectedArea] || {}).forEach(
