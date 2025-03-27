@@ -5,6 +5,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import Popup from "reactjs-popup";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { element } from "prop-types";
+import { Embed } from "semantic-ui-react";
 
 export function ShiftDashboard() {
   const [showPopup, setShowPopup] = useState(false);
@@ -99,6 +101,7 @@ export function ShiftDashboard() {
     setShowPopup(true);
   }
 
+  // update event
   function handleSubmit() {
     const [datePart, timePart] = selectedDate.split("T");
     let hour = timePart.split(":")[0];
@@ -118,8 +121,6 @@ export function ShiftDashboard() {
     }
 
     let eventId = selectedEvent.id;
-
-    shifts;
 
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
@@ -175,6 +176,20 @@ export function ShiftDashboard() {
     setSelectedEvent({});
   }
 
+  function verifyarea(shift, shitDateInStringFormat) {
+    let shiftStartDate;
+    const datePart = shitDateInStringFormat.split("T")[0];
+    if( shift.shiftType == "Day_shift") shiftStartDate = datePart+"T"+"00:00:01"
+    else if(shift.shiftType == "Evening_shift") shiftStartDate = datePart+"T"+"08:00:01"
+    else shiftStartDate = datePart+"T"+"16:00:01"
+   
+    return shifts.some((element) => {
+     let elementArea = element.title;
+     return elementArea == shift.area && shiftStartDate == element.start ;
+    });
+   
+  }
+
   function handleAddEvent() {
     const [datePart, timePart] = selectedDate.split("T");
     let hour = timePart.split(":")[0];
@@ -200,6 +215,11 @@ export function ShiftDashboard() {
       date: Date.parse(date),
       employees: [],
     };
+
+    if (verifyarea(newShift, date)) {
+      alert("Area already exist");
+      return
+    }
 
     // Get selected employees
     Object.entries(staffingRules[selectedArea] || {}).forEach(
