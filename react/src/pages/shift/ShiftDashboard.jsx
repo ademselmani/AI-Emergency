@@ -163,6 +163,7 @@ export function ShiftDashboard() {
           console.error("Error updating shift:", error.response.data);
         });
     } else {
+      
       axios
         .post("http://localhost:3000/shifts", newShift)
         .then((response) => {
