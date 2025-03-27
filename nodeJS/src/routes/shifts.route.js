@@ -67,10 +67,11 @@ router.get("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
   const shift = req.body
+  const id = shift.id || shift._id
 
   try {
     const updatedShift = await Shift.findByIdAndUpdate(
-      shift.id,
+      id,
       {
         $set: shift,
       },
