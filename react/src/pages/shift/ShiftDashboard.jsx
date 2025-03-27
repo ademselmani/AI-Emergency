@@ -93,6 +93,7 @@ export function ShiftDashboard() {
 
   function handleEventClick(eventClickInfo) {
     setSelectedEvent(eventClickInfo.event)
+    setSelectedDate(eventClickInfo.event.startStr)
     console.log(selectedEvent)
     console.log(eventClickInfo.event); 
     console.log(selectedEvent.id)
@@ -117,6 +118,8 @@ export function ShiftDashboard() {
   }
 
   let eventId = selectedEvent.id;
+
+    shifts
 
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
@@ -148,7 +151,18 @@ export function ShiftDashboard() {
     console.log("Final Shift Data:", JSON.stringify(newShift, null, 2));
 
     // Send data to backend
-    axios
+    if (eventId) {
+      axios
+      .put("http://localhost:3000/shifts", newShift)
+      .then((response) => {
+        console.log("Shift updated:", response.data);
+        setShowPopup(false);
+      })
+      .catch((error) => {
+        console.error("Error updating shift:", error.response.data);
+      });
+    }else {
+      axios
       .post("http://localhost:3000/shifts", newShift)
       .then((response) => {
         console.log("Shift added:", response.data);
@@ -157,6 +171,8 @@ export function ShiftDashboard() {
       .catch((error) => {
         console.error("Error adding shift:", error.response.data);
       });
+    }
+    setSelectedEvent({})
   }
 
   return (
