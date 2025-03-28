@@ -5,14 +5,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import Popup from "reactjs-popup";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { element } from "prop-types";
-import { Embed } from "semantic-ui-react";
 
 export function ShiftDashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
+  const [selectedShiftType, setselectedShiftType] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState({}); // Store selected employees
   const [shifts, setShifts] = useState([]);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
@@ -92,8 +91,15 @@ export function ShiftDashboard() {
   }
 
   function handleEventClick(eventClickInfo) {
+    let starTime = eventClickInfo.event.start.toString().split(" ")[4];
+    if (starTime === "00:00:01") setselectedShiftType("Day_shift");
+    else if (starTime === "08:00:01") setselectedShiftType("Evening_shift");
+    else setselectedShiftType("Night_shift");
+
+    setSelectedArea(eventClickInfo.event.title);
     setSelectedEvent(eventClickInfo.event);
     setSelectedDate(eventClickInfo.event.startStr);
+
     console.log(selectedEvent);
     console.log(eventClickInfo.event);
     console.log(selectedEvent.id);
@@ -163,7 +169,6 @@ export function ShiftDashboard() {
           console.error("Error updating shift:", error.response.data);
         });
     } else {
-      
       axios
         .post("http://localhost:3000/shifts", newShift)
         .then((response) => {
@@ -180,10 +185,10 @@ export function ShiftDashboard() {
   async function updateShift(eventDropInfo) {
     console.log(eventDropInfo.event.end.toString());
     const newDate = eventDropInfo.event.end.toISOString().split("T")[0];
-  
+
     let starTime = eventDropInfo.event.start.toString().split(" ")[4];
     let endTime = eventDropInfo.event.end.toString().split(" ")[4];
-  
+
     if (
       (starTime === "00:00:01" && endTime === "08:00:00") ||
       (starTime === "08:00:01" &&
@@ -192,18 +197,21 @@ export function ShiftDashboard() {
         (endTime === "23:59:59" || endTime === "00:00:00"))
     ) {
       console.log(eventDropInfo.event.id);
-  
+
       // ✅ Await the response
       const shift = await getShiftById(eventDropInfo.event.id);
-  
+
       if (!shift) {
         console.error("Shift not found or error occurred.");
         return;
       }
-  
+
       if (starTime === "00:00:01" && shift.shiftType !== "Day_shift") {
         shift.shiftType = "Day_shift"; // Fixing incorrect assignment
-      } else if (starTime === "08:00:01" && shift.shiftType !== "Evening_shift") {
+      } else if (
+        starTime === "08:00:01" &&
+        shift.shiftType !== "Evening_shift"
+      ) {
         shift.shiftType = "Evening_shift";
       } else if (starTime === "16:00:01" && shift.shiftType !== "Night_shift") {
         shift.shiftType = "Night_shift";
@@ -211,11 +219,11 @@ export function ShiftDashboard() {
       shift.date = newDate;
 
       if (verifyarea(shift, eventDropInfo.event.end.toISOString())) {
-        eventDropInfo.revert()
+        eventDropInfo.revert();
         alert("Area already exist");
-        return
+        return;
       }
-  
+
       try {
         const response = await axios.put("http://localhost:3000/shifts", shift);
         console.log("Shift modified:", response.data);
@@ -229,26 +237,35 @@ export function ShiftDashboard() {
       console.log("Wrong shift timing");
       eventDropInfo.revert();
     }
-  
+
+    getShifts()
+
+
+
     console.log(starTime);
     console.log(endTime);
-    console.log("Updated event: " + JSON.stringify(eventDropInfo.event, null, 2));
-    console.log("Old event: " + JSON.stringify(eventDropInfo.oldEvent, null, 2));
+    console.log(
+      "Updated event: " + JSON.stringify(eventDropInfo.event, null, 2)
+    );
+    console.log(
+      "Old event: " + JSON.stringify(eventDropInfo.oldEvent, null, 2)
+    );
   }
 
   const verifyarea = (shift, shitDateInStringFormat) => {
     let shiftStartDate;
     const datePart = shitDateInStringFormat.split("T")[0];
-    if( shift.shiftType == "Day_shift") shiftStartDate = datePart+"T"+"00:00:01"
-    else if(shift.shiftType == "Evening_shift") shiftStartDate = datePart+"T"+"08:00:01"
-    else shiftStartDate = datePart+"T"+"16:00:01"
-   
+    if (shift.shiftType == "Day_shift")
+      shiftStartDate = datePart + "T" + "00:00:01";
+    else if (shift.shiftType == "Evening_shift")
+      shiftStartDate = datePart + "T" + "08:00:01";
+    else shiftStartDate = datePart + "T" + "16:00:01";
+
     return shifts.some((element) => {
-     let elementArea = element.title;
-     return elementArea == shift.area && shiftStartDate == element.start ;
+      let elementArea = element.title;
+      return elementArea == shift.area && shiftStartDate == element.start;
     });
-   
-  }
+  };
 
   function handleAddEvent() {
     const [datePart, timePart] = selectedDate.split("T");
@@ -278,7 +295,7 @@ export function ShiftDashboard() {
 
     if (verifyarea(newShift, date)) {
       alert("Area already exist");
-      return
+      return;
     }
 
     // Get selected employees
@@ -347,6 +364,8 @@ export function ShiftDashboard() {
               <select
                 id="siftType"
                 className="w-full p-2 border rounded-lg bg-gray-50"
+                onChange={(e) => setselectedShiftType(e.target.value)}
+                value={selectedShiftType}
               >
                 <option value="Day_shift">Day shift</option>
                 <option value="Evening_shift">Evening shift</option>
@@ -446,8 +465,6 @@ export function ShiftDashboard() {
   );
 }
 
-
-
 // Custom render function for events
 function renderEventContent(eventInfo) {
   return (
@@ -457,8 +474,6 @@ function renderEventContent(eventInfo) {
     </>
   );
 }
-
-
 
 async function getShiftById(id) {
   try {
