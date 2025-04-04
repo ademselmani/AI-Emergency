@@ -17,6 +17,7 @@ const roomRoutes = require("./src/routes/roomRoute");
 const equipmentRoutes = require("./src/routes/equipmentRoute");
 const patientRoutes = require("./src/routes/patientRoutes");
 const shiftRoutes = require("./src/routes/shifts.route");
+const { extractFaceDescriptor } = require("./src/services/auth.service");
 
 const multer = require("multer");
 
@@ -78,18 +79,37 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Route pour l'upload d'image
-app.post("/upload", upload.single("image"), (req, res) => {
+app.post("/upload", upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).send("Aucun fichier uploadé.");
   }
+  // Lire l'image en mémoire et la convertir en base64
+  const imageData = `data:image/jpeg;base64,${fs
+    .readFileSync(req.file.path)
+    .toString("base64")}`;
+  console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
 
-  // Retourne l'URL de l'image uploadée
-  const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
-  res.json({ imageUrl });
+  // Extraire le descripteur facial
+  const faceDescriptor = await extractFaceDescriptor(imageData);
+  try {
+    if (!faceDescriptor || faceDescriptor.length === 0) {
+      throw new Error("❌ Aucun visage détecté dans l'image !");
+    }
+    // Retourne l'URL de l'image uploadée
+    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error(
+      "🚨 Erreur lors de l'extraction du descripteur facial :",
+      error
+    );
+    res.status(500).json()
+  }
 });
 
 // Servir les fichiers statiques depuis le dossier 'uploads'
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use(passport.initialize());
 app.use(passport.session());
 

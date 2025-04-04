@@ -42,7 +42,7 @@ function isSupportedImageType(imageData) {
 }
 
 // Fonction pour extraire le descripteur facial
-async function extractFaceDescriptor(imageData) {
+ async function extractFaceDescriptor(imageData) {
   try {
     console.log("🔍 Vérification du format de l'image...");
     if (!isSupportedImageType(imageData)) {
@@ -79,36 +79,36 @@ async function extractFaceDescriptor(imageData) {
     return Array.from(detections[0].descriptor);
   } catch (error) {
     console.error("🚨 Erreur lors de l'extraction du descripteur facial :", error);
-    throw error;
+   
   }
 }
 
 const signup = async (data) => {
   try {
-    //  Desactivate data validate for Add quickly users to test shift management
+   
+    console.log("📦 Données reçues :", data); // Vérifier les données reçues
 
-    // console.log("📦 Données reçues :", data); // Vérifier les données reçues
+    if (!data.imageFile || !data.imageFile.path) {
+      throw new Error("❌ Aucune image fournie !");
+    }
 
-    // if (!data.imageFile || !data.imageFile.path) {
-    //   throw new Error("❌ Aucune image fournie !");
-    // }
+    // Vérifier si l'email existe déjà
+    let user = await User.findOne({ email: data.email });
+    if (user) {
+      console.error("❌ Email already exists:", data.email);
+      throw new Error("Email already exists");
+    }
 
-    // // Vérifier si l'email existe déjà
-    // let user = await User.findOne({ email: data.email });
-    // if (user) {
-    //   console.error("❌ Email already exists:", data.email);
-    //   throw new Error("Email already exists");
-    // }
+    // Lire l'image en mémoire et la convertir en base64
+    const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
+    console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
 
-    // // Lire l'image en mémoire et la convertir en base64
-    // const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
-    // console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
+    // Extraire le descripteur facial
+    const faceDescriptor = await extractFaceDescriptor(imageData);
+    if (!faceDescriptor || faceDescriptor.length === 0) {
+      throw new Error("❌ Aucun visage détecté dans l'image !");
+    }
 
-    // // Extraire le descripteur facial
-    // const faceDescriptor = await extractFaceDescriptor(imageData);
-    // if (!faceDescriptor || faceDescriptor.length === 0) {
-    //   throw new Error("❌ Aucun visage détecté dans l'image !");
-    // }
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     
@@ -122,8 +122,8 @@ const signup = async (data) => {
       status : data.status,
       password :data.password,
       // Comment the imag validation to test shift management
-  /*     image: "http://localhost:3000/"+data.imageFile.path,
-      faceDescriptor, // Stocke uniquement le descripteur facial */
+       image: "http://localhost:3000/"+data.imageFile.path,
+      faceDescriptor, // Stocke uniquement le descripteur facial 
     });
 
     // Sauvegarder l'utilisateur dans la base de données
@@ -235,6 +235,7 @@ const loginface = async (imageData) => {
 
 
 module.exports = {
+  extractFaceDescriptor,
   loginface,
   signup,
   login,
