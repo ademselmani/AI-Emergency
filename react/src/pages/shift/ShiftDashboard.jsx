@@ -16,10 +16,14 @@ export function ShiftDashboard() {
   const [shifts, setShifts] = useState([]);
   const [showDeleteButton, setShowDeleteButton] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState({});
+  const [validationError, setValidationError] = useState(""); // For showing validation errors
 
   function handleDateSelect(selectInfo) {
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
+    // Reset employee selections and validation errors when opening a new popup
+    setSelectedEmployees({});
+    setValidationError("");
   }
 
   async function handleDeleteEvent() {
@@ -32,7 +36,7 @@ export function ShiftDashboard() {
       const response = await axios.get("http://localhost:3000/user/active");
       setActiveEmployees(response.data);
     } catch (error) {
-      console.error(error.response.data.error);
+      console.error(error.response?.data?.error || "Failed to fetch employees");
     }
   }
 
@@ -67,7 +71,6 @@ export function ShiftDashboard() {
     }
   }
 
-  // useEffect(())
   useEffect(() => {
     getActiveEmployee();
   }, []);
@@ -83,14 +86,63 @@ export function ShiftDashboard() {
     General_ED: { receptionist: 1, ambulance_driver: 2 },
   };
 
+  // Get all selected employee IDs across all roles
+  const getAllSelectedEmployeeIds = () => {
+    const allSelectedIds = [];
+    Object.values(selectedEmployees).forEach(roleSelections => {
+      Object.values(roleSelections).forEach(id => {
+        if (id) allSelectedIds.push(id);
+      });
+    });
+    return allSelectedIds;
+  };
+
+  // Validate that all required positions are filled
+  const validateAllPositionsFilled = () => {
+    if (!selectedArea) {
+      setValidationError("Please select an area");
+      return false;
+    }
+
+    const areaRules = staffingRules[selectedArea];
+    if (!areaRules) return true; // No roles defined for this area
+    
+    let allFilled = true;
+    let missingPositions = [];
+
+    Object.entries(areaRules).forEach(([role, count]) => {
+      for (let i = 0; i < count; i++) {
+        const isPositionFilled = selectedEmployees[role]?.[i];
+        if (!isPositionFilled) {
+          allFilled = false;
+          missingPositions.push(`${role} #${i + 1}`);
+        }
+      }
+    });
+
+    if (!allFilled) {
+      setValidationError(`Please fill all required positions: ${missingPositions.join(", ")}`);
+    } else {
+      setValidationError("");
+    }
+
+    return allFilled;
+  };
+
   function handleEmployeeSelection(role, index, value) {
     setSelectedEmployees((prev) => ({
       ...prev,
       [role]: { ...(prev[role] || {}), [index]: value },
     }));
+    // Clear validation error when a selection is made
+    setValidationError("");
   }
 
   function handleEventClick(eventClickInfo) {
+    // Reset employee selections and validation errors when opening a new event
+    setSelectedEmployees({});
+    setValidationError("");
+    
     let starTime = eventClickInfo.event.start.toString().split(" ")[4];
     if (starTime === "00:00:01") setselectedShiftType("Day_shift");
     else if (starTime === "08:00:01") setselectedShiftType("Evening_shift");
@@ -105,24 +157,62 @@ export function ShiftDashboard() {
     console.log(selectedEvent.id);
     setShowDeleteButton(true);
     setShowPopup(true);
+    
+    // Load existing employee assignments for this event
+    loadExistingEmployees(eventClickInfo.event.id);
+  }
+  
+  // Function to load existing employees for an event
+  async function loadExistingEmployees(eventId) {
+    try {
+      const shift = await getShiftById(eventId);
+      if (shift && shift.employees) {
+        // Transform the employees array into the format used by selectedEmployees
+        const employeeSelections = {};
+        
+        // Group employees by role
+        const employeesByRole = {};
+        shift.employees.forEach(emp => {
+          if (!employeesByRole[emp.role]) {
+            employeesByRole[emp.role] = [];
+          }
+          employeesByRole[emp.role].push(emp.employeeId);
+        });
+        
+        // Format into selectedEmployees structure
+        Object.entries(employeesByRole).forEach(([role, ids]) => {
+          employeeSelections[role] = {};
+          ids.forEach((id, index) => {
+            employeeSelections[role][index] = id;
+          });
+        });
+        
+        setSelectedEmployees(employeeSelections);
+      }
+    } catch (error) {
+      console.error("Error loading existing employees:", error);
+    }
   }
 
   // update event
   function handleSubmit() {
+    // First validate all positions are filled
+    if (!validateAllPositionsFilled()) {
+      return; // Don't proceed if validation fails
+    }
+
     const [datePart, timePart] = selectedDate.split("T");
-    let hour = timePart.split(":")[0];
+    let hour = timePart ? timePart.split(":")[0] : "00";
     let date = selectedDate; // Default to selectedDate
 
     console.log("Hour:", hour);
-    // let formattedDate
+    
     // Ensure date is correctly formatted
     if (hour === "00") {
       date =
-        `${datePart}T01:${timePart.split(":")[1]}:${timePart.split(":")[2]}` +
-        ":00";
-      // formattedDate = date.replace(/([+-]\d{2})$/, "$1:00");
-
-      // console.log("Formatted Date:", formattedDate); // Debugging
+        `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${
+          timePart ? timePart.split(":")[2] : "00"
+        }:00`;
       console.log("date " + date);
     }
 
@@ -131,7 +221,6 @@ export function ShiftDashboard() {
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
       area: document.querySelector("#area").value,
-
       date: Date.parse(date),
       employees: [],
     };
@@ -141,12 +230,11 @@ export function ShiftDashboard() {
     // Get selected employees
     Object.entries(staffingRules[selectedArea] || {}).forEach(
       ([role, count]) => {
-        newShift.employees[role] = [];
         for (let i = 0; i < count; i++) {
           const selectedValue = selectedEmployees[role]?.[i] || "";
           if (selectedValue) {
             newShift.employees.push({
-              employeeId: selectedValue, // employee ID (use the `id` of the selected employee)
+              employeeId: selectedValue, // employee ID
               role: role, // employee role
             });
           }
@@ -166,7 +254,7 @@ export function ShiftDashboard() {
           setShowPopup(false);
         })
         .catch((error) => {
-          console.error("Error updating shift:", error.response.data);
+          console.error("Error updating shift:", error.response?.data || error);
         });
     } else {
       axios
@@ -176,7 +264,7 @@ export function ShiftDashboard() {
           setShowPopup(false);
         })
         .catch((error) => {
-          console.error("Error adding shift:", error.response.data);
+          console.error("Error adding shift:", error.response?.data || error);
         });
     }
     setSelectedEvent({});
@@ -220,7 +308,7 @@ export function ShiftDashboard() {
 
       if (verifyarea(shift, eventDropInfo.event.end.toISOString())) {
         eventDropInfo.revert();
-        alert("Area already exist");
+        alert("Area already exists for this shift time");
         return;
       }
 
@@ -238,9 +326,7 @@ export function ShiftDashboard() {
       eventDropInfo.revert();
     }
 
-    getShifts()
-
-
+    getShifts();
 
     console.log(starTime);
     console.log(endTime);
@@ -268,46 +354,47 @@ export function ShiftDashboard() {
   };
 
   function handleAddEvent() {
+    // First validate all positions are filled
+    if (!validateAllPositionsFilled()) {
+      return; // Don't proceed if validation fails
+    }
+
     const [datePart, timePart] = selectedDate.split("T");
-    let hour = timePart.split(":")[0];
+    let hour = timePart ? timePart.split(":")[0] : "00";
     let date = selectedDate; // Default to selectedDate
 
     console.log("Hour:", hour);
-    // let formattedDate
+    
     // Ensure date is correctly formatted
     if (hour === "00") {
       date =
-        `${datePart}T01:${timePart.split(":")[1]}:${timePart.split(":")[2]}` +
-        ":00";
-      // formattedDate = date.replace(/([+-]\d{2})$/, "$1:00");
-
-      // console.log("Formatted Date:", formattedDate); // Debugging
+        `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${
+          timePart ? timePart.split(":")[2] : "00"
+        }:00`;
       console.log("date " + date);
     }
 
     const newShift = {
       shiftType: document.querySelector("#siftType").value,
       area: document.querySelector("#area").value,
-
       date: Date.parse(date),
       employees: [],
     };
 
     if (verifyarea(newShift, date)) {
-      alert("Area already exist");
+      setValidationError("Area already exists for this shift time");
       return;
     }
 
     // Get selected employees
     Object.entries(staffingRules[selectedArea] || {}).forEach(
       ([role, count]) => {
-        newShift.employees[role] = [];
         for (let i = 0; i < count; i++) {
           const selectedValue = selectedEmployees[role]?.[i] || "";
           if (selectedValue) {
             newShift.employees.push({
-              employeeId: selectedValue, // employee ID (use the `id` of the selected employee)
-              role: role, // employee role
+              employeeId: selectedValue,
+              role: role,
             });
           }
         }
@@ -322,15 +409,16 @@ export function ShiftDashboard() {
       .then((response) => {
         console.log("Shift added:", response.data);
         setShowPopup(false);
+        setValidationError("");
       })
       .catch((error) => {
-        console.error("Error adding shift:", error.response.data);
+        console.error("Error adding shift:", error.response?.data || error);
+        setValidationError("Error adding shift: " + (error.response?.data?.error || "Unknown error"));
       });
   }
 
   return (
     <div>
-
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         headerToolbar={{
@@ -350,10 +438,17 @@ export function ShiftDashboard() {
 
       {/* Popup */}
       <Popup open={showPopup} onClose={() => setShowPopup(false)} modal>
-        <div className="bg-white p-[15px]  shadow-xl max-w-lg w-full mx-auto border border-gray-300 ">
+        <div className="bg-white p-[15px] shadow-xl max-w-lg w-full mx-auto border border-gray-300">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Shift for {selectedDate.split("T")[0]}
           </h2>
+
+          {/* Validation error message */}
+          {validationError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <p>{validationError}</p>
+            </div>
+          )}
 
           {/* Shift Type and Area */}
           <div className="flex gap-4 mb-4">
@@ -378,7 +473,12 @@ export function ShiftDashboard() {
               </label>
               <select
                 id="area"
-                onChange={(e) => setSelectedArea(e.target.value)}
+                onChange={(e) => {
+                  setSelectedArea(e.target.value);
+                  // Reset employee selections when area changes
+                  setSelectedEmployees({});
+                  setValidationError("");
+                }}
                 value={selectedArea}
                 className="w-full p-2 border rounded-lg bg-gray-50"
               >
@@ -400,24 +500,40 @@ export function ShiftDashboard() {
                     {role} ({count} required)
                   </label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    {[...Array(count)].map((_, index) => (
-                      <select
-                        key={index}
-                        className="w-full p-2 border rounded-lg bg-gray-50"
-                        onChange={(e) =>
-                          handleEmployeeSelection(role, index, e.target.value)
-                        }
-                      >
-                        <option value="">Select {role}</option>
-                        {activeEmployees
-                          .filter((employee) => employee.role === role)
-                          .map((employee) => (
-                            <option key={employee._id} value={employee._id}>
-                              {employee.name}
-                            </option>
-                          ))}
-                      </select>
-                    ))}
+                    {[...Array(count)].map((_, index) => {
+                      // Get all currently selected employees except this dropdown
+                      const allSelectedIds = getAllSelectedEmployeeIds();
+                      const currentValue = selectedEmployees[role]?.[index] || "";
+                      
+                      // If this dropdown has a value, remove it from the list of "taken" IDs
+                      const takenIds = currentValue 
+                        ? allSelectedIds.filter(id => id !== currentValue)
+                        : allSelectedIds;
+                      
+                      return (
+                        <select
+                          key={index}
+                          className="w-full p-2 border rounded-lg bg-gray-50"
+                          value={currentValue}
+                          onChange={(e) =>
+                            handleEmployeeSelection(role, index, e.target.value)
+                          }
+                        >
+                          <option value="">Select {role}</option>
+                          {activeEmployees
+                            .filter((employee) => employee.role === role)
+                            .map((employee) => (
+                              <option
+                                key={employee._id}
+                                value={employee._id}
+                                disabled={takenIds.includes(employee._id)}
+                              >
+                                {employee.name} {takenIds.includes(employee._id) ? "(Already selected)" : ""}
+                              </option>
+                            ))}
+                        </select>
+                      );
+                    })}
                   </div>
                 </div>
               )
@@ -429,6 +545,7 @@ export function ShiftDashboard() {
               type="button"
               onClick={handleAddEvent}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              disabled={!selectedArea}
             >
               Add Shift
             </button>
