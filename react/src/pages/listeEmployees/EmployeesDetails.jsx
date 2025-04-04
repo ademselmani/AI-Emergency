@@ -11,7 +11,6 @@ const EmployeesDetails = () => {
     lastName: "",
     image: "",
     address: "",
-    education: "",
     role: "", // Ajout du champ role
     phone: "",
     email: "",
@@ -35,12 +34,13 @@ const EmployeesDetails = () => {
           `http://localhost:3000/user/employees/${id}`
         );
         const data = await response.json();
+
         setProfileData({
           firstName: data.name || "",
           lastName: data.familyName || "",
           image: data.image || "",
           address: data.adresse || "",
-          education: data.qualifications?.degree || "",
+          // education: data.qualifications?.degree || "",
           role: data.role || "",
           phone: data.phone || "",
           email: data.email || "",
@@ -102,9 +102,9 @@ const EmployeesDetails = () => {
         familyName: profileData.lastName,
         adresse: profileData.address,
         role: profileData.role, // Inclure le rôle
-        qualifications: {
-          degree: profileData.education,
-        },
+        // qualifications: {
+        //   degree: profileData.education,
+        // },
         image: profileData.image,
       };
 
@@ -257,7 +257,8 @@ const EmployeesDetails = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="col-12 col-md-6">
+                  
+                  {/* <div className="col-12 col-md-6">
                     <label htmlFor="education" className="form-label">
                       Education
                     </label>
@@ -268,7 +269,8 @@ const EmployeesDetails = () => {
                       value={profileData.education || ""}
                       onChange={handleInputChange}
                     />
-                  </div>
+                  </div> */}
+
                   <div className="col-12 col-md-6">
                     <label htmlFor="role" className="form-label">
                       Role

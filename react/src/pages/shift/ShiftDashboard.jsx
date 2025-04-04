@@ -330,7 +330,7 @@ export function ShiftDashboard() {
 
   return (
     <div>
-      <h1>Demo App</h1>
+
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         headerToolbar={{
