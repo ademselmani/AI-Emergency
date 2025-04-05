@@ -123,7 +123,8 @@ const signup = async (data) => {
       password :data.password,
       // Comment the imag validation to test shift management
        image: "http://localhost:3000/"+data.imageFile.path,
-      faceDescriptor, // Stocke uniquement le descripteur facial 
+      faceDescriptor, // Stocke uniquement le descripteur facial
+      status : "active"
     });
 
     // Sauvegarder l'utilisateur dans la base de données
