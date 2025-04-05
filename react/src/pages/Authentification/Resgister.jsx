@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { Eye, EyeOff } from "lucide-react"; // Utilisation d'icônes Lucide (tu peux aussi utiliser FontAwesome ou Material Icons)
+/** @format */
+
+import React, { useState, useRef, useEffect } from "react"
+import axios from "axios"
+import { Eye, EyeOff, Camera } from "lucide-react"
 
 const Register = () => {
-  // State variables to store form data
-  const [formData, setFormData] = useState({
+  const initialFormState = {
+    cin: "",
     name: "",
     familyName: "",
     gender: "",
@@ -12,265 +14,490 @@ const Register = () => {
     role: "",
     phone: "",
     password: "",
-    image: null, // State for image upload
-  });
-  const [showPassword, setShowPassword] = useState(false);
+    image: null,
+  }
 
-  // State variables for error handling
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState(initialFormState)
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState("")
+  const fileInputRef = useRef(null)
 
-  // Handle input changes
+  useEffect(() => {
+    setFormData(initialFormState)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }, [])
+
+  const validateField = (name, value) => {
+    const newErrors = {}
+    switch (name) {
+      case "cin":
+        if (!value) newErrors.cin = "CIN is required"
+        else if (!/^\d{8}$/.test(value))
+          newErrors.cin = "CIN must be exactly 8 digits"
+        break
+      case "name":
+        if (!value) newErrors.name = "First Name is required"
+        else if (value.length < 2)
+          newErrors.name = "First Name must be at least 2 characters"
+        break
+      case "familyName":
+        if (!value) newErrors.familyName = "Last Name is required"
+        else if (value.length < 2)
+          newErrors.familyName = "Last Name must be at least 2 characters"
+        break
+      case "gender":
+        if (!value) newErrors.gender = "Gender is required"
+        break
+      case "email":
+        if (!value) newErrors.email = "Email is required"
+        else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value))
+          newErrors.email = "Please enter a valid email"
+        break
+      case "role":
+        if (!value) newErrors.role = "Role is required"
+        break
+      case "phone":
+        if (!value) newErrors.phone = "Phone is required"
+        else if (!/^\+?[1-9]\d{1,14}$/.test(value))
+          newErrors.phone =
+            "Please enter a valid phone number with country code"
+        break
+      case "password":
+        if (!value) newErrors.password = "Password is required"
+        else if (value.length < 8)
+          newErrors.password = "Password must be at least 8 characters"
+        break
+      default:
+        break
+    }
+    return newErrors
+  }
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+    const { name, value } = e.target
+    if (name === "cin") {
+      const numericValue = value.replace(/\D/g, "").slice(0, 8)
+      setFormData((prev) => ({ ...prev, [name]: numericValue }))
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return { ...newErrors, ...validateField(name, numericValue) }
+      })
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return { ...newErrors, ...validateField(name, value) }
+      })
+    }
+  }
 
-  // Handle image upload
   const handleImageChange = (e) => {
-    setFormData({
-      ...formData,
-      image: e.target.files[0], // Store the selected file
-    });
-  };
+    const file = e.target.files[0]
+    setFormData((prev) => ({ ...prev, image: file }))
+    setErrors((prev) => {
+      const newErrors = { ...prev }
+      delete newErrors.image
+      if (!file) newErrors.image = "Please upload an image"
+      return newErrors
+    })
+  }
 
-  // Handle camera capture
   const handleCapture = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.createElement("video");
-      video.srcObject = stream;
-      video.play();
-
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-
-      // Wait until the video is playing
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      const video = document.createElement("video")
+      video.srcObject = stream
+      video.play()
+      const canvas = document.createElement("canvas")
+      const context = canvas.getContext("2d")
       video.onplaying = () => {
         setTimeout(() => {
-          // Set the canvas size based on video dimensions
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          // Draw the current frame to canvas
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          // Convert canvas to image blob
+          canvas.width = video.videoWidth
+          canvas.height = video.videoHeight
+          context.drawImage(video, 0, 0, canvas.width, canvas.height)
           canvas.toBlob((blob) => {
-            setFormData({
-              ...formData,
-              image: blob, // Set the image as a blob
-            });
-          });
-
-          stream.getTracks().forEach((track) => track.stop()); // Stop video stream
-        }, 1000); // Capture image after 1 second
-      };
+            const file = new File([blob], "profile.jpg", { type: "image/jpeg" })
+            setFormData((prev) => ({ ...prev, image: file }))
+            setErrors((prev) => ({ ...prev, image: "", camera: "" }))
+            if (fileInputRef.current) {
+              const dataTransfer = new DataTransfer()
+              dataTransfer.items.add(file)
+              fileInputRef.current.files = dataTransfer.files
+            }
+          }, "image/jpeg")
+          stream.getTracks().forEach((track) => track.stop())
+        }, 1000)
+      }
     } catch (error) {
-      console.error("Error accessing camera: ", error);
-      setError("Unable to access the camera.");
+      setErrors((prev) => ({ ...prev, camera: "Unable to access the camera." }))
     }
-  };
+  }
 
-  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const formDataToSend = new FormData();
-    for (const key in formData) {
-      formDataToSend.append(key, formData[key]);
+    e.preventDefault()
+    let newErrors = {}
+    Object.keys(formData).forEach((key) => {
+      if (key !== "image") {
+        newErrors = { ...newErrors, ...validateField(key, formData[key]) }
+      }
+    })
+    if (!formData.image) {
+      newErrors.image = "Please upload an image"
     }
-
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      setStatusMessage("Please fix the highlighted errors")
+      return
+    }
+    setLoading(true)
+    setStatusMessage("Processing registration...")
     try {
-      const response = await axios.post("http://localhost:3000/api/auth/signup", formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-    
+      const formDataToSend = new FormData()
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null) {
+          formDataToSend.append(key, formData[key])
+        }
+      })
+      const response = await axios.post(
+        "http://localhost:3000/api/auth/signup",
+        formDataToSend,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      )
       if (response.status === 201) {
-        alert("User created successfully!");
+        setStatusMessage("Registration successful!")
+        setFormData(initialFormState)
+        setErrors({})
+        if (fileInputRef.current) fileInputRef.current.value = ""
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      console.error("Registration error:", err)
+      const errorResponse = err.response?.data
+      if (errorResponse?.errors) {
+        setErrors(errorResponse.errors)
+      } else {
+        setErrors({
+          general:
+            errorResponse?.message || "Registration failed. Please try again.",
+        })
+      }
+      setStatusMessage("Registration failed")
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="authentication-wrapper authentication-basic container-p-y">
-      <div className="authentication-inner">
-        <div className="card">
-          <div className="card-body">
-            <div className="app-brand justify-content-center">
-              <a href="index.html" className="app-brand-link gap-2">
-                <span className="app-brand-logo demo"></span>
-                <span className="app-brand-text demo text-body fw-bolder">Create an employee</span>
-              </a>
+    <div className='authentication-wrapper authentication-basic container-p-y'>
+      <div className='authentication-inner'>
+        <div className='card'>
+          <div className='card-body'>
+            <div className='app-brand justify-content-center'>
+              <span className='app-brand-text demo text-body fw-bolder'>
+                Create an employee
+              </span>
             </div>
-           
 
-            {error && <div className="alert alert-danger">{error}</div>}
+            {errors.general && (
+              <div
+                className='alert alert-danger alert-dismissible fade show'
+                role='alert'
+              >
+                {errors.general}
+                <button
+                  type='button'
+                  className='btn-close'
+                  onClick={() =>
+                    setErrors((prev) => ({ ...prev, general: "" }))
+                  }
+                ></button>
+              </div>
+            )}
 
-            <form id="formAuthentication" className="mb-3" onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label htmlFor="name" className="form-label">First Name</label>
+            {statusMessage && (
+              <div
+                className={`alert ${
+                  loading ? "alert-info" : "alert-success"
+                } alert-dismissible fade show`}
+                role='alert'
+              >
+                {statusMessage}
+                {loading && (
+                  <div
+                    className='spinner-border spinner-border-sm text-primary ms-2'
+                    role='status'
+                  >
+                    <span className='visually-hidden'>Loading...</span>
+                  </div>
+                )}
+                {!loading && (
+                  <button
+                    type='button'
+                    className='btn-close'
+                    onClick={() => setStatusMessage("")}
+                  ></button>
+                )}
+              </div>
+            )}
+
+            <form
+              id='formAuthentication'
+              className='mb-3'
+              onSubmit={handleSubmit}
+            >
+              <input
+                type='email'
+                name='preventAutofill1'
+                style={{ display: "none" }}
+              />
+              <input
+                type='password'
+                name='preventAutofill2'
+                style={{ display: "none" }}
+              />
+
+              <div className='mb-3'>
+                <label htmlFor='cin' className='form-label'>
+                  CIN <span className='text-danger'>*</span>
+                </label>
                 <input
-                  type="text"
-                  className="form-control"
-                  id="name"
-                  name="name"
-                  placeholder="Enter your username"
+                  type='text'
+                  inputMode='numeric'
+                  pattern='\d{8}'
+                  className={`form-control ${errors.cin ? "is-invalid" : ""}`}
+                  id='cin'
+                  name='cin'
+                  placeholder='Enter 8-digit CIN'
+                  value={formData.cin}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+                {errors.cin && (
+                  <div className='invalid-feedback'>{errors.cin}</div>
+                )}
+              </div>
+
+              <div className='mb-3'>
+                <label htmlFor='name' className='form-label'>
+                  First Name <span className='text-danger'>*</span>
+                </label>
+                <input
+                  type='text'
+                  className={`form-control ${errors.name ? "is-invalid" : ""}`}
+                  id='name'
+                  name='name'
+                  placeholder='Enter your first name'
                   value={formData.name}
                   onChange={handleChange}
-                  required
-                  autoFocus
+                  disabled={loading}
                 />
-              <div className="mb-3">
-                <label htmlFor="familyName" className="form-label">Last Name</label>
+                {errors.name && (
+                  <div className='invalid-feedback'>{errors.name}</div>
+                )}
+              </div>
+
+              <div className='mb-3'>
+                <label htmlFor='familyName' className='form-label'>
+                  Last Name <span className='text-danger'>*</span>
+                </label>
                 <input
-                  type="text"
-                  className="form-control"
-                  id="familyName"
-                  name="familyName"
-                  placeholder="Enter your last name"
+                  type='text'
+                  className={`form-control ${
+                    errors.familyName ? "is-invalid" : ""
+                  }`}
+                  id='familyName'
+                  name='familyName'
+                  placeholder='Enter your last name'
                   value={formData.familyName}
                   onChange={handleChange}
-                  required
-                  autoFocus
+                  disabled={loading}
                 />
+                {errors.familyName && (
+                  <div className='invalid-feedback'>{errors.familyName}</div>
+                )}
+              </div>
 
-                <div className="mb-3">
-                <label htmlFor="gender" className="form-label">gender</label>
+              <div className='mb-3'>
+                <label htmlFor='gender' className='form-label'>
+                  Gender <span className='text-danger'>*</span>
+                </label>
                 <select
-                  className="form-control"
-                  id="gender"
-                  name="gender"
+                  className={`form-control ${
+                    errors.gender ? "is-invalid" : ""
+                  }`}
+                  id='gender'
+                  name='gender'
                   value={formData.gender}
                   onChange={handleChange}
-                  required
+                  disabled={loading}
                 >
-                  <option value="">Select a gender</option>
-                  <option value="doctor">Man</option>
-                  <option value="admin">Woman</option>
+                  <option value=''>Select gender</option>
+                  <option value='Man'>Man</option>
+                  <option value='Woman'>Woman</option>
                 </select>
+                {errors.gender && (
+                  <div className='invalid-feedback'>{errors.gender}</div>
+                )}
               </div>
 
-                <div className="mb-3">
-                <label htmlFor="role" className="form-label">Role</label>
+              <div className='mb-3'>
+                <label htmlFor='role' className='form-label'>
+                  Role <span className='text-danger'>*</span>
+                </label>
                 <select
-                  className="form-control"
-                  id="role"
-                  name="role"
+                  className={`form-control ${errors.role ? "is-invalid" : ""}`}
+                  id='role'
+                  name='role'
                   value={formData.role}
                   onChange={handleChange}
-                  required
+                  disabled={loading}
                 >
-                  <option value="">Select a role</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="admin">Admin</option>
-                  <option value="nurse">Nurse</option>
-                  <option value="triage_nurse">Triage-nurse</option>
-                  <option value="receptionnist">Receptionnist</option>
-                  <option value="ambulance_driver">Ambulance_driver</option>
+                  <option value=''>Select role</option>
+                  <option value='doctor'>Doctor</option>
+                  <option value='admin'>Admin</option>
+                  <option value='nurse'>Nurse</option>
+                  <option value='triage_nurse'>Triage-nurse</option>
+                  <option value='receptionnist'>Receptionnist</option>
+                  <option value='ambulance_driver'>Ambulance_driver</option>
                 </select>
+                {errors.role && (
+                  <div className='invalid-feedback'>{errors.role}</div>
+                )}
               </div>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email</label>
+
+              <div className='mb-3'>
+                <label htmlFor='registerEmail' className='form-label'>
+                  Email <span className='text-danger'>*</span>
+                </label>
                 <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  name="email"
-                  placeholder="Enter your email"
+                  type='email'
+                  autoComplete='new-email'
+                  className={`form-control ${errors.email ? "is-invalid" : ""}`}
+                  id='registerEmail'
+                  name='email'
+                  placeholder='Enter your email'
                   value={formData.email}
                   onChange={handleChange}
-                  required
+                  disabled={loading}
                 />
+                {errors.email && (
+                  <div className='invalid-feedback'>{errors.email}</div>
+                )}
               </div>
-              
-              <div className="mb-3">
-                <label htmlFor="phone" className="form-label">Phone</label>
+
+              <div className='mb-3'>
+                <label htmlFor='phone' className='form-label'>
+                  Phone <span className='text-danger'>*</span>
+                </label>
                 <input
-                  type="text"
-                  className="form-control"
-                  id="phone"
-                  name="phone"
-                  placeholder="Enter your phone"
+                  type='text'
+                  className={`form-control ${errors.phone ? "is-invalid" : ""}`}
+                  id='phone'
+                  name='phone'
+                  placeholder='Enter phone with country code (e.g., +123456789)'
                   value={formData.phone}
                   onChange={handleChange}
-                  required
+                  disabled={loading}
                 />
+                {errors.phone && (
+                  <div className='invalid-feedback'>{errors.phone}</div>
+                )}
               </div>
-             <div className="mb-3 form-password-toggle">
-  <label className="form-label" htmlFor="password">Password</label>
-  <div className="input-group input-group-merge">
-    <input
-      type={showPassword ? "text" : "password"}
-      id="password"
-      className="form-control"
-      name="password"
-      placeholder="Enter your password"
-      value={formData.password}
-      onChange={handleChange}
-      required
-    />
-    <button
-      type="button"
-      className="btn btn-outline-secondary"
-      onClick={() => setShowPassword(!showPassword)}
-    >
-      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-    </button>
-  </div>
-</div>
 
+              <div className='mb-3 form-password-toggle'>
+                <label className='form-label' htmlFor='registerPassword'>
+                  Password <span className='text-danger'>*</span>
+                </label>
+                <div className='input-group input-group-merge'>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    autoComplete='new-password'
+                    id='registerPassword'
+                    className={`form-control ${
+                      errors.password ? "is-invalid" : ""
+                    }`}
+                    name='password'
+                    placeholder='Enter your password (min 8 characters)'
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                  <button
+                    type='button'
+                    className='btn btn-outline-secondary'
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <div className='invalid-feedback d-block'>
+                    {errors.password}
+                  </div>
+                )}
+              </div>
 
-              {/* Image Upload Field */}
-              <div className="mb-3">
-                <label htmlFor="image" className="form-label">Upload Image</label>
+              <div className='mb-3'>
+                <label htmlFor='image' className='form-label'>
+                  Upload Image <span className='text-danger'>*</span>
+                </label>
                 <input
-                  type="file"
-                  className="form-control"
-                  id="image"
-                  name="image"
+                  type='file'
+                  ref={fileInputRef}
+                  className={`form-control ${errors.image ? "is-invalid" : ""}`}
+                  id='image'
+                  name='image'
+                  accept='image/*'
                   onChange={handleImageChange}
+                  disabled={loading}
                 />
+                {errors.image && (
+                  <div className='invalid-feedback'>{errors.image}</div>
+                )}
               </div>
 
-              {/* Camera Capture Button */}
-              <div className="mb-3">
-                <button type="button" className="btn btn-secondary" onClick={handleCapture}>
+              <div className='mb-3'>
+                <button
+                  type='button'
+                  className='btn btn-secondary'
+                  onClick={handleCapture}
+                  disabled={loading}
+                >
+                  <Camera size={18} className='me-2' />
                   Capture Photo
                 </button>
+                {errors.camera && (
+                  <div className='text-danger mt-2'>{errors.camera}</div>
+                )}
               </div>
 
-              <div className="mb-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="terms-conditions"
-                    name="terms"
-                  />
-                  <label className="form-check-label" htmlFor="terms-conditions">
-                    I agree to
-                    <a href=";">privacy policy & terms</a>
-                  </label>
-                </div>
-              </div>
-              <button className="btn btn-primary d-grid w-100" type="submit">
-                Sign up
+              <button
+                className='btn btn-primary d-grid w-100'
+                type='submit'
+                disabled={loading || Object.keys(errors).length > 0}
+              >
+                {loading ? (
+                  <>
+                    <span
+                      className='spinner-border spinner-border-sm me-2'
+                      aria-hidden='true'
+                    ></span>
+                    Processing...
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </button>
-           </div>
             </form>
-
-         
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register

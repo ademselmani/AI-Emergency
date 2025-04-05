@@ -10,6 +10,7 @@ import {
   Users,
   XCircle,
   Pencil,
+  AlertCircle,
 } from "lucide-react"
 import Modal from "../../components/ressourcesComponent/modal"
 import axios from "axios"
@@ -392,15 +393,105 @@ const Equipment = () => {
       userSelect: "none",
     }
 
-    const overdue =
-      equipment.nextMaintenanceDate &&
-      new Date(equipment.nextMaintenanceDate) < new Date()
-
     const dragHandleStyle = {
       cursor: "move",
       padding: "4px",
       marginRight: "8px",
       display: "inline-block",
+    }
+
+    // Calculate progress for the maintenance bar
+    const today = new Date()
+    const nextMaintenance = equipment.nextMaintenanceDate
+      ? new Date(equipment.nextMaintenanceDate)
+      : null
+    const lastMaintenance = equipment.lastMaintenanceDate
+      ? new Date(equipment.lastMaintenanceDate)
+      : equipment.purchaseDate
+      ? new Date(equipment.purchaseDate)
+      : null // Fallback to purchaseDate if lastMaintenanceDate is unavailable
+
+    let progress = 0
+    let barColor = "#3b82f6" // Default blue
+    let maintenanceStatus = "" // To store "Due Soon" or "Overdue"
+    let showReminder = false // Determine if a reminder should be shown
+    let barLabel = "Next Maintenance" // Default label for the bar
+    let barColorOverride = null // Override color for specific statuses
+
+    if (nextMaintenance && lastMaintenance) {
+      const totalDuration = nextMaintenance - lastMaintenance
+      const timePassed = today - lastMaintenance
+
+      if (totalDuration > 0) {
+        progress = (timePassed / totalDuration) * 100
+        if (progress < 0) progress = 0 // Before last maintenance or purchase date
+        if (progress > 100) progress = 100 // Overdue
+
+        if (progress < 50) {
+          barColor = "#22c55e" // Green for < 50%
+        } else if (progress < 100) {
+          barColor = "#f59e0b" // Yellow for 50%-100%
+          if (progress >= 80) {
+            maintenanceStatus = "Due Soon" // Alert when within 20% of the deadline
+          }
+        } else {
+          barColor = "#dc2626" // Red for overdue
+          maintenanceStatus = "Overdue"
+        }
+      }
+    } else if (nextMaintenance) {
+      // No lastMaintenanceDate or purchaseDate, check if overdue
+      if (today > nextMaintenance) {
+        progress = 100
+        barColor = "#dc2626" // Red for overdue
+        maintenanceStatus = "Overdue"
+      } else {
+        progress = 0 // No progress yet
+        barColor = "#3b82f6" // Blue as default
+        // Check if within 7 days of nextMaintenanceDate
+        const daysUntilMaintenance = Math.ceil(
+          (nextMaintenance - today) / (1000 * 60 * 60 * 24)
+        )
+        if (daysUntilMaintenance <= 7) {
+          maintenanceStatus = "Due Soon"
+          barColor = "#f59e0b" // Yellow to indicate urgency
+        }
+      }
+    }
+
+    // Adjust bar label and color based on status
+    if (equipment.status === "MAINTENANCE") {
+      barLabel = "Scheduled Next Maintenance" // Indicate this is the next cycle
+      barColorOverride = maintenanceStatus === "Overdue" ? "#dc2626" : "#6b7280" // Gray unless overdue
+    } else if (equipment.status === "OUT_OF_ORDER") {
+      barLabel = "Next Maintenance (Pending Repair)" // Indicate repair is needed first
+      barColorOverride = "#6b7280" // Gray to de-emphasize
+    }
+
+    // Determine if a reminder should be shown based on status
+    if (maintenanceStatus) {
+      if (equipment.status === "OUT_OF_ORDER") {
+        showReminder = false // Skip reminders for OUT_OF_ORDER
+      } else if (equipment.status === "MAINTENANCE") {
+        // Only show reminder if overdue (maintenance process is delayed)
+        showReminder = maintenanceStatus === "Overdue"
+      } else {
+        // Show reminder for AVAILABLE and IN_USE
+        showReminder = true
+      }
+    }
+
+    // Function to send a maintenance reminder notification
+    const handleSendReminder = async () => {
+      try {
+        const response = await axios.post(
+          `http://localhost:3000/equipments/${equipment._id}/notify`,
+          { type: "maintenance" }
+        )
+        toast.success(response.data.message || "Reminder sent successfully!")
+      } catch (err) {
+        toast.error(`Failed to send reminder: ${err.message}`)
+      }
     }
 
     return (
@@ -452,7 +543,8 @@ const Equipment = () => {
         >
           Room: {equipment.room?.name || "N/A"}
         </div>
-        {equipment.nextMaintenanceDate && (
+        {/* Always show the maintenance bar if nextMaintenance exists, with adjusted label and color */}
+        {nextMaintenance && (
           <div style={{ marginTop: "8px" }}>
             <div
               style={{
@@ -460,14 +552,14 @@ const Equipment = () => {
                 color: statusColors[equipment.status].color,
               }}
             >
-              Next Maintenance
+              {barLabel}
             </div>
             <div
               style={{
                 height: "4px",
-                backgroundColor: overdue ? "#dc2626" : "#3b82f6",
+                backgroundColor: barColorOverride || barColor,
                 borderRadius: "2px",
-                width: overdue ? "100%" : "50%",
+                width: `${progress}%`,
               }}
             />
             <div
@@ -476,8 +568,23 @@ const Equipment = () => {
                 color: statusColors[equipment.status].color,
               }}
             >
-              {new Date(equipment.nextMaintenanceDate).toLocaleDateString()}
+              {nextMaintenance.toLocaleDateString()}
             </div>
+          </div>
+        )}
+        {/* Display maintenance reminder alert only if showReminder is true */}
+        {showReminder && (
+          <div
+            style={{
+              color: maintenanceStatus === "Overdue" ? "#dc2626" : "#f59e0b",
+              fontSize: "12px",
+              marginTop: "8px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <AlertCircle size={14} style={{ marginRight: "4px" }} />
+            Maintenance {maintenanceStatus}
           </div>
         )}
         <div
@@ -489,6 +596,26 @@ const Equipment = () => {
             gap: "8px",
           }}
         >
+          {/* Show notification button only if showReminder is true */}
+          {showReminder && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleSendReminder()
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              title='Send maintenance reminder'
+            >
+              <AlertCircle
+                size={16}
+                color={maintenanceStatus === "Overdue" ? "#dc2626" : "#f59e0b"}
+              />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -608,7 +735,7 @@ const Equipment = () => {
         borderRadius: "8px",
         backgroundColor: statusColors[activeEquipment.status].backgroundColor,
         boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
-        opacity: 0.9,
+        opacity: "0.9",
         zIndex: 1000,
       }
     : {}

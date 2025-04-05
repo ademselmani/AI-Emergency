@@ -10,40 +10,112 @@ const {loginface,
     login
   } = require("../services/auth.service");
   
-  const signUpController = async (req, res) => {
+const signUpController = async (req, res) => {
   try {
-    const { name,familyName , email, role, phone, password } = req.body;
-    const imageFile = req.file;
-    
+    console.log("Données reçues dans req.body :", req.body)
+    console.log("Fichier image reçu :", req.file)
 
-    // Appel du service d'inscription
-    const { userId, email: userEmail, name: userName, role: userRole, token } = await signup({ 
-      name, 
-      familyName ,
-      email, 
-      role, 
-      phone, 
-      password, 
-      imageFile ,
-    });
+    const { cin, name, familyName, gender, email, role, phone, password } =
+      req.body
+    const imageFile = req.file
 
-    // Réponse en cas de succès
+    const requiredFields = {
+      cin,
+      name,
+      familyName,
+      gender,
+      email,
+      role,
+      phone,
+      password,
+    }
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value || value === "")
+      .map(([key]) => key)
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Champs requis manquants",
+        errors: missingFields.reduce((acc, field) => {
+          acc[field] = `${
+            field.charAt(0).toUpperCase() + field.slice(1)
+          } est requis`
+          return acc
+        }, {}),
+      })
+    }
+
+    if (!imageFile) {
+      return res.status(400).json({
+        success: false,
+        message: "Image requise",
+        errors: { image: "Une image est requise" },
+      })
+    }
+
+    const result = await signup({
+      cin,
+      name,
+      familyName,
+      gender,
+      email,
+      role,
+      phone,
+      password,
+      imageFile,
+    })
+
     return res.status(201).json({
       success: true,
-      userId,
-      email: userEmail,
-      name: userName,
-      role: userRole,
-      token,
-    });
+      data: result,
+    })
   } catch (error) {
-    console.error("❌ Erreur lors de l'inscription :", error);
-    return res.status(500).json({ success: false, message: `❌ Erreur serveur: ${error.message}` });
+    console.error("❌ Erreur lors de l'inscription :", error.stack) // More detailed logging
+
+    const errorResponses = {
+      "Email already exists": {
+        status: 409,
+        errors: { email: "Cet email est déjà enregistré" },
+      },
+      "CIN already exists": {
+        status: 409,
+        errors: { cin: "Ce CIN est déjà enregistré" },
+      },
+      "❌ Aucun visage détecté dans l'image !": {
+        status: 400,
+        errors: { image: "Aucun visage détecté dans l'image fournie" },
+      },
+      "❌ Aucune image fournie !": {
+        status: 400,
+        errors: { image: "Aucune image fournie" },
+      },
+    }
+
+    if (error.name === "ValidationError") {
+      const errors = Object.keys(error.errors).reduce((acc, key) => {
+        acc[key] = error.errors[key].message
+        return acc
+      }, {})
+      return res.status(400).json({
+        success: false,
+        message: "Erreur de validation",
+        errors,
+      })
+    }
+
+    const errorConfig = errorResponses[error.message] || {
+      status: 500,
+      errors: { general: error.message || "Erreur serveur inconnue" },
+    }
+
+    return res.status(errorConfig.status).json({
+      success: false,
+      message: error.message,
+      errors: errorConfig.errors,
+    })
   }
-};
-
-  
-
+}
 
 const loginController = async (req, res, next) => {
     try {

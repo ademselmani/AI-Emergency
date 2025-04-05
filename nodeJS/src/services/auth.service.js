@@ -85,64 +85,74 @@ async function extractFaceDescriptor(imageData) {
 
 const signup = async (data) => {
   try {
-    console.log("📦 Données reçues :", data); // Vérifier les données reçues
+    console.log("📦 Données reçues dans signup:", data)
+
+    const requiredFields = [
+      "cin",
+      "name",
+      "familyName",
+      "gender",
+      "email",
+      "role",
+      "phone",
+      "password",
+      "imageFile",
+    ]
+    const missingFields = requiredFields.filter(
+      (field) => !data[field] || data[field] === ""
+    )
+    if (missingFields.length > 0) {
+      throw new Error(`Champs requis manquants: ${missingFields.join(", ")}`)
+    }
 
     if (!data.imageFile || !data.imageFile.path) {
-      throw new Error("❌ Aucune image fournie !");
+      throw new Error("❌ Aucune image fournie !")
     }
 
-    // Vérifier si l'email existe déjà
-    let user = await User.findOne({ email: data.email });
-    if (user) {
-      console.error("❌ Email already exists:", data.email);
-      throw new Error("Email already exists");
+    const existingUser = await User.findOne({
+      $or: [{ email: data.email }, { cin: data.cin }],
+    })
+    if (existingUser) {
+      if (existingUser.email === data.email)
+        throw new Error("Email already exists")
+      if (existingUser.cin === data.cin) throw new Error("CIN already exists")
     }
 
-    // Lire l'image en mémoire et la convertir en base64
-    const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
-    console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
-
-    // Extraire le descripteur facial
-    const faceDescriptor = await extractFaceDescriptor(imageData);
+    const imageData = `data:image/jpeg;base64,${fs
+      .readFileSync(data.imageFile.path)
+      .toString("base64")}`
+    const faceDescriptor = await extractFaceDescriptor(imageData)
     if (!faceDescriptor || faceDescriptor.length === 0) {
-      throw new Error("❌ Aucun visage détecté dans l'image !");
+      throw new Error("❌ Aucun visage détecté dans l'image !")
     }
-    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    
-    // Créer un nouvel utilisateur avec le descripteur facial (sans sauvegarder l'image)
-    user = new User({
-      name: data.name,
-      familyName : data.familyName,
-      email: data.email,
-      role: data.role,
-      phone: data.phone,
-      password :data.password,
-      image: "http://localhost:3000/"+data.imageFile.path,
-      faceDescriptor, // Stocke uniquement le descripteur facial
-    });
+    const hashedPassword = await bcrypt.hash(data.password, 10)
+    const user = new User({
+      ...data,
+      password: hashedPassword,
+      image: "http://localhost:3000/" + data.imageFile.path,
+      faceDescriptor,
+    })
 
-    // Sauvegarder l'utilisateur dans la base de données
-    await user.save();
-    console.log(`✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`);
+    await user.save()
+    console.log(
+      `✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`
+    )
 
-    // Générer un token JWT après l'enregistrement
-    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret");
+    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret")
 
     return {
       userId: user._id,
       email: user.email,
       name: user.name,
       role: user.role,
-      token: token,
-    };
-
+      token,
+    }
   } catch (error) {
-    console.error("❌ Erreur lors de l'inscription :", error.message);
-    throw error;
+    console.error("❌ Erreur dans signup:", error.stack)
+    throw error // Ensure error is propagated
   }
-};
-
+}
 
 // Connexion d'un utilisateur (avec ou sans reconnaissance faciale)
 
