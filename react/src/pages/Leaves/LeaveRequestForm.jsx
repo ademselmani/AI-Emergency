@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 const LeaveRequestForm = ({ onSuccess, onClose }) => {
@@ -11,6 +11,28 @@ const LeaveRequestForm = ({ onSuccess, onClose }) => {
 
   const [message, setMessage] = useState({ text: "", type: "" });
   const [errors, setErrors] = useState({});
+  const [existingLeaves, setExistingLeaves] = useState([]);
+
+  // Charger les congés existants de l'utilisateur
+  useEffect(() => {
+    const fetchUserLeaves = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/leaves/my-requests",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setExistingLeaves(response.data);
+      } catch (error) {
+        console.error("Error fetching user leaves:", error);
+      }
+    };
+
+    fetchUserLeaves();
+  }, []);
 
   const validateDates = () => {
     const newErrors = {};
@@ -28,6 +50,26 @@ const LeaveRequestForm = ({ onSuccess, onClose }) => {
       newErrors.endDate = "End date cannot be before start date";
     }
 
+    // Vérification des chevauchements avec les congés existants
+    const newStart = new Date(formData.startDate);
+    const newEnd = new Date(formData.endDate);
+    
+    const hasOverlap = existingLeaves.some(leave => {
+      const existingStart = new Date(leave.startDate);
+      const existingEnd = new Date(leave.endDate);
+      
+      return (
+        (newStart >= existingStart && newStart <= existingEnd) ||
+        (newEnd >= existingStart && newEnd <= existingEnd) ||
+        (newStart <= existingStart && newEnd >= existingEnd)
+      );
+    });
+
+    if (hasOverlap) {
+      newErrors.startDate = "You already have a leave during this period";
+      newErrors.endDate = "You already have a leave during this period";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -40,9 +82,9 @@ const LeaveRequestForm = ({ onSuccess, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateDates()) return;
-
+  
     setMessage({ text: "", type: "" });
-
+  
     try {
       const response = await axios.post(
         "http://localhost:3000/api/leaves/request",
@@ -57,14 +99,17 @@ const LeaveRequestForm = ({ onSuccess, onClose }) => {
           },
         }
       );
-
-      if (response.status === 200) {
+  
+      if (response.status === 201) {
         setMessage({
           text: "Leave request submitted successfully! 🎉",
           type: "success"
         });
-        onSuccess();
-        setFormData({ startDate: "", endDate: "", reason: "", leaveType: "" });
+  
+        setTimeout(() => {
+          onSuccess();
+          setFormData({ startDate: "", endDate: "", reason: "", leaveType: "" });
+        }, 1000);
       }
     } catch (error) {
       setMessage({

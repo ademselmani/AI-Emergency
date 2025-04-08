@@ -27,7 +27,7 @@ import UpdatePatientTriage from "./pages/Triage-nurse/UpdatePatientTriage";
 import ListeEmployees from "./pages/listeEmployees/listeEmployees";
 import UpdatePatientForm from "./pages/receptionnist/UpdatePatientForm"
 import EmployeesDetails from "./pages/listeEmployees/EmployeesDetails";
-import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/css/bootstrap.min.css";MyLeaveRequests
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -44,8 +44,10 @@ import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
 import Listofleaves from "./pages/Leaves/Listleaves";
 import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
 import Statleaves from "./pages/Leaves/Statleaves";
- 
-   
+import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
+import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
+import HomePage from "./pages/HomePage.jsx"
+
 function App() {
   return (
     <>
@@ -236,9 +238,13 @@ element={
   
   
   } />
+ <Route path="/demandeAmbulance" element={<AmbulancePatient />} />
+ <Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
+<Route path ="/home" element={<HomePage/>}/>
+
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
- 
+
         </Routes>
         ;
       </Router>
