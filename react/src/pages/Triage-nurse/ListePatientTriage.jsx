@@ -150,7 +150,7 @@ let filteredPatients = patients
                   </td>
                   <td>
                     <button className="details" onClick={() => handleViewDetails(patient)}>Details</button>
-                    <button className="edit" onClick={() => handleEditPatient(patient._id)}>Edit</button>
+                    <button className="edit" onClick={() => handleEditPatient(patient._id)}>Triage</button>
                   </td>
                 </tr>
               ))}

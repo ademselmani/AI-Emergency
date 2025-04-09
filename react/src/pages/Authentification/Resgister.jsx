@@ -17,6 +17,8 @@ const Register = () => {
     image: null,
   }
 
+  const [previewImage, setPreviewImage] = useState(null);
+
   const [formData, setFormData] = useState(initialFormState)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
@@ -460,14 +462,25 @@ const Register = () => {
                 )}
               </div>
 
-              <div className='mb-3'>
-                <button
-                  type='button'
-                  className='btn btn-secondary'
-                  onClick={handleCapture}
-                  disabled={loading}
-                >
-                  <Camera size={18} className='me-2' />
+              {/* Affichage de l’image capturée ou uploadée */}
+              {previewImage && (
+                <div className="mb-3 text-center">
+                  <p className="text-success">✅ Image sélectionnée</p>
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    style={{
+                      maxWidth: "200px",
+                      borderRadius: "8px",
+                      border: "2px solid #198754",
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Capture avec caméra */}
+              <div className="mb-3">
+                <button type="button" className="btn btn-secondary" onClick={handleCapture}>
                   Capture Photo
                 </button>
                 {errors.camera && (
