@@ -85,28 +85,45 @@ function isSupportedImageType(imageData) {
 
 const signup = async (data) => {
   try {
-   
-    console.log("📦 Données reçues :", data); // Vérifier les données reçues
+    console.log("📦 Données reçues dans signup:", data)
+
+    const requiredFields = [
+      "cin",
+      "name",
+      "familyName",
+      "gender",
+      "email",
+      "role",
+      "phone",
+      "password",
+      "imageFile",
+    ]
+    const missingFields = requiredFields.filter(
+      (field) => !data[field] || data[field] === ""
+    )
+    if (missingFields.length > 0) {
+      throw new Error(`Champs requis manquants: ${missingFields.join(", ")}`)
+    }
 
     if (!data.imageFile || !data.imageFile.path) {
-      throw new Error("❌ Aucune image fournie !");
+      throw new Error("❌ Aucune image fournie !")
     }
 
-    // Vérifier si l'email existe déjà
-    let user = await User.findOne({ email: data.email });
-    if (user) {
-      console.error("❌ Email already exists:", data.email);
-      throw new Error("Email already exists");
+    const existingUser = await User.findOne({
+      $or: [{ email: data.email }, { cin: data.cin }],
+    })
+    if (existingUser) {
+      if (existingUser.email === data.email)
+        throw new Error("Email already exists")
+      if (existingUser.cin === data.cin) throw new Error("CIN already exists")
     }
 
-    // Lire l'image en mémoire et la convertir en base64
-    const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
-    console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
-
-    // Extraire le descripteur facial
-    const faceDescriptor = await extractFaceDescriptor(imageData);
+    const imageData = `data:image/jpeg;base64,${fs
+      .readFileSync(data.imageFile.path)
+      .toString("base64")}`
+    const faceDescriptor = await extractFaceDescriptor(imageData)
     if (!faceDescriptor || faceDescriptor.length === 0) {
-      throw new Error("❌ Aucun visage détecté dans l'image !");
+      throw new Error("❌ Aucun visage détecté dans l'image !")
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -144,11 +161,10 @@ const signup = async (data) => {
     };
 
   } catch (error) {
-    console.error("❌ Erreur lors de l'inscription :", error.message);
-    throw error;
+    console.error("❌ Erreur dans signup:", error.stack)
+    throw error // Ensure error is propagated
   }
-};
-
+}
 
 // Connexion d'un utilisateur (avec ou sans reconnaissance faciale)
 

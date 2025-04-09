@@ -18,6 +18,7 @@ const equipmentRoutes = require("./src/routes/equipmentRoute");
 const patientRoutes = require("./src/routes/patientRoutes");
 const shiftRoutes = require("./src/routes/shifts.route");
 const { extractFaceDescriptor } = require("./src/services/auth.service");
+const { Server } = require("socket.io");
 
 const multer = require("multer");
 
@@ -34,8 +35,6 @@ const demandeRoutes = require("./src/routes/demandeRoutes");
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
-const treatmentRoutes = require("./src/routes/treatmentRoutes");
-const prescriptionRoutes = require("./src/routes/prescriptionRoutes");
 
 mongoose
   .connect(configDB.mongo.uri, {

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react"
 import { Plus, Edit, Trash2 } from "lucide-react"
 import Modal from "../../components/ressourcesComponent/modal"
 import axios from "axios"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 const Area = () => {
   const [areas, setAreas] = useState([])
@@ -15,6 +17,7 @@ const Area = () => {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
 
   // Fetch areas from the backend
   useEffect(() => {
@@ -37,7 +40,7 @@ const Area = () => {
     if (area) {
       setCurrentArea(area)
       setFormData({
-        name: area.name,
+        name: area.name || "",
         description: area.description || "",
       })
     } else {
@@ -48,26 +51,40 @@ const Area = () => {
       })
     }
     setIsModalOpen(true)
+    setErrors({})
   }
 
   // Close modal
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setCurrentArea(null)
-  }
-
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
     setFormData({
-      ...formData,
-      [name]: value,
+      name: "",
+      description: "",
     })
+    setErrors({})
   }
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setErrors({})
+
+    // Basic validation
+    const requiredFields = ["name"]
+    const missingFields = requiredFields.filter(
+      (field) =>
+        !formData[field] ||
+        (typeof formData[field] === "string" && formData[field].trim() === "")
+    )
+    if (missingFields.length > 0) {
+      setErrors({
+        general: `Missing required fields: ${missingFields.join(", ")}`,
+      })
+      toast.error(`Missing required fields: ${missingFields.join(", ")}`)
+      return
+    }
+
     try {
       if (currentArea) {
         // Update existing area
@@ -80,6 +97,7 @@ const Area = () => {
             area._id === currentArea._id ? response.data : area
           )
         )
+        toast.success("Area updated successfully!")
       } else {
         // Create new area
         const response = await axios.post(
@@ -87,13 +105,24 @@ const Area = () => {
           formData
         )
         setAreas([...areas, response.data])
+        toast.success("Area created successfully!")
       }
       handleCloseModal()
     } catch (err) {
       console.error("Submit Error:", err)
-      setError(
-        `Failed to ${currentArea ? "update" : "create"} area: ${err.message}`
-      )
+      if (err.response && err.response.data.errors) {
+        setErrors(err.response.data.errors)
+        toast.error("Validation failed. Check the form for errors.")
+      } else {
+        setErrors({
+          general: `Failed to ${currentArea ? "update" : "create"} area: ${
+            err.message
+          }`,
+        })
+        toast.error(
+          `Failed to ${currentArea ? "update" : "create"} area: ${err.message}`
+        )
+      }
     }
   }
 
@@ -102,8 +131,10 @@ const Area = () => {
     try {
       await axios.delete(`http://localhost:3000/areas/${id}`)
       setAreas(areas.filter((area) => area._id !== id))
+      toast.success("Area deleted successfully!")
     } catch (err) {
       setError(`Failed to delete area: ${err.message}`)
+      toast.error(`Failed to delete area: ${err.message}`)
     }
   }
 
@@ -130,6 +161,25 @@ const Area = () => {
     "OBSERVATION_UNIT",
   ]
 
+  // Define form fields for the Modal
+  const areaFields = [
+    {
+      name: "name",
+      label: "Area Name",
+      type: "select",
+      options: areaNames.map((name) => ({ value: name, label: name })),
+      placeholder: "Select an area",
+      required: true,
+    },
+    {
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Enter description",
+      rows: 3,
+    },
+  ]
+
   return (
     <div
       style={{
@@ -138,6 +188,7 @@ const Area = () => {
         minHeight: "100vh",
       }}
     >
+      <ToastContainer />
       <div
         style={{
           display: "flex",
@@ -282,109 +333,16 @@ const Area = () => {
 
       {/* Modal for adding/editing areas */}
       <Modal
+        key={currentArea?._id || "new-area"}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={currentArea ? "Edit Area" : "Add New Area"}
-      >
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='name'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Area Name
-            </label>
-            <select
-              id='name'
-              name='name'
-              value={formData.name}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-              required
-            >
-              <option value='' disabled>
-                Select an area
-              </option>
-              {areaNames.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor='description'
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              Description
-            </label>
-            <textarea
-              id='description'
-              name='description'
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-          </div>
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}
-          >
-            <button
-              type='button'
-              onClick={handleCloseModal}
-              style={{
-                padding: "8px 16px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                backgroundColor: "#fff",
-                color: "#1f2937",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#3b82f6",
-                color: "#fff",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              {currentArea ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        formData={formData}
+        setFormData={setFormData}
+        handleSubmit={handleSubmit}
+        errors={errors}
+        fields={areaFields}
+      />
     </div>
   )
 }

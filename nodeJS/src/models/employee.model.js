@@ -1,44 +1,92 @@
-const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+/** @format */
 
+const mongoose = require("mongoose")
+const bcrypt = require("bcrypt")
 
 const employeeSchema = mongoose.Schema({
-  cin: Number,
-  name: String,
-  familyName: String,
-  image : String,
+  cin: {
+    type: String,
+    required: [true, "Le CIN est requis"],
+    unique: [true, "Ce CIN existe déjà"],
+    validate: {
+      validator: function (v) {
+        return /^[0-9]{8}$/.test(v)
+      },
+      message: "Le CIN doit avoir exactement 8 chiffres",
+    },
+  },
+  name: {
+    type: String,
+    required: [true, "Le prénom est requis"],
+    trim: true,
+    minlength: [2, "Le prénom doit avoir au moins 2 caractères"],
+    maxlength: [50, "Le prénom ne peut pas dépasser 50 caractères"],
+  },
+  familyName: {
+    type: String,
+    required: [true, "Le nom de famille est requis"],
+    trim: true,
+    minlength: [2, "Le nom de famille doit avoir au moins 2 caractères"],
+    maxlength: [50, "Le nom de famille ne peut pas dépasser 50 caractères"],
+  },
+  image: String,
   birthday: Date,
-  gender: String,
-  phone: String,
-  imagePath: { type: String, required: false }, // Le chemin du fichier image stocké
-  faceDescriptor: { type: [Number], required: false }, // Descripteur facial
+  gender: {
+    type: String,
+    required: [true, "Le genre est requis"],
+    enum: {
+      values: ["Man", "Woman"],
+      message: "Le genre doit être 'Man' ou 'Woman'",
+    },
+  },
+  phone: {
+    type: String,
+    required: [true, "Le numéro de téléphone est requis"],
+    match: [
+      /^\+?[1-9]\d{1,14}$/,
+      "Veuillez entrer un numéro de téléphone valide",
+    ],
+  },
+  imagePath: { type: String, required: false },
+  faceDescriptor: { type: [Number], required: false },
   role: {
     type: String,
-    enum: [
-      "admin",
-      "doctor",
-      "nurse",
-      "triage_nurse",
-      "receptionnist",
-      "ambulance_driver",
-    ],
+    required: [true, "Le rôle est requis"],
+    enum: {
+      values: [
+        "admin",
+        "doctor",
+        "nurse",
+        "triage_nurse",
+        "receptionnist",
+        "ambulance_driver",
+      ],
+      message: "Rôle invalide",
+    },
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "L'email est requis"],
     unique: true,
+    trim: true,
+    lowercase: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      "Veuillez entrer un email valide",
+    ],
   },
   password: {
     type: String,
-    required: true,
+    required: [true, "Le mot de passe est requis"],
+    minlength: [8, "Le mot de passe doit avoir au moins 8 caractères"],
   },
 
   resetToken: { type: String, default: "" },
   joinDate: Date,
   adresse: String,
-
   status: {
     type: String,
+    default: "active",
     enum: ["active", "on_leave", "retired"],
   },
 
@@ -57,22 +105,22 @@ const employeeSchema = mongoose.Schema({
       certification: String,
     },
   },
-});
-
-
+})
 
 employeeSchema.pre("save", async function (next) {
-  if(!this.image === ""  || this.image === null) this.image = "../../uploads/anonyme.jpg"
-  if (!this.isModified("password")) {
-    return next();
+  if (!this.image || this.image === "") {
+    this.image = "../../uploads/anonyme.jpg"
   }
-  const hash = await bcrypt.hash(this.password, 10);
-  this.password = hash;
-  next();
-});
 
+  if (!this.isModified("password")) {
+    return next()
+  }
 
+  const hash = await bcrypt.hash(this.password, 10)
+  this.password = hash
+  next()
+})
 
-const Employee = mongoose.model("employees", employeeSchema);
+const Employee = mongoose.model("employees", employeeSchema)
 
-module.exports = Employee;
+module.exports = Employee

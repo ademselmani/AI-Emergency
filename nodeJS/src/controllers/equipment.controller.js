@@ -3,6 +3,9 @@
 const Equipment = require("../models/equipment.model")
 const Room = require("../models/room.model")
 
+const twilio = require("twilio")
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
+
 // Create new equipment
 exports.createEquipment = async (req, res) => {
   try {
@@ -106,5 +109,33 @@ exports.deleteEquipment = async (req, res) => {
   } catch (err) {
     console.error("Error deleting equipment:", err) // Add logging
     res.status(500).json({ error: "Internal server error" })
+  }
+}
+
+
+exports.sendNotification = async (req, res) => {
+  try {
+    const equipment = await Equipment.findById(req.params.id)
+    if (!equipment) {
+      return res.status(404).json({ message: "Equipment not found" })
+    }
+    const message = `Reminder: ${equipment.name} (Serial: ${
+      equipment.serialNumber
+    }) is ${
+      new Date(equipment.nextMaintenanceDate) < new Date()
+        ? "overdue"
+        : "due soon"
+    } for maintenance! Next maintenance date: ${new Date(
+      equipment.nextMaintenanceDate
+    ).toLocaleDateString()}.`
+    await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: "+21625837933", 
+    })
+    res.json({ message: "Reminder sent successfully" })
+  } catch (err) {
+    console.error("Error sending notification:", err)
+    res.status(500).json({ error: "Failed to send reminder" })
   }
 }
