@@ -146,7 +146,7 @@ const Equipment = () => {
       ? new Date(formData.purchaseDate)
       : null
     const lastMaintenanceDate = formData.lastMaintenanceDate
-      ? new Date(formData.lastMaintenanceDate)
+      ? new Date(formData.lasttenanceDate)
       : null
     const nextMaintenanceDate = formData.nextMaintenanceDate
       ? new Date(formData.nextMaintenanceDate)
