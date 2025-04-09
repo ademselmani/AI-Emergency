@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./LeavesList.css";
+import { toast } from 'react-toastify'; // For better notifications
+import 'react-toastify/dist/ReactToastify.css';
 
 const Listleaves = () => {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchRequests = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("http://localhost:3000/api/leaves/requests", {
           headers: {
@@ -21,10 +25,14 @@ const Listleaves = () => {
         if (response.ok) {
           setRequests(data);
         } else {
-          setError(data.error || "Erreur lors du chargement des demandes.");
+          setError(data.error || "Error loading leave requests.");
+          toast.error(data.error || "Error loading leave requests.");
         }
       } catch (err) {
-        setError("Erreur serveur, veuillez réessayer.");
+        setError("Server error, please try again.");
+        toast.error("Server error, please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -46,19 +54,35 @@ const Listleaves = () => {
 
       if (response.ok) {
         setRequests(requests.map((req) => (req._id === id ? { ...req, status } : req)));
+        
+        // Show success notification with email confirmation
+        if (status === "approve") {
+          toast.success(
+            <div>
+              <p>Leave approved successfully!</p>
+              <p>Notification email sent to employee.</p>
+            </div>,
+            { autoClose: 3000 }
+          );
+        } else {
+          toast.success("Leave request updated successfully!", { autoClose: 2000 });
+        }
       } else {
-        alert(data.error || "Erreur lors de la mise à jour.");
+        toast.error(data.error || "Error updating request.");
       }
     } catch (error) {
-      alert("Erreur serveur, veuillez réessayer.");
+      toast.error("Server error, please try again.");
+      console.error("Update error:", error);
     }
   };
 
   const deleteRequest = async (id) => {
-    const url = `http://localhost:3000/api/leaves/${id}`;
+    if (!window.confirm("Are you sure you want to delete this leave request?")) {
+      return;
+    }
     
     try {
-      const response = await fetch(url, {
+      const response = await fetch(`http://localhost:3000/api/leaves/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -69,11 +93,13 @@ const Listleaves = () => {
 
       if (response.ok) {
         setRequests(requests.filter((req) => req._id !== id));
+        toast.success("Leave request deleted successfully!");
       } else {
-        alert(data.error || "Erreur lors de la suppression.");
+        toast.error(data.error || "Error deleting request.");
       }
     } catch (error) {
-      alert("Erreur serveur, veuillez réessayer.");
+      toast.error("Server error, please try again.");
+      console.error("Delete error:", error);
     }
   };
 
@@ -82,10 +108,11 @@ const Listleaves = () => {
     : requests.filter((req) => req.status === filterStatus);
 
   const getStatusCount = (status) => requests.filter(r => r.status === status).length;
+
   return (
     <div className="listleaves-container">
       <div className="listleaves-header">
-        <h2 className="listleaves-title">Leaves </h2>
+        <h2 className="listleaves-title">Leave Requests</h2>
         
         <div className="filter-buttons">
           <button
@@ -115,7 +142,13 @@ const Listleaves = () => {
         </div>
       </div>
 
-      {error && (
+      {isLoading && (
+        <div className="loading-indicator">
+          <p>Loading leave requests...</p>
+        </div>
+      )}
+
+      {error && !isLoading && (
         <div className="error-message">
           <p>{error}</p>
         </div>
@@ -127,7 +160,7 @@ const Listleaves = () => {
             <div key={request._id} className="leave-card">
               <div className="card-header">
                 <div className="employee-info">
-                  <h3 className="employee-name">{request.employee?.name || "Non spécifié"}</h3>
+                  <h3 className="employee-name">{request.employee?.name || "Not specified"}</h3>
                   <p className="employee-email">{request.employee?.email || "N/A"}</p>
                 </div>
                 <span className={`status-badge status-${request.status}`}>
@@ -164,6 +197,7 @@ const Listleaves = () => {
                     <button
                       onClick={() => updateRequestStatus(request._id, "approve")}
                       className="action-button approve-button"
+                      title="Approve leave request"
                     >
                       <span className="icon-check"></span>
                       Approve
@@ -171,6 +205,7 @@ const Listleaves = () => {
                     <button
                       onClick={() => updateRequestStatus(request._id, "reject")}
                       className="action-button reject-button"
+                      title="Reject leave request"
                     >
                       <span className="icon-cross"></span>
                       Reject
@@ -180,6 +215,7 @@ const Listleaves = () => {
                 <button
                   onClick={() => deleteRequest(request._id)}
                   className="action-button delete-button"
+                  title="Delete leave request"
                 >
                   <span className="icon-trash"></span>
                 </button>
@@ -187,9 +223,11 @@ const Listleaves = () => {
             </div>
           ))
         ) : (
-          <div className="no-requests">
-            <p>Aucune demande trouvée</p>
-          </div>
+          !isLoading && (
+            <div className="no-requests">
+              <p>No leave requests found</p>
+            </div>
+          )
         )}
       </div>
     </div>
