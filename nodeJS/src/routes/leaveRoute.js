@@ -210,11 +210,12 @@ router.put("/approve/:id", authMiddleware, async (req, res) => {
     const leaveDays = Math.ceil((new Date(request.endDate) - new Date(request.startDate)) / (1000 * 60 * 60 * 24)) + 1;
 
     if (request.employee.leaveQuota < leaveDays) {
+
       return res.status(400).json({ error: "Not enough leave quota available" });
     }
 
     request.employee.leaveQuota -= leaveDays;
-    await request.employee.save();
+    //await request.employee.save();
 
     request.status = "approved";
     await request.save();

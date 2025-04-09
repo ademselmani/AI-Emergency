@@ -221,6 +221,16 @@ const Sidebar = () => {
           >   
             <i className='menu-icon tf-icons bx bx-user' />
             <div data-i18n='Analytics'>My profile</div>
+
+          </NavLink>
+          <NavLink 
+            to='/shift' 
+            className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
+            end
+          >   
+            <i className='menu-icon tf-icons bx bx-calendar' />
+            <div data-i18n='Analytics'>Shift</div>
+            
           </NavLink>
         </li>
         

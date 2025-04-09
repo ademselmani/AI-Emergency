@@ -31,7 +31,7 @@ const leaveRoute = require("./src/routes/leaveRoute")
 const treatmentRoutes = require('./src/routes/treatmentRoutes');
 const prescriptionRoutes = require('./src/routes/prescriptionRoutes');
 const demandeRoutes = require("./src/routes/demandeRoutes"); 
-
+const Demande = require("./src/models/demande");
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
@@ -144,7 +144,7 @@ app.use("/shifts", shiftRoutes);
 app.use("/api/treatments", treatmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/patients", patientRoutes);
-
+app.use("/api/demandes",demandeRoutes);
 // ✅ **Central Error Handling**
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
