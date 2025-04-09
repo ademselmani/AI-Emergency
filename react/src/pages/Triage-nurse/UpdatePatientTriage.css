@@ -81,4 +81,6 @@
     font-weight: bold;
   }
   
-  
+  .error {
+    border-color: red;
+  }

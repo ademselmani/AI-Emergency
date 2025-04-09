@@ -107,6 +107,30 @@ const signup = async (data) => {
     if (!faceDescriptor || faceDescriptor.length === 0) {
       throw new Error("❌ Aucun visage détecté dans l'image !");
     }
+    // Vérifier si ce visage est déjà utilisé
+    const existingUsers = await User.find({ faceDescriptor: { $exists: true } });
+
+    let isFaceUsed = false;
+    for (const existingUser of existingUsers) {
+      if (!existingUser.faceDescriptor || existingUser.faceDescriptor.length === 0) continue;
+    
+      // Convertir les descripteurs en Float32Array pour comparaison
+      const storedDescriptor = new Float32Array(existingUser.faceDescriptor);
+      const currentDescriptor = new Float32Array(faceDescriptor);
+    
+      const distance = faceapi.euclideanDistance(currentDescriptor, storedDescriptor);
+      console.log(`📏 Distance avec ${existingUser.email}:`, distance);
+    
+      if (distance < 0.4) { // 0.4 = seuil strict pour considérer que c'est la même personne
+        isFaceUsed = true;
+        break;
+      }
+    }
+    
+    if (isFaceUsed) {
+      throw new Error("❌ Ce visage est déjà associé à un autre compte.");
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     

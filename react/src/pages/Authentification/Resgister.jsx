@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Eye, EyeOff } from "lucide-react"; // Utilisation d'icônes Lucide (tu peux aussi utiliser FontAwesome ou Material Icons)
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
-  // State variables to store form data
   const [formData, setFormData] = useState({
     name: "",
     familyName: "",
@@ -12,30 +11,25 @@ const Register = () => {
     role: "",
     phone: "",
     password: "",
-    image: null, // State for image upload
+    image: null,
   });
-  const [showPassword, setShowPassword] = useState(false);
 
-  // State variables for error handling
+  const [previewImage, setPreviewImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Handle input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle image upload
   const handleImageChange = (e) => {
-    setFormData({
-      ...formData,
-      image: e.target.files[0], // Store the selected file
-    });
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setFormData({ ...formData, image: file });
+    setPreviewImage(URL.createObjectURL(file));
   };
 
-  // Handle camera capture
   const handleCapture = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -46,25 +40,21 @@ const Register = () => {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
 
-      // Wait until the video is playing
       video.onplaying = () => {
         setTimeout(() => {
-          // Set the canvas size based on video dimensions
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          // Draw the current frame to canvas
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-          // Convert canvas to image blob
           canvas.toBlob((blob) => {
-            setFormData({
-              ...formData,
-              image: blob, // Set the image as a blob
-            });
+            if (blob) {
+              setFormData({ ...formData, image: blob });
+              setPreviewImage(URL.createObjectURL(blob));
+            }
           });
 
-          stream.getTracks().forEach((track) => track.stop()); // Stop video stream
-        }, 1000); // Capture image after 1 second
+          stream.getTracks().forEach((track) => track.stop());
+        }, 1000);
       };
     } catch (error) {
       console.error("Error accessing camera: ", error);
@@ -72,7 +62,6 @@ const Register = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -87,7 +76,7 @@ const Register = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-    
+
       if (response.status === 201) {
         alert("User created successfully!");
       }
@@ -102,16 +91,16 @@ const Register = () => {
         <div className="card">
           <div className="card-body">
             <div className="app-brand justify-content-center">
-              <a href="index.html" className="app-brand-link gap-2">
-                <span className="app-brand-logo demo"></span>
-                <span className="app-brand-text demo text-body fw-bolder">Create an employee</span>
+              <a href="#" className="app-brand-link gap-2">
+                <span className="app-brand-text demo text-body fw-bolder">
+                  Create an employee
+                </span>
               </a>
             </div>
-           
 
             {error && <div className="alert alert-danger">{error}</div>}
 
-            <form id="formAuthentication" className="mb-3" onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label htmlFor="name" className="form-label">First Name</label>
                 <input
@@ -119,12 +108,12 @@ const Register = () => {
                   className="form-control"
                   id="name"
                   name="name"
-                  placeholder="Enter your username"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  autoFocus
                 />
+              </div>
+
               <div className="mb-3">
                 <label htmlFor="familyName" className="form-label">Last Name</label>
                 <input
@@ -132,15 +121,14 @@ const Register = () => {
                   className="form-control"
                   id="familyName"
                   name="familyName"
-                  placeholder="Enter your last name"
                   value={formData.familyName}
                   onChange={handleChange}
                   required
-                  autoFocus
                 />
+              </div>
 
-                <div className="mb-3">
-                <label htmlFor="gender" className="form-label">gender</label>
+              <div className="mb-3">
+                <label htmlFor="gender" className="form-label">Gender</label>
                 <select
                   className="form-control"
                   id="gender"
@@ -150,12 +138,12 @@ const Register = () => {
                   required
                 >
                   <option value="">Select a gender</option>
-                  <option value="doctor">Man</option>
-                  <option value="admin">Woman</option>
+                  <option value="man">Man</option>
+                  <option value="woman">Woman</option>
                 </select>
               </div>
 
-                <div className="mb-3">
+              <div className="mb-3">
                 <label htmlFor="role" className="form-label">Role</label>
                 <select
                   className="form-control"
@@ -169,12 +157,12 @@ const Register = () => {
                   <option value="doctor">Doctor</option>
                   <option value="admin">Admin</option>
                   <option value="nurse">Nurse</option>
-                  <option value="triage_nurse">Triage-nurse</option>
+                  <option value="triage_nurse">Triage Nurse</option>
                   <option value="receptionnist">Receptionnist</option>
-                  <option value="ambulance_driver">Ambulance_driver</option>
+                  <option value="ambulance_driver">Ambulance Driver</option>
                 </select>
               </div>
-              </div>
+
               <div className="mb-3">
                 <label htmlFor="email" className="form-label">Email</label>
                 <input
@@ -182,13 +170,12 @@ const Register = () => {
                   className="form-control"
                   id="email"
                   name="email"
-                  placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                 />
               </div>
-              
+
               <div className="mb-3">
                 <label htmlFor="phone" className="form-label">Phone</label>
                 <input
@@ -196,37 +183,34 @@ const Register = () => {
                   className="form-control"
                   id="phone"
                   name="phone"
-                  placeholder="Enter your phone"
                   value={formData.phone}
                   onChange={handleChange}
                   required
                 />
               </div>
-             <div className="mb-3 form-password-toggle">
-  <label className="form-label" htmlFor="password">Password</label>
-  <div className="input-group input-group-merge">
-    <input
-      type={showPassword ? "text" : "password"}
-      id="password"
-      className="form-control"
-      name="password"
-      placeholder="Enter your password"
-      value={formData.password}
-      onChange={handleChange}
-      required
-    />
-    <button
-      type="button"
-      className="btn btn-outline-secondary"
-      onClick={() => setShowPassword(!showPassword)}
-    >
-      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-    </button>
-  </div>
-</div>
 
+              <div className="mb-3 form-password-toggle">
+                <label className="form-label" htmlFor="password">Password</label>
+                <div className="input-group input-group-merge">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    className="form-control"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
 
-              {/* Image Upload Field */}
               <div className="mb-3">
                 <label htmlFor="image" className="form-label">Upload Image</label>
                 <input
@@ -234,38 +218,45 @@ const Register = () => {
                   className="form-control"
                   id="image"
                   name="image"
+                  accept="image/*"
                   onChange={handleImageChange}
                 />
               </div>
 
-              {/* Camera Capture Button */}
+              {/* Affichage de l’image capturée ou uploadée */}
+              {previewImage && (
+                <div className="mb-3 text-center">
+                  <p className="text-success">✅ Image sélectionnée</p>
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                    style={{
+                      maxWidth: "200px",
+                      borderRadius: "8px",
+                      border: "2px solid #198754",
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Capture avec caméra */}
               <div className="mb-3">
                 <button type="button" className="btn btn-secondary" onClick={handleCapture}>
                   Capture Photo
                 </button>
               </div>
 
-              <div className="mb-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="terms-conditions"
-                    name="terms"
-                  />
-                  <label className="form-check-label" htmlFor="terms-conditions">
-                    I agree to
-                    <a href=";">privacy policy & terms</a>
-                  </label>
-                </div>
+              <div className="mb-3 form-check">
+                <input className="form-check-input" type="checkbox" id="terms" />
+                <label className="form-check-label" htmlFor="terms">
+                  I agree to <a href="#">privacy policy & terms</a>
+                </label>
               </div>
-              <button className="btn btn-primary d-grid w-100" type="submit">
+
+              <button type="submit" className="btn btn-primary d-grid w-100">
                 Sign up
               </button>
-           </div>
             </form>
-
-         
           </div>
         </div>
       </div>
