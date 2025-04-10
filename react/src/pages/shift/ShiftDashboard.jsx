@@ -21,6 +21,7 @@ export function ShiftDashboard() {
   const [currentShiftEmployees, setCurrentShiftEmployees] = useState([]);
 
   function handleDateSelect(selectInfo) {
+    if(localStorage.getItem("role") != "admin") return
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
     setSelectedEmployees({});
@@ -46,7 +47,7 @@ export function ShiftDashboard() {
   }
 
   function getShiftTypeFromStartTime(startTime) {
-    const hour = startTime.split('T')[1].substring(0, 2);
+    const hour = startTime.split("T")[1].substring(0, 2);
     if (hour === "00") return "Day_shift";
     if (hour === "08") return "Evening_shift";
     if (hour === "16") return "Night_shift";
@@ -57,21 +58,21 @@ export function ShiftDashboard() {
     try {
       const response = await axios.get("http://localhost:3000/shifts");
       const assignments = {};
-      
+
       for (const shift of response.data) {
-        const date = new Date(shift.date).toISOString().split('T')[0];
+        const date = new Date(shift.date).toISOString().split("T")[0];
         const shiftType = shift.shiftType;
-        
+
         if (selectedEvent.id === shift._id) continue;
-        
+
         if (shift.employees && shift.employees.length > 0) {
-          shift.employees.forEach(emp => {
+          shift.employees.forEach((emp) => {
             const key = `${date}-${shiftType}-${emp.employeeId}`;
             assignments[key] = true;
           });
         }
       }
-      
+
       setEmployeeShiftAssignments(assignments);
     } catch (error) {
       console.error("Error processing employee assignments:", error);
@@ -81,25 +82,54 @@ export function ShiftDashboard() {
   async function getShifts() {
     try {
       const response = await axios.get("http://localhost:3000/shifts");
-      const formattedShifts = response.data.map((shift) => {
-        let date = new Date(shift.date).toISOString().split("T")[0];
-        return {
-          id: shift._id,
-          title: shift.area,
-          start:
-            shift.shiftType === "Day_shift"
-              ? `${date}T00:00:01`
-              : shift.shiftType === "Evening_shift"
-              ? `${date}T08:00:01`
-              : `${date}T16:00:01`,
-          end:
-            shift.shiftType === "Day_shift"
-              ? `${date}T08:00:00`
-              : shift.shiftType === "Evening_shift"
-              ? `${date}T16:00:00`
-              : `${date}T23:59:59`,
-        };
-      });
+      let formattedShifts;
+      if ("admin" == localStorage.getItem("role")) {
+        formattedShifts = response.data.map((shift) => {
+          let date = new Date(shift.date).toISOString().split("T")[0];
+          return {
+            id: shift._id,
+            title: shift.area,
+            start:
+              shift.shiftType === "Day_shift"
+                ? `${date}T00:00:01`
+                : shift.shiftType === "Evening_shift"
+                ? `${date}T08:00:01`
+                : `${date}T16:00:01`,
+            end:
+              shift.shiftType === "Day_shift"
+                ? `${date}T08:00:00`
+                : shift.shiftType === "Evening_shift"
+                ? `${date}T16:00:00`
+                : `${date}T23:59:59`,
+          };
+        });
+      } else {
+        formattedShifts = response.data
+          .filter((shift) =>
+            shift.employees.some(
+              (employee) => employee.employeeId == localStorage.getItem("user_id")
+            )
+          )
+          .map((shift) => {
+            let date = new Date(shift.date).toISOString().split("T")[0];
+            return {
+              id: shift._id,
+              title: shift.area,
+              start:
+                shift.shiftType === "Day_shift"
+                  ? `${date}T00:00:01`
+                  : shift.shiftType === "Evening_shift"
+                  ? `${date}T08:00:01`
+                  : `${date}T16:00:01`,
+              end:
+                shift.shiftType === "Day_shift"
+                  ? `${date}T08:00:00`
+                  : shift.shiftType === "Evening_shift"
+                  ? `${date}T16:00:00`
+                  : `${date}T23:59:59`,
+            };
+          });
+      }
       setShifts(formattedShifts);
     } catch (error) {
       console.error("Error retrieving shifts:", error);
@@ -124,8 +154,8 @@ export function ShiftDashboard() {
 
   const getAllSelectedEmployeeIds = () => {
     const allSelectedIds = [];
-    Object.values(selectedEmployees).forEach(roleSelections => {
-      Object.values(roleSelections).forEach(id => {
+    Object.values(selectedEmployees).forEach((roleSelections) => {
+      Object.values(roleSelections).forEach((id) => {
         if (id) allSelectedIds.push(id);
       });
     });
@@ -133,13 +163,13 @@ export function ShiftDashboard() {
   };
 
   const isEmployeeAssignedToSameShift = (employeeId, date, shiftType) => {
-    const datePart = date.split('T')[0];
+    const datePart = date.split("T")[0];
     const key = `${datePart}-${shiftType}-${employeeId}`;
-    
+
     if (currentShiftEmployees.includes(employeeId)) {
       return false;
     }
-    
+
     return employeeShiftAssignments[key] === true;
   };
 
@@ -151,7 +181,7 @@ export function ShiftDashboard() {
 
     const areaRules = staffingRules[selectedArea];
     if (!areaRules) return true;
-    
+
     let allFilled = true;
     let missingPositions = [];
 
@@ -166,7 +196,9 @@ export function ShiftDashboard() {
     });
 
     if (!allFilled) {
-      setValidationError(`Please fill all required positions: ${missingPositions.join(", ")}`);
+      setValidationError(
+        `Please fill all required positions: ${missingPositions.join(", ")}`
+      );
     } else {
       setValidationError("");
     }
@@ -176,15 +208,29 @@ export function ShiftDashboard() {
 
   function handleEmployeeSelection(role, index, value) {
     const currentShiftType = document.querySelector("#siftType").value;
-    
-    if (value && isEmployeeAssignedToSameShift(value, selectedDate, currentShiftType)) {
-      setValidationError(`This employee is already assigned to a ${currentShiftType.replace('_', ' ')} on this date.`);
+
+    if (
+      value &&
+      isEmployeeAssignedToSameShift(value, selectedDate, currentShiftType)
+    ) {
+      setValidationError(
+        `This employee is already assigned to a ${currentShiftType.replace(
+          "_",
+          " "
+        )} on this date.`
+      );
       return;
     }
 
     const allSelectedIds = getAllSelectedEmployeeIds();
-    if (value && allSelectedIds.includes(value) && selectedEmployees[role]?.[index] !== value) {
-      setValidationError("This employee is already selected for another role in this shift.");
+    if (
+      value &&
+      allSelectedIds.includes(value) &&
+      selectedEmployees[role]?.[index] !== value
+    ) {
+      setValidationError(
+        "This employee is already selected for another role in this shift."
+      );
       return;
     }
 
@@ -192,14 +238,15 @@ export function ShiftDashboard() {
       ...prev,
       [role]: { ...(prev[role] || {}), [index]: value },
     }));
-    
+
     setValidationError("");
   }
 
   function handleEventClick(eventClickInfo) {
+    if(localStorage.getItem("role") != "admin") return
     setSelectedEmployees({});
     setValidationError("");
-    
+
     let starTime = eventClickInfo.event.start.toString().split(" ")[4];
     if (starTime === "00:00:01") setselectedShiftType("Day_shift");
     else if (starTime === "08:00:01") setselectedShiftType("Evening_shift");
@@ -210,33 +257,33 @@ export function ShiftDashboard() {
     setSelectedDate(eventClickInfo.event.startStr);
     setShowDeleteButton(true);
     setShowPopup(true);
-    
+
     loadExistingEmployees(eventClickInfo.event.id);
   }
-  
+
   async function loadExistingEmployees(eventId) {
     try {
       const shift = await getShiftById(eventId);
       if (shift && shift.employees) {
-        const employeeIds = shift.employees.map(emp => emp.employeeId);
+        const employeeIds = shift.employees.map((emp) => emp.employeeId);
         setCurrentShiftEmployees(employeeIds);
-        
+
         const employeeSelections = {};
         const employeesByRole = {};
-        shift.employees.forEach(emp => {
+        shift.employees.forEach((emp) => {
           if (!employeesByRole[emp.role]) {
             employeesByRole[emp.role] = [];
           }
           employeesByRole[emp.role].push(emp.employeeId);
         });
-        
+
         Object.entries(employeesByRole).forEach(([role, ids]) => {
           employeeSelections[role] = {};
           ids.forEach((id, index) => {
             employeeSelections[role][index] = id;
           });
         });
-        
+
         setSelectedEmployees(employeeSelections);
       }
     } catch (error) {
@@ -251,17 +298,30 @@ export function ShiftDashboard() {
 
     const currentShiftType = document.querySelector("#siftType").value;
     const selectedIds = getAllSelectedEmployeeIds();
-    
+
     const uniqueIds = new Set(selectedIds);
     if (uniqueIds.size !== selectedIds.length) {
-      setValidationError("The same employee cannot be assigned to multiple roles in the same shift.");
+      setValidationError(
+        "The same employee cannot be assigned to multiple roles in the same shift."
+      );
       return;
     }
 
     for (const employeeId of selectedIds) {
-      if (!currentShiftEmployees.includes(employeeId) && 
-          isEmployeeAssignedToSameShift(employeeId, selectedDate, currentShiftType)) {
-        setValidationError(`One or more employees are already assigned to a ${currentShiftType.replace('_', ' ')} on this date.`);
+      if (
+        !currentShiftEmployees.includes(employeeId) &&
+        isEmployeeAssignedToSameShift(
+          employeeId,
+          selectedDate,
+          currentShiftType
+        )
+      ) {
+        setValidationError(
+          `One or more employees are already assigned to a ${currentShiftType.replace(
+            "_",
+            " "
+          )} on this date.`
+        );
         return;
       }
     }
@@ -271,7 +331,9 @@ export function ShiftDashboard() {
     let date = selectedDate;
 
     if (hour === "00") {
-      date = `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${timePart ? timePart.split(":")[2] : "00"}:00`;
+      date = `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${
+        timePart ? timePart.split(":")[2] : "00"
+      }:00`;
     }
 
     let eventId = selectedEvent.id;
@@ -285,17 +347,19 @@ export function ShiftDashboard() {
 
     newShift.id = eventId;
 
-    Object.entries(staffingRules[selectedArea] || {}).forEach(([role, count]) => {
-      for (let i = 0; i < count; i++) {
-        const selectedValue = selectedEmployees[role]?.[i] || "";
-        if (selectedValue) {
-          newShift.employees.push({
-            employeeId: selectedValue,
-            role: role,
-          });
+    Object.entries(staffingRules[selectedArea] || {}).forEach(
+      ([role, count]) => {
+        for (let i = 0; i < count; i++) {
+          const selectedValue = selectedEmployees[role]?.[i] || "";
+          if (selectedValue) {
+            newShift.employees.push({
+              employeeId: selectedValue,
+              role: role,
+            });
+          }
         }
       }
-    });
+    );
 
     if (eventId) {
       axios
@@ -325,14 +389,18 @@ export function ShiftDashboard() {
   }
 
   async function updateShift(eventDropInfo) {
+    if(localStorage.getItem("role") != "admin") return
+
     const newDate = eventDropInfo.event.end.toISOString().split("T")[0];
     let starTime = eventDropInfo.event.start.toString().split(" ")[4];
     let endTime = eventDropInfo.event.end.toString().split(" ")[4];
 
     if (
       (starTime === "00:00:01" && endTime === "08:00:00") ||
-      (starTime === "08:00:01" && (endTime === "16:00:00" || endTime === "15:59:59")) ||
-      (starTime === "16:00:01" && (endTime === "23:59:59" || endTime === "00:00:00"))
+      (starTime === "08:00:01" &&
+        (endTime === "16:00:00" || endTime === "15:59:59")) ||
+      (starTime === "16:00:01" &&
+        (endTime === "23:59:59" || endTime === "00:00:00"))
     ) {
       const shift = await getShiftById(eventDropInfo.event.id);
       if (!shift) return;
@@ -340,7 +408,7 @@ export function ShiftDashboard() {
       if (starTime === "00:00:01") shift.shiftType = "Day_shift";
       else if (starTime === "08:00:01") shift.shiftType = "Evening_shift";
       else if (starTime === "16:00:01") shift.shiftType = "Night_shift";
-      
+
       shift.date = newDate;
 
       if (verifyarea(shift, eventDropInfo.event.end.toISOString())) {
@@ -349,24 +417,26 @@ export function ShiftDashboard() {
         return;
       }
 
-      const formattedDate = new Date(newDate).toISOString().split('T')[0];
+      const formattedDate = new Date(newDate).toISOString().split("T")[0];
       let conflictExists = false;
-      const currentShiftEmpIds = shift.employees.map(emp => emp.employeeId);
-      
+      const currentShiftEmpIds = shift.employees.map((emp) => emp.employeeId);
+
       if (shift)
-      if (shift.employees && shift.employees.length > 0) {
-        for (const emp of shift.employees) {
-          const key = `${formattedDate}-${shift.shiftType}-${emp.employeeId}`;
-          if (employeeShiftAssignments[key]) {
-            conflictExists = true;
-            break;
+        if (shift.employees && shift.employees.length > 0) {
+          for (const emp of shift.employees) {
+            const key = `${formattedDate}-${shift.shiftType}-${emp.employeeId}`;
+            if (employeeShiftAssignments[key]) {
+              conflictExists = true;
+              break;
+            }
           }
         }
-      }
-      
+
       if (conflictExists) {
         eventDropInfo.revert();
-        alert("Cannot move shift: One or more employees are already assigned to the same shift type on the target date");
+        alert(
+          "Cannot move shift: One or more employees are already assigned to the same shift type on the target date"
+        );
         return;
       }
 
@@ -375,7 +445,10 @@ export function ShiftDashboard() {
         getShifts();
         processEmployeeAssignments();
       } catch (error) {
-        console.error("Error modifying shift:", error.response?.data || error.message);
+        console.error(
+          "Error modifying shift:",
+          error.response?.data || error.message
+        );
       }
     } else {
       eventDropInfo.revert();
@@ -404,16 +477,29 @@ export function ShiftDashboard() {
 
     const currentShiftType = document.querySelector("#siftType").value;
     const selectedIds = getAllSelectedEmployeeIds();
-    
+
     const uniqueIds = new Set(selectedIds);
     if (uniqueIds.size !== selectedIds.length) {
-      setValidationError("The same employee cannot be assigned to multiple roles in the same shift.");
+      setValidationError(
+        "The same employee cannot be assigned to multiple roles in the same shift."
+      );
       return;
     }
 
     for (const employeeId of selectedIds) {
-      if (isEmployeeAssignedToSameShift(employeeId, selectedDate, currentShiftType)) {
-        setValidationError(`One or more employees are already assigned to a ${currentShiftType.replace('_', ' ')} on this date.`);
+      if (
+        isEmployeeAssignedToSameShift(
+          employeeId,
+          selectedDate,
+          currentShiftType
+        )
+      ) {
+        setValidationError(
+          `One or more employees are already assigned to a ${currentShiftType.replace(
+            "_",
+            " "
+          )} on this date.`
+        );
         return;
       }
     }
@@ -423,7 +509,9 @@ export function ShiftDashboard() {
     let date = selectedDate;
 
     if (hour === "00") {
-      date = `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${timePart ? timePart.split(":")[2] : "00"}:00`;
+      date = `${datePart}T01:${timePart ? timePart.split(":")[1] : "00"}:${
+        timePart ? timePart.split(":")[2] : "00"
+      }:00`;
     }
 
     const newShift = {
@@ -438,17 +526,19 @@ export function ShiftDashboard() {
       return;
     }
 
-    Object.entries(staffingRules[selectedArea] || {}).forEach(([role, count]) => {
-      for (let i = 0; i < count; i++) {
-        const selectedValue = selectedEmployees[role]?.[i] || "";
-        if (selectedValue) {
-          newShift.employees.push({
-            employeeId: selectedValue,
-            role: role,
-          });
+    Object.entries(staffingRules[selectedArea] || {}).forEach(
+      ([role, count]) => {
+        for (let i = 0; i < count; i++) {
+          const selectedValue = selectedEmployees[role]?.[i] || "";
+          if (selectedValue) {
+            newShift.employees.push({
+              employeeId: selectedValue,
+              role: role,
+            });
+          }
         }
       }
-    });
+    );
 
     axios
       .post("http://localhost:3000/shifts", newShift)
@@ -459,7 +549,10 @@ export function ShiftDashboard() {
         processEmployeeAssignments();
       })
       .catch((error) => {
-        setValidationError("Error adding shift: " + (error.response?.data?.error || "Unknown error"));
+        setValidationError(
+          "Error adding shift: " +
+            (error.response?.data?.error || "Unknown error")
+        );
       });
   }
 
@@ -475,7 +568,7 @@ export function ShiftDashboard() {
         initialView="timeGridWeek"
         weekends={true}
         events={shifts}
-        editable={true}
+        editable={ localStorage.getItem("role") == "admin" }
         eventDrop={updateShift}
         eventContent={renderEventContent}
         dateClick={handleDateSelect}
@@ -534,50 +627,55 @@ export function ShiftDashboard() {
           </div>
 
           {selectedArea &&
-            Object.entries(staffingRules[selectedArea] || {}).map(([role, count]) => (
-              <div key={role} className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700">
-                  {role} ({count} required)
-                </label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  {[...Array(count)].map((_, index) => {
-                    const allSelectedIds = getAllSelectedEmployeeIds();
-                    const currentValue = selectedEmployees[role]?.[index] || "";
-                    
-                    return (
-                      <select
-                        key={index}
-                        className="w-full p-2 border rounded-lg bg-gray-50"
-                        value={currentValue}
-                        onChange={(e) =>
-                          handleEmployeeSelection(role, index, e.target.value)
-                        }
-                      >
-                        <option value="">Select {role}</option>
-                        {activeEmployees
-                          .filter((employee) => employee.role === role)
-                          .map((employee) => {
-                            const isDisabled = allSelectedIds.includes(employee._id) && 
-                                             currentValue !== employee._id;
-                            return (
-                              <option
-                                key={employee._id}
-                                value={employee._id}
-                                disabled={isDisabled}
-                              >
-                                {employee.name} {isDisabled ? "(Already selected)" : ""}
-                              </option>
-                            );
-                          })}
-                      </select>
-                    );
-                  })}
+            Object.entries(staffingRules[selectedArea] || {}).map(
+              ([role, count]) => (
+                <div key={role} className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    {role} ({count} required)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {[...Array(count)].map((_, index) => {
+                      const allSelectedIds = getAllSelectedEmployeeIds();
+                      const currentValue =
+                        selectedEmployees[role]?.[index] || "";
+
+                      return (
+                        <select
+                          key={index}
+                          className="w-full p-2 border rounded-lg bg-gray-50"
+                          value={currentValue}
+                          onChange={(e) =>
+                            handleEmployeeSelection(role, index, e.target.value)
+                          }
+                        >
+                          <option value="">Select {role}</option>
+                          {activeEmployees
+                            .filter((employee) => employee.role === role)
+                            .map((employee) => {
+                              const isDisabled =
+                                allSelectedIds.includes(employee._id) &&
+                                currentValue !== employee._id;
+                              return (
+                                <option
+                                  key={employee._id}
+                                  value={employee._id}
+                                  disabled={isDisabled}
+                                >
+                                  {employee.name}{" "}
+                                  {isDisabled ? "(Already selected)" : ""}
+                                </option>
+                              );
+                            })}
+                        </select>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
 
           <div className="flex justify-between mt-4">
-            {(
+            {
               <button
                 type="button"
                 onClick={handleAddEvent}
@@ -586,7 +684,7 @@ export function ShiftDashboard() {
               >
                 Add Shift
               </button>
-            )}
+            }
 
             {showDeleteButton && (
               <>
@@ -634,7 +732,10 @@ async function getShiftById(id) {
     const response = await axios.get(`http://localhost:3000/shifts/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching shift:", error.response?.data || error.message);
+    console.error(
+      "Error fetching shift:",
+      error.response?.data || error.message
+    );
     return null;
   }
 }
@@ -644,7 +745,10 @@ async function deleteShiftId(id) {
     const response = await axios.delete(`http://localhost:3000/shifts/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error deleting shift:", error.response?.data || error.message);
+    console.error(
+      "Error deleting shift:",
+      error.response?.data || error.message
+    );
     return null;
   }
 }
