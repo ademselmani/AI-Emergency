@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
   className="layout-wrapper layout-content-navbar" 
   style={{ 
     // comment the background image because it hiddens the calender view in shift page
-    // backgroundImage: `url('/back.jpg')`, 
+     backgroundImage: `url('/back.jpg')`, 
     backgroundSize: '100% 100%', // Étire l'image pour remplir complètement l'élément
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',

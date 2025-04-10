@@ -44,7 +44,7 @@ const EditMedicalTreatment = () => {
         // Format doctors for react-select
         const formattedDoctors = doctorsRes.data.map((doctor) => ({
           value: doctor._id,
-          label: `${doctor.name} (${doctor.specialization})`,
+          label: `${doctor.name} ${doctor.familyName}`,
         }));
         setDoctors(formattedDoctors);
 

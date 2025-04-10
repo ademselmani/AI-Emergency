@@ -6,6 +6,8 @@ import { Card, Container, Row, Col, Button, Collapse, Spinner, Form, Badge } fro
 import { motion } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown, faChevronUp, faUserCircle, faAmbulance, faFileInvoiceDollar, faAddressBook, faClock } from '@fortawesome/free-solid-svg-icons';
 
 const ShowPatientTreatments = () => {
   const location = useLocation();
@@ -21,11 +23,23 @@ const ShowPatientTreatments = () => {
   const [doctors, setDoctors] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openSections, setOpenSections] = useState({});
+  const [openSections, setOpenSections] = useState({
+    basicInfo: false,
+    emergencyInfo: false,
+    insuranceInfo: false,
+    contactInfo: false,
+    timestamps: false
+  });
   const [patientDetails, setPatientDetails] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [treatmentsPerPage] = useState(6);
+
+  const InfoItem = ({ label, value }) => (
+    <div className="mb-2">
+      <strong>{label}:</strong> {value || 'N/A'}
+    </div>
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +53,7 @@ const ShowPatientTreatments = () => {
         setDoctors(doctorsRes.data);
         setEquipment(equipmentRes.data);
         setTreatments(treatmentsRes.data);
-        setPatientDetails(selectedPatient); // Set patient details from the selected patient
+        setPatientDetails(selectedPatient);
       } catch (error) {
         toast.error('Error loading data.');
       } finally {
@@ -92,7 +106,7 @@ const ShowPatientTreatments = () => {
   const getDoctorNamesByIds = (doctorIds = []) => {
     return doctorIds.map(id => {
       const doctor = doctors.find(doc => doc._id === id);
-      return doctor ? `${doctor.name} (${doctor.specialization})` : 'Unknown';
+      return doctor ? `${doctor.name} ${doctor.familyName}` : 'Unknown';
     }).join(', ');
   };
 
@@ -111,7 +125,10 @@ const ShowPatientTreatments = () => {
   };
 
   const toggleSection = (section) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const indexOfLastTreatment = currentPage * treatmentsPerPage;
@@ -125,69 +142,148 @@ const ShowPatientTreatments = () => {
     <Container className="mt-5">
       <ToastContainer />
       {patientDetails && (
-        <Card className="mb-4 shadow-sm">
+        <Card className="mb-4 shadow-sm border-primary">
+          <Card.Header className="bg-secondary text-white">
+            <h3 className="mb-0">Patient Information</h3>
+          </Card.Header>
           <Card.Body>
-            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('basicInfo')} className="clickable-title">
-              Basic Information <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
-            </motion.h2>
-            <Collapse in={openSections['basicInfo']}>
-              <div>
-                <p><strong>Name:</strong> {patientDetails.firstName} {patientDetails.lastName}</p>
-                <p><strong>Birth Date:</strong> {new Date(patientDetails.birthDate).toLocaleDateString()}</p>
-                <p><strong>Birth Place:</strong> {patientDetails.birthPlace}</p>
-                <p><strong>Sex:</strong> {patientDetails.sex}</p>
-                <p><strong>Phone:</strong> {patientDetails.phone}</p>
+            {/* Basic Information Section */}
+            <div className="info-section mb-4 border-bottom">
+              <div 
+                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
+                onClick={() => toggleSection('basicInfo')}
+              >
+                <h5 className="mb-0">
+                  <FontAwesomeIcon icon={faUserCircle} className="me-2" />
+                  Basic Information
+                </h5>
+                <FontAwesomeIcon icon={openSections.basicInfo ? faChevronUp : faChevronDown} />
               </div>
-            </Collapse>
+              <Collapse in={openSections.basicInfo}>
+                <div className="p-3">
+                  <Row>
+                    <Col md={6}>
+                      <InfoItem label="Full Name" value={`${patientDetails.firstName} ${patientDetails.lastName}`} />
+                      <InfoItem label="Birth Date" value={new Date(patientDetails.birthDate).toLocaleDateString()} />
+                      <InfoItem label="Birth Place" value={patientDetails.birthPlace} />
+                    </Col>
+                    <Col md={6}>
+                      <InfoItem label="Gender" value={patientDetails.sex} />
+                      <InfoItem label="Phone" value={patientDetails.phone} />
+                    </Col>
+                  </Row>
+                </div>
+              </Collapse>
+            </div>
 
-            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('emergencyInfo')} className="clickable-title">
-              Emergency Information <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
-            </motion.h2>
-            <Collapse in={openSections['emergencyInfo']}>
-              <div>
-                <p><strong>Arrival Mode:</strong> {patientDetails.arrivalMode}</p>
-                <p><strong>Emergency Reason:</strong> {patientDetails.emergencyReason}</p>
-                <p><strong>Observations:</strong> {patientDetails.observations}</p>
-                <p><strong>Status:</strong> {patientDetails.status}</p>
-                <p><strong>Emergency Area:</strong> {patientDetails.emergencyArea}</p>
+            {/* Emergency Information Section */}
+            <div className="info-section mb-4 border-bottom">
+              <div 
+                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
+                onClick={() => toggleSection('emergencyInfo')}
+              >
+                <h5 className="mb-0">
+                  <FontAwesomeIcon icon={faAmbulance} className="me-2" />
+                  Emergency Information
+                </h5>
+                <FontAwesomeIcon icon={openSections.emergencyInfo ? faChevronUp : faChevronDown} />
               </div>
-            </Collapse>
+              <Collapse in={openSections.emergencyInfo}>
+                <div className="p-3">
+                  <Row>
+                    <Col md={6}>
+                      <InfoItem label="Arrival Mode" value={patientDetails.arrivalMode} />
+                      <InfoItem label="Emergency Reason" value={patientDetails.emergencyReason} />
+                    </Col>
+                    <Col md={6}>
+                      <InfoItem label="Status" value={patientDetails.status} />
+                      <InfoItem label="Emergency Area" value={patientDetails.emergencyArea} />
+                    </Col>
+                  </Row>
+                  <InfoItem label="Observations" value={patientDetails.observations} />
+                </div>
+              </Collapse>
+            </div>
 
-            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('insuranceInfo')} className="clickable-title">
-              Insurance Details <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
-            </motion.h2>
-            <Collapse in={openSections['insuranceInfo']}>
-              <div>
-                <p><strong>Card Number:</strong> {patientDetails.insurance?.cardNumber || 'N/A'}</p>
-                <p><strong>Provider:</strong> {patientDetails.insurance?.provider || 'N/A'}</p>
+            {/* Insurance Information Section */}
+            <div className="info-section mb-4 border-bottom">
+              <div 
+                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
+                onClick={() => toggleSection('insuranceInfo')}
+              >
+                <h5 className="mb-0">
+                  <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" />
+                  Insurance Details
+                </h5>
+                <FontAwesomeIcon icon={openSections.insuranceInfo ? faChevronUp : faChevronDown} />
               </div>
-            </Collapse>
+              <Collapse in={openSections.insuranceInfo}>
+                <div className="p-3">
+                  <Row>
+                    <Col md={6}>
+                      <InfoItem label="Card Number" value={patientDetails.insurance?.cardNumber || 'N/A'} />
+                    </Col>
+                    <Col md={6}>
+                      <InfoItem label="Provider" value={patientDetails.insurance?.provider || 'N/A'} />
+                    </Col>
+                  </Row>
+                </div>
+              </Collapse>
+            </div>
 
-            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('contactInfo')} className="clickable-title">
-              Contact Person <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
-            </motion.h2>
-            <Collapse in={openSections['contactInfo']}>
-              <div>
-                <p><strong>Name:</strong> {patientDetails.contact?.name}</p>
-                <p><strong>Relation:</strong> {patientDetails.contact?.relation}</p>
-                <p><strong>Phone:</strong> {patientDetails.contact?.phone}</p>
-                <p><strong>Email:</strong> {patientDetails.contact?.email}</p>
+            {/* Contact Information Section */}
+            <div className="info-section mb-4 border-bottom">
+              <div 
+                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
+                onClick={() => toggleSection('contactInfo')}
+              >
+                <h5 className="mb-0">
+                  <FontAwesomeIcon icon={faAddressBook} className="me-2" />
+                  Contact Person
+                </h5>
+                <FontAwesomeIcon icon={openSections.contactInfo ? faChevronUp : faChevronDown} />
               </div>
-            </Collapse>
+              <Collapse in={openSections.contactInfo}>
+                <div className="p-3">
+                  <Row>
+                    <Col md={6}>
+                      <InfoItem label="Name" value={patientDetails.contact?.name} />
+                      <InfoItem label="Relation" value={patientDetails.contact?.relation} />
+                    </Col>
+                    <Col md={6}>
+                      <InfoItem label="Phone" value={patientDetails.contact?.phone} />
+                      <InfoItem label="Email" value={patientDetails.contact?.email} />
+                    </Col>
+                  </Row>
+                </div>
+              </Collapse>
+            </div>
 
-            <motion.h2 whileTap={{ scale: 0.95 }} onClick={() => toggleSection('timestamps')} className="clickable-title">
-              Timestamps <i class='bx bx-chevron-down bx-burst bx-rotate-90' ></i>
-            </motion.h2>
-            <Collapse in={openSections['timestamps']}>
-              <div>
-                <p><strong>Arrival Time:</strong> {new Date(patientDetails.arrivalTime).toLocaleString()}</p>
-                <p><strong>Created At:</strong> {new Date(patientDetails.createdAt).toLocaleString()}</p>
-                <p><strong>Updated At:</strong> {new Date(patientDetails.updatedAt).toLocaleString()}</p>
+            {/* Timestamps Section */}
+            <div className="info-section">
+              <div 
+                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
+                onClick={() => toggleSection('timestamps')}
+              >
+                <h5 className="mb-0">
+                  <FontAwesomeIcon icon={faClock} className="me-2" />
+                  Timestamps
+                </h5>
+                <FontAwesomeIcon icon={openSections.timestamps ? faChevronUp : faChevronDown} />
               </div>
-            </Collapse>
+              <Collapse in={openSections.timestamps}>
+                <div className="p-3">
+                  <InfoItem label="Arrival Time" value={new Date(patientDetails.arrivalTime).toLocaleString()} />
+                  <InfoItem label="Created At" value={new Date(patientDetails.createdAt).toLocaleString()} />
+                  <InfoItem label="Updated At" value={new Date(patientDetails.updatedAt).toLocaleString()} />
+                </div>
+              </Collapse>
+            </div>
           </Card.Body>
         </Card>
       )}
+
+      {/* Rest of your component remains the same */}
       {loading ? (
         <div className="d-flex justify-content-center mt-4"><Spinner animation="border" variant="primary" /></div>
       ) : (
@@ -235,7 +331,7 @@ const ShowPatientTreatments = () => {
                       { value: '', label: 'Filter by doctor...' },
                       ...doctors.map(doctor => ({
                         value: doctor._id,
-                        label: `${doctor.name} (${doctor.specialization})`,
+                        label: `${doctor.name} ${doctor.familyName}`,
                       })),
                     ]}
                     onChange={(option) => setDoctorFilter(option?.value || '')}

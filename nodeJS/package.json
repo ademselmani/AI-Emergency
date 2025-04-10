@@ -7,6 +7,7 @@
     "test": "mocha --recursive --exit"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "@tensorflow/tfjs-core": "^4.22.0",
     "@types/chai": "^5.0.1",
     "@types/chai-http": "^4.2.4",
@@ -24,11 +25,13 @@
     "express-async-errors": "^3.1.1",
     "express-session": "^1.18.1",
     "face-api.js": "^0.22.2",
+    "framer-motion": "^12.6.3",
     "fs": "^0.0.1-security",
     "handlebars": "^4.7.8",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.487.0",
     "mocha": "^11.1.0",
     "mongoose": "^8.10.1",
     "morgan": "~1.9.1",

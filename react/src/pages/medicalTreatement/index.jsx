@@ -1,30 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
-import Select from 'react-select'; // Import react-select
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Select from 'react-select';
 import { NavLink } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { User, PlusCircle, Stethoscope } from 'lucide-react';
 
 const Treatments = () => {
-  const [patients, setPatients] = useState([]); // State to store the list of patients
-  const [selectedPatient, setSelectedPatient] = useState(null); // State to store the selected patient
-  const [sortCriteria, setSortCriteria] = useState('urgency'); // State to store the sorting criteria
-  const [loading, setLoading] = useState(true); // State to handle loading state
-  const [error, setError] = useState(null); // State to handle errors
+  const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [sortCriteria, setSortCriteria] = useState('urgency');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch patients from the API
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/patients');
         const data = await response.json();
 
-        console.log("Raw API Response:", data); // Verify structure of received data
+        if (!Array.isArray(data.data)) throw new Error('Data received is not an array');
 
-        if (!Array.isArray(data.data)) { // Verify that `data.data` is an array
-          throw new Error('Data received is not an array');
-        }
-
-        setPatients(data.data); // Use `data.data`
-        sortPatients(sortCriteria, data.data); // Sort with the correct array
+        setPatients(data.data);
+        sortPatients(sortCriteria, data.data);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -33,185 +30,143 @@ const Treatments = () => {
     };
 
     fetchPatients();
-  }, []); // Empty dependency array to run only once on mount
+  }, []);
 
-  // Sort patients based on the selected criteria
   const sortPatients = (criteria, patientsData) => {
-    let sortedPatients = [...patientsData];
-
+    let sorted = [...patientsData];
     switch (criteria) {
       case 'urgency':
-        sortedPatients.sort((a, b) => {
-          const aTriage = a.medicalRecords[0]?.triageLevel || 0; // Use the first medical record's triage level
-          const bTriage = b.medicalRecords[0]?.triageLevel || 0;
-          return aTriage - bTriage;
-        });
+        sorted.sort((a, b) => (a.medicalRecords[0]?.triageLevel || 0) - (b.medicalRecords[0]?.triageLevel || 0));
         break;
       case 'date':
-        sortedPatients.sort((a, b) => {
-          const aDate = new Date(a.arrivalTime || 0); // Use arrival time for sorting
-          const bDate = new Date(b.arrivalTime || 0);
-          return aDate - bDate;
-        });
+        sorted.sort((a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0));
         break;
       case 'both':
-        sortedPatients.sort((a, b) => {
-          const aTriage = a.medicalRecords[0]?.triageLevel || 0;
-          const bTriage = b.medicalRecords[0]?.triageLevel || 0;
-          if (aTriage === bTriage) {
-            const aDate = new Date(a.arrivalTime || 0);
-            const bDate = new Date(b.arrivalTime || 0);
-            return aDate - bDate;
-          }
-          return aTriage - bTriage;
+        sorted.sort((a, b) => {
+          const triageDiff = (a.medicalRecords[0]?.triageLevel || 0) - (b.medicalRecords[0]?.triageLevel || 0);
+          if (triageDiff !== 0) return triageDiff;
+          return new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0);
         });
         break;
       default:
         break;
     }
-
-    setPatients(sortedPatients);
+    setPatients(sorted);
   };
 
-  // Handle filter change
   const handleFilterChange = (criteria) => {
     setSortCriteria(criteria);
     sortPatients(criteria, patients);
   };
 
-  // Handle patient selection
   const handlePatientSelect = (selectedOption) => {
     setSelectedPatient(selectedOption ? selectedOption.value : null);
   };
 
-  // Format patients for react-select
-  const patientOptions = patients.map((patient) => ({
-    value: patient,
-    label: `${patient.firstName} ${patient.lastName} (Status: ${patient.status}, Phone: ${patient.phone})`,
+  const patientOptions = patients.map((p) => ({
+    value: p,
+    label: `${p.firstName} ${p.lastName} (Status: ${p.status}, Phone: ${p.phone})`,
   }));
 
-  // Display loading or error messages
-  if (loading) {
-    return <div className="container text-center mt-4">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="container text-center mt-4 text-danger">Error: {error}</div>;
-  }
+  if (loading) return <div className="container text-center mt-5">⏳ Loading patients...</div>;
+  if (error) return <div className="container text-center text-danger mt-5">❌ Error: {error}</div>;
 
   return (
-    <div className="container card p-3">
-      <h1 className="text-center mb-4">Assign Medical Treatment</h1>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="container my-5"
+    >
+      <div className="card shadow-lg p-4">
+        <h1 className="text-center mb-4 display-6 text-primary"><Stethoscope size={28} /> Assign Medical Treatment</h1>
 
-      {/* Filter Options */}
-      <div className="mb-4">
-        <h2>Sort By</h2>
-        <div className="btn-group" role="group">
-          <button
-            className={`btn ${sortCriteria === 'urgency' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => handleFilterChange('urgency')}
-          >
-            Urgency
-          </button>
-          <button
-            className={`btn ${sortCriteria === 'date' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => handleFilterChange('date')}
-          >
-            Arrival Time
-          </button>
-          <button
-            className={`btn ${sortCriteria === 'both' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => handleFilterChange('both')}
-          >
-            Both (Urgency and Arrival Time)
-          </button>
-        </div>
-      </div>
-
-      {/* Step 1: Ask which patient the treatment will be assigned to */}
-      <div className="mb-4">
-        <h2>Select a Patient</h2>
-        <Select
-          options={patientOptions}
-          onChange={handlePatientSelect}
-          placeholder="Search for a patient..."
-          isSearchable // Enable search functionality
-          isClearable // Allow clearing the selection
-        />
-      </div>
-
-      {/* Step 2: Display the selected patient */}
-      {selectedPatient && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <h2 className="card-title">Selected Patient</h2>
-            <p>
-              <strong>Name:</strong> {selectedPatient.firstName} {selectedPatient.lastName}
-            </p>
-            <p>
-              <strong>Birth Date:</strong> {new Date(selectedPatient.birthDate).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Sex:</strong> {selectedPatient.sex}
-            </p>
-            <p>
-              <strong>Phone:</strong> {selectedPatient.phone}
-            </p>
-            <p>
-              <strong>Arrival Mode:</strong> {selectedPatient.arrivalMode}
-            </p>
-            <p>
-              <strong>Emergency Reason:</strong> {selectedPatient.emergencyReason}
-            </p>
-            <p>
-              <strong>Observations:</strong> {selectedPatient.observations}
-            </p>
-            <p>
-              <strong>Emergency Area:</strong> {selectedPatient.emergencyArea}
-            </p>
-            <p>
-              <strong>Arrival Time:</strong> {new Date(selectedPatient.arrivalTime).toLocaleString()}
-            </p>
-            <span className="text-center" style={{ display: 'flex', justifyContent: 'center' }}>
-              <NavLink
-                to={`/medical-treatments/patient/add/${selectedPatient._id}`}
-                state={{ patient: selectedPatient }}
-                className={({ isActive }) =>
-                  `menu-link btn btn-outline-success ${isActive ? 'active' : ''}`
-                }
-                style={{ width: 'fit-content' }}
+        {/* Filter Buttons */}
+        <div className="mb-4">
+          <h5>Sort Patients By</h5>
+          <div className="btn-group">
+            {['urgency', 'date', 'both'].map((crit) => (
+              <button
+                key={crit}
+                className={`btn ${sortCriteria === crit ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => handleFilterChange(crit)}
               >
-                <i className="menu-icon tf-icons bx bx-plus"></i>
-                <div data-i18n="Analytics">Add Medical Monitoring</div>
-              </NavLink>
-              <NavLink
-                to={`/medical-treatments/patient/show/${selectedPatient._id}`}
-                state={{ patient: selectedPatient }}
-                className={({ isActive }) =>
-                  `menu-link btn btn-outline-info ${isActive ? 'active' : ''}`
-                }
-                style={{ width: 'fit-content' }}
-              >
-                <i className="menu-icon tf-icons bx bx-band-aid"></i>
-                <div data-i18n="Analytics">Show Current Medical Monitoring</div>
-              </NavLink>
-            </span>
+                {crit.charAt(0).toUpperCase() + crit.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Step 3: List all patients sorted by the selected criteria */}
-      <div>
-        <h2>Patients List</h2>
-        <ul className="list-group">
-          {patients.map((patient) => (
-            <li key={patient._id} className="list-group-item">
-              {patient.firstName} {patient.lastName} (Status: {patient.status}, Phone: {patient.phone})
-            </li>
-          ))}
-        </ul>
+        {/* Select a patient */}
+        <div className="mb-4">
+          <h5>Select a Patient</h5>
+          <Select
+            options={patientOptions}
+            onChange={handlePatientSelect}
+            placeholder="🔍 Search patient by name, phone or status"
+            isSearchable
+            isClearable
+          />
+        </div>
+
+        {/* Display selected patient */}
+        {selectedPatient && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="card mb-4 border-info shadow-sm"
+          >
+            <div className="card-body">
+              <h5 className="card-title text-info"><User size={20} /> {selectedPatient.firstName} {selectedPatient.lastName}</h5>
+              <ul className="list-unstyled mt-3">
+                <li><strong>Birth Date:</strong> {new Date(selectedPatient.birthDate).toLocaleDateString()}</li>
+                <li><strong>Sex:</strong> {selectedPatient.sex}</li>
+                <li><strong>Phone:</strong> {selectedPatient.phone}</li>
+                <li><strong>Arrival Mode:</strong> {selectedPatient.arrivalMode}</li>
+                <li><strong>Emergency Reason:</strong> {selectedPatient.emergencyReason}</li>
+                <li><strong>Observations:</strong> {selectedPatient.observations}</li>
+                <li><strong>Emergency Area:</strong> {selectedPatient.emergencyArea}</li>
+                <li><strong>Arrival Time:</strong> {new Date(selectedPatient.arrivalTime).toLocaleString()}</li>
+              </ul>
+              <div className="d-flex gap-3 justify-content-center mt-3">
+                <NavLink
+                  to={`/medical-treatments/patient/add/${selectedPatient._id}`}
+                  state={{ patient: selectedPatient }}
+                  className="btn btn-success d-flex align-items-center gap-1"
+                >
+                  <PlusCircle size={18} /> Add Monitoring
+                </NavLink>
+                <NavLink
+                  to={`/medical-treatments/patient/show/${selectedPatient._id}`}
+                  state={{ patient: selectedPatient }}
+                  className="btn btn-outline-info d-flex align-items-center gap-1"
+                >
+                  <Stethoscope size={18} /> View Monitoring
+                </NavLink>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Patient List */}
+        <div>
+          <h5>📋 Sorted Patient List</h5>
+          <ul className="list-group">
+            {patients.map((p) => (
+              <li key={p._id} className="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                  {p.firstName} {p.lastName}
+                </span>
+                <span className="badge bg-secondary">
+                  {p.status} | {p.phone}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -44,7 +44,7 @@ const AddMedicalTreatment = () => {
         const response = await axios.get('http://localhost:3000/employee/employees/doctor');
         const availableDoctors = response.data.filter(doctor => doctor.status === "active");
 
-        setDoctors(availableDoctors.map(doctor => ({ value: doctor._id, label: `${doctor.name} (${doctor.specialization})` })));
+        setDoctors(availableDoctors.map(doctor => ({ value: doctor._id, label: `${doctor.name} ${doctor.familyName}` })));
       } catch (error) {
         console.error('Error fetching doctors:', error);
         toast.error('Failed to fetch doctors. Please try again.');
