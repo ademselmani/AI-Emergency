@@ -8,6 +8,8 @@ const {
   resetPasswordController,
   loginFaceController,
   googleAuthController,
+  Verify2FAController,
+  VerifyCode
 } = require("../controllers/auth.controller");
 const upload = require("../middlewares/auth/uploadMiddleware");
 
@@ -17,6 +19,8 @@ router.post("/signup", upload.single("image"), signUpController);
 router.post("/login", loginController);
 router.post("/forget-password", forgetPasswordController);
 router.post("/reset-password", resetPasswordController);
+router.post("/verifyCode", Verify2FAController);
+router.post("/codeVerified", VerifyCode);
 
 // Google OAuth Routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));

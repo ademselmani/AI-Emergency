@@ -5,6 +5,8 @@ const Room = require("../models/room.model")
 
 const twilio = require("twilio")
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
+const mongoose = require("mongoose")
+
 
 // Create new equipment
 exports.createEquipment = async (req, res) => {
@@ -113,29 +115,67 @@ exports.deleteEquipment = async (req, res) => {
 }
 
 
+
 exports.sendNotification = async (req, res) => {
+  const { id } = req.params;
+  const { type, message } = req.body;
+
   try {
-    const equipment = await Equipment.findById(req.params.id)
+    const equipment = await Equipment.findById(id).populate("room");
     if (!equipment) {
-      return res.status(404).json({ message: "Equipment not found" })
+      return res.status(404).json({ error: "Equipment not found" });
     }
-    const message = `Reminder: ${equipment.name} (Serial: ${
-      equipment.serialNumber
-    }) is ${
-      new Date(equipment.nextMaintenanceDate) < new Date()
-        ? "overdue"
-        : "due soon"
-    } for maintenance! Next maintenance date: ${new Date(
-      equipment.nextMaintenanceDate
-    ).toLocaleDateString()}.`
-    await client.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: "+21625837933", 
-    })
-    res.json({ message: "Reminder sent successfully" })
+
+    // Prepare the message if not provided
+    const notificationMessage =
+      message ||
+      `Manual reminder: ${equipment.name} (Serial: ${equipment.serialNumber}) is due for maintenance soon!`;
+
+    // Send SMS
+    let smsError = null;
+    try {
+      const smsResponse = await client.messages.create({
+        body: notificationMessage,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: "+21625837933",
+      });
+      console.log("Twilio response for manual reminder:", smsResponse.sid);
+    } catch (err) {
+      console.error(`❌ Failed to send SMS for ${equipment.name}:`, err.message);
+      smsError = err.message;
+    }
+
+    // Log the notification in the database
+    equipment.notifications.push({ type, message: notificationMessage });
+    equipment.lastNotified = new Date();
+    await equipment.save();
+
+    // Emit WebSocket event with error if SMS failed
+    try {
+      const io = req.io; // Use req.io as set in app.js
+      if (io) {
+        io.emit("maintenanceNotification", {
+          equipmentId: equipment._id,
+          message: notificationMessage,
+          sentAt: new Date(),
+          ...(smsError && { error: `Failed to send SMS: ${smsError}` }),
+        });
+      } else {
+        console.error("Socket.IO instance not available on req.io");
+      }
+    } catch (err) {
+      console.error("Error emitting WebSocket event:", err.message);
+    }
+
+    // Always send a response, even if WebSocket fails
+    res.status(200).json({ message: "Notification logged successfully" });
   } catch (err) {
-    console.error("Error sending notification:", err)
-    res.status(500).json({ error: "Failed to send reminder" })
+    console.error("Error in sendNotification:", err.message);
+    res.status(500).json({ error: err.message });
   }
-}
+};
+
+
+
+
+
