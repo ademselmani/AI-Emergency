@@ -34,6 +34,7 @@ const demandeRoutes = require("./src/routes/demandeRoutes");
 const Demande = require("./src/models/demande");
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
+const { getAnomalies, getForecast } = require('./src/services/aiService');
 
 
 mongoose
@@ -203,6 +204,15 @@ setInterval(() => {
 }, 3000);
 
 
+app.get('/api/anomalies', async (req, res) => {
+  const data = await getAnomalies();
+  res.json(data);
+});
+
+app.get('/api/forecast', async (req, res) => {
+  const data = await getForecast();
+  res.json(data);
+});
 server.listen(3000, () => {
   console.log("🚀 Serveur démarré sur http://localhost:3000");
 });

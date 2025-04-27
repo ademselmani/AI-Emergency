@@ -50,7 +50,12 @@ import {ShiftDashboard} from "./pages/shift/ShiftDashboard.jsx";
    
 import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
 import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
-import HomePage from "./pages/HomePage.jsx"
+import HomePage from "./pages/HomePage.jsx";
+
+
+import LeaveAnomalie from "./pages/Leaves/LeaveAnomalie.jsx";
+import LeaveForecast from "./pages/Leaves/LeaveForecast.jsx"
+
 
 function App() {
   return (
@@ -255,7 +260,8 @@ element={
  <Route path="/demandeAmbulance" element={<AmbulancePatient />} />
  <Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
 <Route path ="/home" element={<HomePage/>}/>
-
+<Route path="/anomalies" element={<Layout><LeaveAnomalie/></Layout>} />
+<Route path="/forecast" element={<Layout><LeaveForecast/></Layout>} />
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
 
