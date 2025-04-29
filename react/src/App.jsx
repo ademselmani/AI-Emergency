@@ -41,7 +41,8 @@ import ShowPatientTreatments from "./pages/medicalTreatement/showPatientTreateme
 import ShowPatientToAdd from "./pages/medicalTreatement/showPatientToAdd";
 import EditMedicalTreatment from "./pages/medicalTreatement/edit";
 import LeaveRequestForm from "./pages/Leaves/LeaveRequestForm";
- 
+import Messenger from "./pages/Messenger.jsx";
+
 import Listofleaves from "./pages/Leaves/Listleaves";
 import MyLeaveRequests from "./pages/Leaves/MyLeaveRequests";
 import Statleaves from "./pages/Leaves/Statleaves";
@@ -115,6 +116,7 @@ function App() {
               </Layout>
             }
           />
+
  
 <Route
   path="/Addpatient"
@@ -263,7 +265,14 @@ element={
 <Route path="/anomalies" element={<Layout><LeaveAnomalie/></Layout>} />
 <Route path="/forecast" element={<Layout><LeaveForecast/></Layout>} />
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
-
+<Route
+           path="/messenger"
+           element={
+              <Layout>
+                <Messenger />
+              </Layout>
+            }
+        />
 
         </Routes>
         ;

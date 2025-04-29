@@ -65,5 +65,18 @@ router.get("/employees/doctor", async (req, res) => {
 //         res.status(500).json(error);
 //     }
 // });
-
+router.get('/search', async (req, res) => {
+  const query = req.query.q;
+  try {
+    const users = await Employee.find({
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+      ],
+    });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur recherche utilisateur' });
+  }
+});
 module.exports = router;

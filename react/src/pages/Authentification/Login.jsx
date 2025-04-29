@@ -1,9 +1,17 @@
-/** @format */
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { FaGoogle, FaUserCircle, FaLock } from "react-icons/fa"; // Icônes pour les boutons
+
+// —--------------------------------------------------
+// Configuration Axios globale
+axios.defaults.baseURL = "http://localhost:3000";
+const savedToken = localStorage.getItem("token");
+if (savedToken) {
+  axios.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+}
+// —--------------------------------------------------
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,29 +22,31 @@ const Login = () => {
 
   // Handle Google Login
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/google";
+    window.location.href = "/api/auth/google";
   };
 
   // Handle regular login
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error before each login attempt
+    setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/auth/login",
-        { email, password }
-      );
+      const response = await axios.post("/api/auth/login", { email, password });
 
-      // If login is successful, save the token and redirect the user
       if (response.data.token) {
+        // 1. Stocker le token et infos user
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.role);
         localStorage.setItem("user_id", response.data.userId);
-       await axios.post("http://localhost:3000/api/auth/verifyCode", { email });
-        navigate("/verify", { state: { email: email } });  
-        //navigate("/profile");
 
+        // 2. Configurer Axios pour injecter le JWT partout
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${response.data.token}`;
+
+        // 3. Lancer la vérification (2FA ou code)
+        await axios.post("/api/auth/verifyCode", { email });
+        navigate("/verify", { state: { email } });
       } else {
         setError("An unknown error occurred");
       }
@@ -51,39 +61,38 @@ const Login = () => {
 
   // Handle face recognition login
   const handleFaceRecognitionClick = () => {
-    navigate("/face-recognition"); // Navigate to the face recognition page
+    navigate("/face-recognition");
   };
 
   // Handle Google OAuth callback
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get("token");
-    const email = queryParams.get("email");
-    const error = queryParams.get("error");
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const emailFromOAuth = params.get("email");
+    const errorFromOAuth = params.get("error");
 
-    if (error) {
-      setError(error); // Display error message if any
+    if (errorFromOAuth) {
+      setError(errorFromOAuth);
     }
 
-    if (token && email) {
-      // Save the token and user data to localStorage
+    if (token && emailFromOAuth) {
+      // 1. Stocker token et email
       localStorage.setItem("token", token);
-      localStorage.setItem("email", email);
+      localStorage.setItem("email", emailFromOAuth);
 
-      // Fetch user role or additional details if needed
+      // 2. Configurer Axios
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      // 3. Récupérer le rôle et rediriger
       axios
-        .get("http://localhost:3000/api/auth/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          const role = response.data.role;
+        .get("/api/auth/user")
+        .then((res) => {
+          const role = res.data.role;
           localStorage.setItem("role", role);
-
-          // Redirect the user based on their role
           if (role === "admin") navigate("/dashboard");
           else navigate("/profile");
         })
-        .catch((err) => {
+        .catch(() => {
           setError("Failed to fetch user details");
         });
     }
@@ -94,10 +103,10 @@ const Login = () => {
       className="login-container"
       style={{
         backgroundImage: `url('/Hospital2.gif')`,
-        backgroundSize: "100% 100%", // Étire l'image pour remplir complètement l'élément
+        backgroundSize: "100% 100%",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        minHeight: "100vh", // Ensures it covers the full screen
+        minHeight: "100vh",
       }}
     >
       <div
@@ -107,7 +116,7 @@ const Login = () => {
           background: "rgba(255, 255, 255, 0.2)",
         }}
       >
-        <h2 className="login-title">Welcome to RescueOn! </h2>
+        <h2 className="login-title">Welcome to RescueOn!</h2>
         <p className="login-subtitle">Please sign in to continue</p>
 
         {error && <p className="error-message">{error}</p>}
@@ -173,7 +182,7 @@ const Login = () => {
   );
 };
 
-// Styles CSS
+// Styles CSS injectés automatiquement
 const styles = `
   .login-container {
     display: flex;
@@ -321,9 +330,9 @@ const styles = `
   }
 `;
 
-// Injecter les styles dans le document
 const styleSheet = document.createElement("style");
 styleSheet.type = "text/css";
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
+
 export default Login;

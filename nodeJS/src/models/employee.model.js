@@ -6,8 +6,8 @@ const bcrypt = require("bcrypt")
 const employeeSchema = mongoose.Schema({
   cin: {
     type: String,
-    required: [true, "Le CIN est requis"],
-    unique: [true, "Ce CIN existe déjà"],
+   required: [true, "Le CIN est requis"],
+   unique: [true, "Ce CIN existe déjà"],
     validate: {
       validator: function (v) {
         return /^[0-9]{8}$/.test(v)
