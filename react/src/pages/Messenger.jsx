@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-
+import "./messenger.module.css"
 const socket = io('http://localhost:3000');
 
 const Messenger = () => {

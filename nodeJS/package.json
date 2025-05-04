@@ -2,10 +2,13 @@
   "name": "nodejs",
   "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "start": "nodemon app.js",
-    "test": "mocha --recursive --exit"
-  },
+ "scripts": {
+  "start": "concurrently \"npm run start-node\" \"npm run start-python\"",
+  "start-node": "nodemon app.js",
+  "start-python": "python ../python/app.py",
+  "test": "mocha --recursive --exit"
+}
+,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@tensorflow/tfjs-core": "^4.22.0",
@@ -55,5 +58,8 @@
     "supertest": "^7.0.0",
     "twilio": "^5.5.1",
     "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

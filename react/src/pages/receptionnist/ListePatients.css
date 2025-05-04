@@ -107,7 +107,7 @@
     background-color: rgb(255, 0, 0);
     color: white;
   }
-  .status-Recovered {
+  .status-Serious {
     background-color: #15ff00;
     color: white;
   }
@@ -205,8 +205,8 @@
 }
 
 /* Recovered - Light Green */
-.status-Recovered {
-  background-color: #15ff00;
+.status-Serious {
+  background-color: #ff8800;
   color: rgb(0, 0, 0);
 }
 

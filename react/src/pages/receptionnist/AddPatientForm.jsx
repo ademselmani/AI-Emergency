@@ -134,7 +134,7 @@ const AddPatientForm = () => {
                   <option value="Triage">Triage</option>
                   <option value="Critical">Critical</option>
                   <option value="Stable">Stable</option>
-                  <option value="Recovered">Recovered</option>
+                  <option value="Serious">Serious</option>
                 </select>
               </div>
 

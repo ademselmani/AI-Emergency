@@ -136,7 +136,7 @@ const UpdatePatientForm = () => {
                   <option value="Triage">Pending</option>
                   <option value="Critical">Critical</option>
                   <option value="Stable">Stable</option>
-                  <option value="Recovered">Recovered</option>
+                  <option value="Serious">Serious</option>
                 </select>
               </div>
               <div className="col-md-6">

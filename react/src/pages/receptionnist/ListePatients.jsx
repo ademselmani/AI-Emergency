@@ -68,8 +68,8 @@ const PatientList = () => {
         return 'status-Stable';
       case 'Triage':
         return 'status-default';
-      case 'Recovered':
-        return 'status-Recovered';
+      case 'Serious':
+        return 'status-Serious';
       default:
         return 'status-default';
     }

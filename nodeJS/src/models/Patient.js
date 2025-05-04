@@ -31,7 +31,7 @@ const patientSchema = new mongoose.Schema({
   // Nouveau champ : Statut du patient
   status: { 
     type: String, 
-    enum: ['Triage', 'Critical', 'Stable', 'Recovered'], 
+    enum: ['Triage', 'Critical', 'Stable', 'Serious'], 
     default: 'Triage' 
   },
 

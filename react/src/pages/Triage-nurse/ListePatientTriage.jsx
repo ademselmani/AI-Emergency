@@ -49,7 +49,7 @@ const ListePatientTriage = () => {
       case 'Critical': return 'status-Critical';
       case 'Stable': return 'status-Stable';
       case 'Triage': return 'status-default';
-      case 'Recovered': return 'status-Recovered';
+      case 'Serious': return 'status-Serious';
       default: return 'status-default';
     }
   };
