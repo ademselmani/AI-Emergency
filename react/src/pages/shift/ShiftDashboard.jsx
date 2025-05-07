@@ -19,12 +19,14 @@ export function ShiftDashboard() {
   const [validationError, setValidationError] = useState("");
   const [employeeShiftAssignments, setEmployeeShiftAssignments] = useState({});
   const [currentShiftEmployees, setCurrentShiftEmployees] = useState([]);
+  const [roleInputCounts, setRoleInputCounts] = useState({}); // Track number of input fields per role
 
   function handleDateSelect(selectInfo) {
     if(localStorage.getItem("role") != "admin") return
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
     setSelectedEmployees({});
+    setRoleInputCounts({}); // Reset input counts
     setValidationError("");
     setCurrentShiftEmployees([]);
     setSelectedEvent({});
@@ -173,7 +175,7 @@ export function ShiftDashboard() {
     return employeeShiftAssignments[key] === true;
   };
 
-  const validateAllPositionsFilled = () => {
+  const validateMinimumPositionsFilled = () => {
     if (!selectedArea) {
       setValidationError("Please select an area");
       return false;
@@ -182,28 +184,26 @@ export function ShiftDashboard() {
     const areaRules = staffingRules[selectedArea];
     if (!areaRules) return true;
 
-    let allFilled = true;
+    let allMinimumFilled = true;
     let missingPositions = [];
 
-    Object.entries(areaRules).forEach(([role, count]) => {
-      for (let i = 0; i < count; i++) {
-        const isPositionFilled = selectedEmployees[role]?.[i];
-        if (!isPositionFilled) {
-          allFilled = false;
-          missingPositions.push(`${role} #${i + 1}`);
-        }
+    Object.entries(areaRules).forEach(([role, minCount]) => {
+      const filledCount = Object.values(selectedEmployees[role] || {}).filter(id => id).length;
+      if (filledCount < minCount) {
+        allMinimumFilled = false;
+        missingPositions.push(`${role} (at least ${minCount} required, ${filledCount} filled)`);
       }
     });
 
-    if (!allFilled) {
+    if (!allMinimumFilled) {
       setValidationError(
-        `Please fill all required positions: ${missingPositions.join(", ")}`
+        `Please fill the minimum required positions: ${missingPositions.join(", ")}`
       );
     } else {
       setValidationError("");
     }
 
-    return allFilled;
+    return allMinimumFilled;
   };
 
   function handleEmployeeSelection(role, index, value) {
@@ -242,9 +242,35 @@ export function ShiftDashboard() {
     setValidationError("");
   }
 
+  function handleAddEmployeeField(role, minCount) {
+    setRoleInputCounts((prev) => ({
+      ...prev,
+      [role]: (prev[role] || minCount) + 1,
+    }));
+  }
+
+  function handleRemoveEmployeeField(role, index, minCount) {
+    if ((roleInputCounts[role] || minCount) <= minCount) return; // Prevent removing below minimum
+
+    setRoleInputCounts((prev) => ({
+      ...prev,
+      [role]: (prev[role] || minCount) - 1,
+    }));
+
+    setSelectedEmployees((prev) => {
+      const updatedRole = { ...(prev[role] || {}) };
+      delete updatedRole[index];
+      return {
+        ...prev,
+        [role]: updatedRole,
+      };
+    });
+  }
+
   function handleEventClick(eventClickInfo) {
     if(localStorage.getItem("role") != "admin") return
     setSelectedEmployees({});
+    setRoleInputCounts({}); // Reset input counts
     setValidationError("");
 
     let starTime = eventClickInfo.event.start.toString().split(" ")[4];
@@ -270,6 +296,8 @@ export function ShiftDashboard() {
 
         const employeeSelections = {};
         const employeesByRole = {};
+        const roleCounts = {};
+
         shift.employees.forEach((emp) => {
           if (!employeesByRole[emp.role]) {
             employeesByRole[emp.role] = [];
@@ -282,9 +310,11 @@ export function ShiftDashboard() {
           ids.forEach((id, index) => {
             employeeSelections[role][index] = id;
           });
+          roleCounts[role] = ids.length;
         });
 
         setSelectedEmployees(employeeSelections);
+        setRoleInputCounts(roleCounts);
       }
     } catch (error) {
       console.error("Error loading existing employees:", error);
@@ -292,7 +322,7 @@ export function ShiftDashboard() {
   }
 
   async function handleSubmit() {
-    if (!validateAllPositionsFilled()) {
+    if (!validateMinimumPositionsFilled()) {
       return;
     }
 
@@ -348,16 +378,16 @@ export function ShiftDashboard() {
     newShift.id = eventId;
 
     Object.entries(staffingRules[selectedArea] || {}).forEach(
-      ([role, count]) => {
-        for (let i = 0; i < count; i++) {
-          const selectedValue = selectedEmployees[role]?.[i] || "";
-          if (selectedValue) {
+      ([role, _]) => {
+        const roleSelections = selectedEmployees[role] || {};
+        Object.entries(roleSelections).forEach(([index, employeeId]) => {
+          if (employeeId) {
             newShift.employees.push({
-              employeeId: selectedValue,
+              employeeId: employeeId,
               role: role,
             });
           }
-        }
+        });
       }
     );
 
@@ -471,7 +501,7 @@ export function ShiftDashboard() {
   };
 
   async function handleAddEvent() {
-    if (!validateAllPositionsFilled()) {
+    if (!validateMinimumPositionsFilled()) {
       return;
     }
 
@@ -527,16 +557,16 @@ export function ShiftDashboard() {
     }
 
     Object.entries(staffingRules[selectedArea] || {}).forEach(
-      ([role, count]) => {
-        for (let i = 0; i < count; i++) {
-          const selectedValue = selectedEmployees[role]?.[i] || "";
-          if (selectedValue) {
+      ([role, _]) => {
+        const roleSelections = selectedEmployees[role] || {};
+        Object.entries(roleSelections).forEach(([index, employeeId]) => {
+          if (employeeId) {
             newShift.employees.push({
-              employeeId: selectedValue,
+              employeeId: employeeId,
               role: role,
             });
           }
-        }
+        });
       }
     );
 
@@ -612,6 +642,7 @@ export function ShiftDashboard() {
                 onChange={(e) => {
                   setSelectedArea(e.target.value);
                   setSelectedEmployees({});
+                  setRoleInputCounts({}); // Reset input counts when area changes
                   setValidationError("");
                 }}
                 value={selectedArea}
@@ -628,50 +659,70 @@ export function ShiftDashboard() {
 
           {selectedArea &&
             Object.entries(staffingRules[selectedArea] || {}).map(
-              ([role, count]) => (
-                <div key={role} className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    {role} ({count} required)
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {[...Array(count)].map((_, index) => {
-                      const allSelectedIds = getAllSelectedEmployeeIds();
-                      const currentValue =
-                        selectedEmployees[role]?.[index] || "";
+              ([role, minCount]) => {
+                const inputCount = roleInputCounts[role] || minCount;
+                return (
+                  <div key={role} className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      {role} (minimum {minCount} required)
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {[...Array(inputCount)].map((_, index) => {
+                        const allSelectedIds = getAllSelectedEmployeeIds();
+                        const currentValue =
+                          selectedEmployees[role]?.[index] || "";
 
-                      return (
-                        <select
-                          key={index}
-                          className="w-full p-2 border rounded-lg bg-gray-50"
-                          value={currentValue}
-                          onChange={(e) =>
-                            handleEmployeeSelection(role, index, e.target.value)
-                          }
-                        >
-                          <option value="">Select {role}</option>
-                          {activeEmployees
-                            .filter((employee) => employee.role === role)
-                            .map((employee) => {
-                              const isDisabled =
-                                allSelectedIds.includes(employee._id) &&
-                                currentValue !== employee._id;
-                              return (
-                                <option
-                                  key={employee._id}
-                                  value={employee._id}
-                                  disabled={isDisabled}
-                                >
-                                  {employee.name}{" "}
-                                  {isDisabled ? "(Already selected)" : ""}
-                                </option>
-                              );
-                            })}
-                        </select>
-                      );
-                    })}
+                        return (
+                          <div key={index} className="flex items-center gap-2">
+                            <select
+                              className="w-full p-2 border rounded-lg bg-gray-50"
+                              value={currentValue}
+                              onChange={(e) =>
+                                handleEmployeeSelection(role, index, e.target.value)
+                              }
+                            >
+                              <option value="">Select {role}</option>
+                              {activeEmployees
+                                .filter((employee) => employee.role === role)
+                                .map((employee) => {
+                                  const isDisabled =
+                                    allSelectedIds.includes(employee._id) &&
+                                    currentValue !== employee._id;
+                                  return (
+                                    <option
+                                      key={employee._id}
+                                      value={employee._id}
+                                      disabled={isDisabled}
+                                    >
+                                      {employee.name}{" "}
+                                      {isDisabled ? "(Already selected)" : ""}
+                                    </option>
+                                  );
+                                })}
+                            </select>
+                            {index >= minCount && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEmployeeField(role, index, minCount)}
+                                className="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600"
+                              >
+                                -
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddEmployeeField(role, minCount)}
+                      className="mt-2 bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600"
+                    >
+                      Add {role}
+                    </button>
                   </div>
-                </div>
-              )
+                );
+              }
             )}
 
           <div className="flex justify-between mt-4">
