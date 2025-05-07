@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import logo from "../../../public/assets/img/logoPI.png";
 import { io } from "socket.io-client";
-
 
 let socketInstance = null;
 
@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [ambulanceNotifications, setAmbulanceNotifications] = useState(0);
   const [leaveNotifications, setLeaveNotifications] = useState(0);
 
+  
  
   const menuItems = useMemo(() => ({
     receptionnist: [
@@ -31,7 +32,7 @@ const Sidebar = () => {
       },
     ],
     triage_nurse: [
-      { to: "/showTriagePatients", icon: "bx bx-group", label: "Show Triage patients" },
+      { to: "/showTriagePatients", icon: "bx bx-group", label: "Triage patients" },
       { 
         to: "/MyLeaveRequests", 
         icon: "fas fa-calendar-check", 
@@ -40,8 +41,7 @@ const Sidebar = () => {
       },
     ],
     nurse: [
-      { to: "/profile", icon: "bx bx-user-plus", label: "Patients in my area" },
-      { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
+       { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
       { 
         to: "/MyLeaveRequests", 
         icon: "fas fa-calendar-check", 
@@ -179,103 +179,218 @@ const Sidebar = () => {
   }
 
   return (
-    <aside id="layout-menu" className="layout-menu menu-vertical menu bg-menu-theme">
-      <div className="app-brand demo" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+    <motion.aside 
+      id="layout-menu"
+      className="layout-menu menu-vertical menu"
+      initial={{ x: -300 }}
+      animate={{ x: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      <div className="glass-brand">
         <img 
           src={logo} 
           alt="ED Logo" 
-          className="app-brand-link app-brand-text demo menu-text fw-bolder ms-2" 
-          style={{ width: "80%", height: "auto", objectFit: "contain" }} 
+          className="sidebar-logo"
         />
-        <NavLink className="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
-          <i className="bx bx-chevron-left bx-sm align-middle" />
-        </NavLink>
+        
       </div>
       
-      <div className="menu-inner-shadow" />
-      
-      <ul className="menu-inner py-1">
+    
+
+      <ul className="menu-inner">
         {menuItems[role]?.map(({ to, icon, label, notifications }) => (
-          <li className="menu-item" key={to}>
+          <motion.li 
+            className="menu-item"
+            key={to}
+            whileHover={{ scale: 1.02 }}
+          >
             <NavLink 
               to={to} 
               className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
               end
             >
-              <i className={`menu-icon tf-icons ${icon}`} />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <i className={`menu-icon ${icon}`} />
+              <div className="link-content">
                 <span>{label}</span>
                 {notifications > 0 && (
                   <span className="notification-badge">{notifications}</span>
                 )}
               </div>
             </NavLink>
-          </li>
+          </motion.li>
         ))}
+
+        <div className="menu-divider" />
 
         <li className='menu-item'>
           <NavLink 
             to='/profile' 
             className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
-            end
           >   
-            <i className='menu-icon tf-icons bx bx-user' />
-            <div data-i18n='Analytics'>My profile</div>
-
+            <i className='menu-icon bx bx-user' />
+            <div>My profile</div>
           </NavLink>
+        </li>
+
+        <li className='menu-item'>
           <NavLink 
             to='/shift' 
             className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
-            end
           >   
-            <i className='menu-icon tf-icons bx bx-calendar' />
-            <div data-i18n='Analytics'>Shift</div>
-            
+            <i className='menu-icon bx bx-calendar' />
+            <div>Shift</div>
           </NavLink>
         </li>
-        
-        <li className="menu-item">
+
+        <div className="menu-divider" />
+
+        <motion.li 
+          className="menu-item"
+          whileTap={{ scale: 0.95 }}
+        >
           <button 
             onClick={handleLogout} 
-            className="menu-link" 
-            style={{ 
-              background: "none", 
-              border: "none", 
-              cursor: "pointer", 
-              display: "flex", 
-              alignItems: "center", 
-              width: "100%" 
-            }}
+            className="logout-button"
           >
-            <i className="menu-icon tf-icons bx bx-log-out" />
+            <i className="menu-icon bx bx-log-out" />
             <div>Log out</div>
           </button>
-        </li>
+        </motion.li>
       </ul>
 
       <style jsx>{`
+        .layout-menu {
+          background: f5f5f9
+          backdrop-filter: blur(10px);
+          width: 280px;
+          min-height: 100vh;
+          box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+          border-right: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 1rem;
+        }
+
+        .glass-brand {
+          display: flex;
+          justify-content: center;
+          padding: 0.5rem ;
+          margin: 0.5rem 0;
+        }
+
+        .sidebar-logo {
+          height: 50px;
+          width: auto;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .app-name {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #ff3b3f;
+          letter-spacing: -0.5px;
+        }
+
+        .menu-divider {
+          height: 1px;
+          background: rgba(0, 0, 0, 0.1);
+          margin: 1rem 0;
+        }
+
+        .menu-item {
+          margin: 0.25rem 0;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .menu-link {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.9rem 1.2rem;
+          color: #2d2d2d;
+          transition: all 0.2s ease;
+          position: relative;
+        }
+
+        .menu-link:hover {
+          background: rgba(255, 59, 63, 0.05);
+          color: #ff3b3f;
+        }
+
+        .menu-link.active {
+          background: rgba(255, 59, 63, 0.1);
+          color: #ff3b3f;
+          border-left: 3px solid #ff3b3f;
+        }
+
+        .menu-icon {
+          font-size: 1.4rem;
+          width: 30px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .link-content {
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+        }
+        .link-content span:first-child {
+          margin-right: 12px; 
+        }
+
+
         .notification-badge {
+          background: #ff3b3f;
+          color: white;
+          min-width: 24px;
+          height: 24px;
+          border-radius: 8px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 20px;
-          height: 20px;
-          padding: 0 5px;
-          font-size: 12px;
-          font-weight: bold;
-          color: white;
-          background-color: #ff3e1d;
-          border-radius: 10px;
-          margin-left: 8px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 0 0.5rem;
+          box-shadow: 0 2px 6px rgba(255, 59, 63, 0.2);
+          margin-left: auto;
         }
-        
-        .menu-link {
-          position: relative;
+
+        .logout-button {
+          width: 100%;
+          background: none;
+          border: none;
+          padding: 0.9rem 1.2rem;
+          color: #2d2d2d;
           display: flex;
           align-items: center;
+          gap: 1rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .logout-button:hover {
+          background: rgba(255, 59, 63, 0.05);
+          color: #ff3b3f;
+        }
+
+        @media (max-width: 768px) {
+          .layout-menu {
+            width: 240px;
+            padding: 0.5rem;
+          }
+          
+          .glass-brand {
+            padding: 1rem;
+          }
+          
+          .app-name {
+            font-size: 1.2rem;
+          }
         }
       `}</style>
-    </aside>
+    </motion.aside>
   );
 };
 

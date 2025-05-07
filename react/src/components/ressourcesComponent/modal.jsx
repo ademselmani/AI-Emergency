@@ -17,166 +17,7 @@ const Modal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-  }
-
-  const renderField = (field) => {
-    const {
-      name,
-      label,
-      type,
-      placeholder,
-      required,
-      options,
-      optionValues,
-      rows,
-    } = field
-    const error = errors[name] || errors.general
-
-    switch (type) {
-      case "text":
-      case "number":
-        return (
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor={name}
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              {label}
-            </label>
-            <input
-              id={name}
-              name={name}
-              type={type}
-              value={formData[name] || ""}
-              onChange={handleChange}
-              placeholder={placeholder}
-              required={required}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {error && (
-              <p
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {error}
-              </p>
-            )}
-          </div>
-        )
-
-      case "select":
-        return (
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor={name}
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              {label}
-            </label>
-            <select
-              id={name}
-              name={name}
-              value={formData[name] || ""}
-              onChange={handleChange}
-              required={required}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            >
-              <option value='' disabled>
-                {placeholder || "Select an option"}
-              </option>
-              {(options || optionValues || []).map((option) => (
-                <option
-                  key={option.value || option}
-                  value={option.value || option}
-                >
-                  {option.label || option}
-                </option>
-              ))}
-            </select>
-            {error && (
-              <p
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {error}
-              </p>
-            )}
-          </div>
-        )
-
-      case "textarea": // Add support for textarea
-        return (
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              htmlFor={name}
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#1f2937",
-                marginBottom: "4px",
-              }}
-            >
-              {label}
-            </label>
-            <textarea
-              id={name}
-              name={name}
-              value={formData[name] || ""}
-              onChange={handleChange}
-              placeholder={placeholder}
-              rows={rows || 3}
-              style={{
-                width: "100%",
-                padding: "8px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-              }}
-            />
-            {error && (
-              <p
-                style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}
-              >
-                {error}
-              </p>
-            )}
-          </div>
-        )
-
-      default:
-        return (
-          <p style={{ color: "#dc2626" }}>
-            Unsupported field type: {type} for {name}
-          </p>
-        )
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   return (
@@ -191,48 +32,125 @@ const Modal = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        zIndex: 1000,
       }}
     >
       <div
         style={{
           backgroundColor: "#fff",
-          padding: "24px",
+          padding: "20px",
           borderRadius: "8px",
           width: "400px",
-          maxWidth: "90%",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          maxHeight: "80vh",
+          overflowY: "auto",
+          position: "relative",
         }}
       >
-        <div
+        <button
+          onClick={onClose}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "24px",
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: "none",
+            border: "none",
+            fontSize: "18px",
+            cursor: "pointer",
           }}
         >
-          <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#1f2937" }}>
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "20px",
-              color: "#6b7280",
-            }}
-          >
-            &times;
-          </button>
-        </div>
+          &times;
+        </button>
+        <h2 style={{ marginBottom: "20px" }}>{title}</h2>
         <form onSubmit={handleSubmit}>
           {fields.map((field) => (
-            <div key={field.name}>{renderField(field)}</div>
+            <div key={field.name} style={{ marginBottom: "15px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "500",
+                }}
+              >
+                {field.label}
+                {field.required && (
+                  <span style={{ color: "red", marginLeft: "4px" }}>*</span>
+                )}
+              </label>
+              {field.type === "select" ? (
+                <select
+                  name={field.name}
+                  value={formData[field.name] || ""}
+                  onChange={handleChange}
+                  required={field.required}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  {field.placeholder && (
+                    <option value='' disabled>
+                      {field.placeholder}
+                    </option>
+                  )}
+                  {(field.options || field.optionValues)?.map((option) => (
+                    <option
+                      key={typeof option === "string" ? option : option.value}
+                      value={typeof option === "string" ? option : option.value}
+                    >
+                      {typeof option === "string" ? option : option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : field.type === "date" ? (
+                <input
+                  type='date'
+                  name={field.name}
+                  value={formData[field.name] || ""}
+                  onChange={handleChange}
+                  required={field.required}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #d1d5db",
+                  }}
+                />
+              ) : (
+                <input
+                  type={field.type || "text"}
+                  name={field.name}
+                  value={formData[field.name] || ""}
+                  onChange={handleChange}
+                  placeholder={field.placeholder || ""}
+                  required={field.required}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    border: "1px solid #d1d5db",
+                  }}
+                />
+              )}
+              {errors[field.name] && (
+                <div
+                  style={{ color: "red", fontSize: "12px", marginTop: "5px" }}
+                >
+                  {errors[field.name]}
+                </div>
+              )}
+            </div>
           ))}
+          {errors.general && (
+            <div
+              style={{ color: "red", fontSize: "12px", marginBottom: "15px" }}
+            >
+              {errors.general}
+            </div>
+          )}
           <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}
+            style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
           >
             <button
               type='button'
@@ -241,8 +159,7 @@ const Modal = ({
                 padding: "8px 16px",
                 border: "1px solid #d1d5db",
                 borderRadius: "4px",
-                backgroundColor: "#fff",
-                color: "#1f2937",
+                background: "none",
                 cursor: "pointer",
               }}
             >
@@ -272,11 +189,29 @@ Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  formData: PropTypes.object,
-  setFormData: PropTypes.func,
+  formData: PropTypes.object.isRequired,
+  setFormData: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
-  errors: PropTypes.object,
-  fields: PropTypes.array.isRequired,
+  errors: PropTypes.object.isRequired,
+  fields: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      type: PropTypes.string,
+      placeholder: PropTypes.string,
+      required: PropTypes.bool,
+      options: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.shape({
+            value: PropTypes.string.isRequired,
+            label: PropTypes.string.isRequired,
+          }),
+        ])
+      ),
+      optionValues: PropTypes.arrayOf(PropTypes.string),
+    })
+  ).isRequired,
 }
 
 export default Modal

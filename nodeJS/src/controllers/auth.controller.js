@@ -209,6 +209,71 @@ const forgetPasswordController = async (req, res) => {
     }
   };
 
+  const Verify2FAController = async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ message: "Utilisateur non trouvé" });
+  
+      // Générer le token de réinitialisation
+      const configDb = require("../config/db.json");
+      const tempCode = Math.floor(100000 + Math.random() * 900000);;
+  
+      user.verifyCode = tempCode;
+      await user.save();
+      const user2 = await User.findOne({ email });
+      // Vérifier que l'email et le mot de passe SMTP sont bien configurés
+      if (!configDb.email || !configDb.email.user || !configDb.email.pass) {
+        return res.status(500).json({ message: "Configuration de l'email incorrecte" });
+      }
+  
+      //  Configurer le transporteur SMTP
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: configDb.email.user,
+          pass: configDb.email.pass,
+        },
+      });
+  
+      const mailOptions = {
+        from: configDb.email.user,
+        to: user.email,
+        subject: "Réinitialisation du mot de passe",
+        text: `Utilisez ce code pour rediriger vers votre compte: ${tempCode}`,
+      };
+  
+      // Envoyer l'email
+      await transporter.sendMail(mailOptions);
+  
+      res.json({ message: "2FA code envoyé" });
+    } catch (err) {
+      console.error("Erreur lors de l'envoi de l'e-mail :", err); // Loguer l'erreur
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+  const VerifyCode = async (req, res) => {
+    try {
+      const { email , code } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(400).json({ message: "Utilisateur non trouvé" });
+      
+      if(user.verifyCode == code) {
+        user.verifyCode = ""
+        await user.save()
+        res.json({ message: "correct code" });
+      } else {
+        console.error("correct code :", err); // Loguer l'erreur
+        res.status(500).json({ error: err.message });
+      }
+     
+    
+    } catch (err) {
+      console.error("Erreur lors de l'envoi de l'e-mail :", err); // Loguer l'erreur
+      res.status(500).json({ error: err.message });
+    }
+  };
 
 
   const googleAuthController = async (req, res) => {
@@ -232,6 +297,8 @@ const forgetPasswordController = async (req, res) => {
     forgetPasswordController,
     resetPasswordController,
     loginFaceController,
-    googleAuthController
+    googleAuthController,
+    Verify2FAController,
+    VerifyCode
 
 };

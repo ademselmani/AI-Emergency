@@ -59,7 +59,7 @@ const AmbulancePatient = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.phone.match(/^[0-9]{8}$/)) newErrors.phone = "Invalid phone number";
+    if (!formData.phone.match(/^\+216[0-9]{8}$/)) newErrors.phone = "Invalid phone number";
     if (!formData.position) newErrors.position = "Location is required";
     
     setErrors(newErrors);

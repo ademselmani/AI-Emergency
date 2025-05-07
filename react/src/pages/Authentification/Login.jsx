@@ -1,72 +1,74 @@
 /** @format */
 
-import React, { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
-import axios from "axios"
-import { FaGoogle, FaUserCircle, FaLock } from "react-icons/fa" // Icônes pour les boutons
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { FaGoogle, FaUserCircle, FaLock } from "react-icons/fa"; // Icônes pour les boutons
 
 const Login = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const navigate = useNavigate()
-  const location = useLocation()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Handle Google Login
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/google"
-  }
+    window.location.href = "http://localhost:3000/api/auth/google";
+  };
 
   // Handle regular login
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setError("") // Reset error before each login attempt
+    e.preventDefault();
+    setError(""); // Reset error before each login attempt
 
     try {
       const response = await axios.post(
         "http://localhost:3000/api/auth/login",
         { email, password }
-      )
+      );
 
       // If login is successful, save the token and redirect the user
       if (response.data.token) {
-        localStorage.setItem("token", response.data.token)
-        localStorage.setItem("role", response.data.role)
-        localStorage.setItem("user_id", response.data.userId)
-        if (response.data.role === "admin") navigate("/dashboard")
-        else navigate("/profile")
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("role", response.data.role);
+        localStorage.setItem("user_id", response.data.userId);
+       await axios.post("http://localhost:3000/api/auth/verifyCode", { email });
+        navigate("/verify", { state: { email: email } });  
+        //navigate("/profile");
+
       } else {
-        setError("An unknown error occurred")
+        setError("An unknown error occurred");
       }
     } catch (err) {
       if (err.response) {
-        setError(err.response.data.message || "Login failed")
+        setError(err.response.data.message || "Login failed");
       } else {
-        setError("Unable to connect to the server")
+        setError("Unable to connect to the server");
       }
     }
-  }
+  };
 
   // Handle face recognition login
   const handleFaceRecognitionClick = () => {
-    navigate("/face-recognition") // Navigate to the face recognition page
-  }
+    navigate("/face-recognition"); // Navigate to the face recognition page
+  };
 
   // Handle Google OAuth callback
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search)
-    const token = queryParams.get("token")
-    const email = queryParams.get("email")
-    const error = queryParams.get("error")
+    const queryParams = new URLSearchParams(location.search);
+    const token = queryParams.get("token");
+    const email = queryParams.get("email");
+    const error = queryParams.get("error");
 
     if (error) {
-      setError(error) // Display error message if any
+      setError(error); // Display error message if any
     }
 
     if (token && email) {
       // Save the token and user data to localStorage
-      localStorage.setItem("token", token)
-      localStorage.setItem("email", email)
+      localStorage.setItem("token", token);
+      localStorage.setItem("email", email);
 
       // Fetch user role or additional details if needed
       axios
@@ -74,102 +76,103 @@ const Login = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
-          const role = response.data.role
-          localStorage.setItem("role", role)
+          const role = response.data.role;
+          localStorage.setItem("role", role);
 
           // Redirect the user based on their role
-          if (role === "admin") navigate("/dashboard")
-          else navigate("/profile")
+          if (role === "admin") navigate("/dashboard");
+          else navigate("/profile");
         })
         .catch((err) => {
-          setError("Failed to fetch user details")
-        })
+          setError("Failed to fetch user details");
+        });
     }
-  }, [location, navigate])
+  }, [location, navigate]);
 
   return (
-    <div className='login-container'
-    
-    
-    style={{ 
-      backgroundImage: `url('/Hospital2.gif')`, 
-      backgroundSize: '100% 100%', // Étire l'image pour remplir complètement l'élément
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      minHeight: '100vh' // Ensures it covers the full screen
-    }}
+    <div
+      className="login-container"
+      style={{
+        backgroundImage: `url('/Hospital2.gif')`,
+        backgroundSize: "100% 100%", // Étire l'image pour remplir complètement l'élément
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        minHeight: "100vh", // Ensures it covers the full screen
+      }}
     >
-      <div className='login-card'
-      
-      style={{ backdropFilter: 'blur(10px)', background: 'rgba(255, 255, 255, 0.2)' }}
+      <div
+        className="login-card"
+        style={{
+          backdropFilter: "blur(10px)",
+          background: "rgba(255, 255, 255, 0.2)",
+        }}
       >
-        <h2 className='login-title'>Welcome to RescueOn! </h2>
-        <p className='login-subtitle'>Please sign in to continue</p>
-        
-        {error && <p className='error-message'>{error}</p>}
-        <form className='login-form' onSubmit={handleLogin}>
-          <div className='form-group'>
-            <label htmlFor='email' className='form-label'>
-              <FaUserCircle className='icon' /> Email
+        <h2 className="login-title">Welcome to RescueOn! </h2>
+        <p className="login-subtitle">Please sign in to continue</p>
+
+        {error && <p className="error-message">{error}</p>}
+        <form className="login-form" onSubmit={handleLogin}>
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              <FaUserCircle className="icon" /> Email
             </label>
             <input
-              type='email'
-              id='email'
-              className='form-input'
-              placeholder='Enter your email'
+              type="email"
+              id="email"
+              className="form-input"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
-          <div className='form-group'>
-            <label htmlFor='password' className='form-label'>
-              <FaLock className='icon' /> Password
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              <FaLock className="icon" /> Password
             </label>
             <input
-              type='password'
-              id='password'
-              className='form-input'
-              placeholder='••••••••'
+              type="password"
+              id="password"
+              className="form-input"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
 
-          <button type='submit' className='login-button'>
+          <button type="submit" className="login-button">
             Sign in
           </button>
 
-          <div className='alternative-login'>
+          <div className="alternative-login">
             <button
-              type='button'
-              className='face-recognition-button'
+              type="button"
+              className="face-recognition-button"
               onClick={handleFaceRecognitionClick}
             >
               Use Face Recognition
             </button>
 
             <button
-              type='button'
-              className='google-login-button'
+              type="button"
+              className="google-login-button"
               onClick={handleGoogleLogin}
             >
-              <FaGoogle className='google-icon' /> Sign in with Google
+              <FaGoogle className="google-icon" /> Sign in with Google
             </button>
           </div>
 
-          <div className='forget-password'>
-            <a href='/forget-password'>Forgot Password?</a>
+          <div className="forget-password">
+            <a href="/forget-password">Forgot Password?</a>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
- 
 // Styles CSS
 const styles = `
   .login-container {
@@ -243,7 +246,7 @@ const styles = `
   .login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #007bff;
+    background-color: #ff3b3f;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -253,7 +256,7 @@ const styles = `
   }
 
   .login-button:hover {
-    background-color: #0056b3;
+    background-color:rgb(179, 0, 27);
   }
 
   .alternative-login {
@@ -282,7 +285,7 @@ const styles = `
   .google-login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #db4437;
+    background-color:rgb(13, 165, 225);
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -296,7 +299,7 @@ const styles = `
   }
 
   .google-login-button:hover {
-    background-color: #c23321;
+    background-color:rgb(40, 156, 214);
   }
 
   .google-icon {
@@ -316,12 +319,11 @@ const styles = `
   .forgot-password a:hover {
     text-decoration: underline;
   }
-`
+`;
 
 // Injecter les styles dans le document
-const styleSheet = document.createElement("style")
-styleSheet.type = "text/css"
-styleSheet.innerText = styles
-document.head.appendChild(styleSheet)
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 export default Login;
- 

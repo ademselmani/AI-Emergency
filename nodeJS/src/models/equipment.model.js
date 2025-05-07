@@ -76,6 +76,27 @@ const EquipmentSchema = new mongoose.Schema(
           `Next maintenance date (${props.value}) must be in the future and after last maintenance date.`,
       },
     },
+    notifications: [
+      {
+        type: {
+          type: String,
+          enum: ["maintenance"],
+          required: true,
+        },
+        message: {
+          type: String,
+          required: true,
+        },
+        sentAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    lastNotified: {
+      type: Date,
+      default: null,
+    },
     manufacturer: {
       type: String,
       trim: true,

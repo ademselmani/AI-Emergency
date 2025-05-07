@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import Modal from "../../components/ressourcesComponent/modal"
 import axios from "axios"
-import { ToastContainer, toast } from "react-toastify"
+import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { Tooltip } from "react-tooltip"
 import "react-tooltip/dist/react-tooltip.css"
@@ -26,6 +26,7 @@ import {
 } from "@dnd-kit/sortable"
 import { useDroppable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
+import socket from "../../components/ressourcesComponent/socket"
 
 const Equipment = () => {
   const [equipments, setEquipments] = useState([])
@@ -49,6 +50,7 @@ const Equipment = () => {
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [errors, setErrors] = useState({})
   const [activeId, setActiveId] = useState(null)
+  const [sendingReminder, setSendingReminder] = useState({})
 
   const statusColors = {
     AVAILABLE: { backgroundColor: "#dcfce7", color: "#166534" },
@@ -94,6 +96,35 @@ const Equipment = () => {
 
     fetchEquipments()
     fetchRooms()
+
+    // Listen for WebSocket events
+    socket.on("equipmentUpdate", (updatedEquipment) => {
+      console.log("Received equipment update:", updatedEquipment)
+      setEquipments((prevEquipments) =>
+        prevEquipments.map((eq) =>
+          eq._id === updatedEquipment._id ? updatedEquipment : eq
+        )
+      )
+    })
+
+    socket.on("maintenanceNotification", (notification) => {
+      console.log("Maintenance notification received:", notification)
+      if (notification.error) {
+        toast.error(
+          `Failed to send maintenance reminder for equipment ${notification.equipmentId}: ${notification.error}`
+        )
+      } else {
+        toast.info(
+          `Maintenance reminder sent for equipment ${notification.equipmentId}: ${notification.message}`
+        )
+      }
+    })
+
+    // Clean up WebSocket listeners on unmount
+    return () => {
+      socket.off("equipmentUpdate")
+      socket.off("maintenanceNotification")
+    }
   }, [])
 
   const handleOpenModal = (equipment) => {
@@ -142,21 +173,22 @@ const Equipment = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrors({})
+
     const purchaseDate = formData.purchaseDate
-      ? new Date(formData.purchaseDate)
+      ? new Date(formData.purchaseDate).toISOString()
       : null
     const lastMaintenanceDate = formData.lastMaintenanceDate
-      ? new Date(formData.lasttenanceDate)
+      ? new Date(formData.lastMaintenanceDate).toISOString()
       : null
     const nextMaintenanceDate = formData.nextMaintenanceDate
-      ? new Date(formData.nextMaintenanceDate)
+      ? new Date(formData.nextMaintenanceDate).toISOString()
       : null
 
     let validationErrors = {}
     if (
       purchaseDate &&
       lastMaintenanceDate &&
-      lastMaintenanceDate < purchaseDate
+      new Date(lastMaintenanceDate) < new Date(purchaseDate)
     ) {
       validationErrors.lastMaintenanceDate =
         "Last maintenance date must be after purchase date"
@@ -164,7 +196,7 @@ const Equipment = () => {
     if (
       purchaseDate &&
       nextMaintenanceDate &&
-      nextMaintenanceDate < purchaseDate
+      new Date(nextMaintenanceDate) < new Date(purchaseDate)
     ) {
       validationErrors.nextMaintenanceDate =
         "Next maintenance date must be after purchase date"
@@ -172,7 +204,7 @@ const Equipment = () => {
     if (
       lastMaintenanceDate &&
       nextMaintenanceDate &&
-      nextMaintenanceDate <= lastMaintenanceDate
+      new Date(nextMaintenanceDate) <= new Date(lastMaintenanceDate)
     ) {
       validationErrors.nextMaintenanceDate =
         "Next maintenance date must be after last maintenance date"
@@ -192,13 +224,20 @@ const Equipment = () => {
       return
     }
 
-    console.log("Submitting formData:", formData)
+    const submissionData = {
+      ...formData,
+      purchaseDate,
+      lastMaintenanceDate,
+      nextMaintenanceDate,
+    }
+
+    console.log("Submitting formData:", submissionData)
 
     try {
       if (currentEquipment) {
         const response = await axios.put(
           `http://localhost:3000/equipments/${currentEquipment._id}`,
-          formData
+          submissionData
         )
         setEquipments(
           equipments.map((eq) =>
@@ -206,13 +245,15 @@ const Equipment = () => {
           )
         )
         toast.success("Equipment updated successfully!")
+        socket.emit("equipmentUpdate", response.data)
       } else {
         const response = await axios.post(
           "http://localhost:3000/equipments",
-          formData
+          submissionData
         )
         setEquipments([...equipments, response.data])
         toast.success("Equipment created successfully!")
+        socket.emit("equipmentUpdate", response.data)
       }
       handleCloseModal()
     } catch (err) {
@@ -245,6 +286,7 @@ const Equipment = () => {
       await axios.delete(`http://localhost:3000/equipments/${id}`)
       setEquipments(equipments.filter((eq) => eq._id !== id))
       toast.success("Equipment deleted successfully!")
+      socket.emit("equipmentUpdate", { _id: id, deleted: true })
     } catch (err) {
       toast.error(`Failed to delete equipment: ${err.message}`)
     }
@@ -280,7 +322,7 @@ const Equipment = () => {
     setSelectedStatus("all")
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `http://localhost:3000/equipments/${draggedEquipment._id}`,
         {
           ...draggedEquipment,
@@ -288,6 +330,7 @@ const Equipment = () => {
         }
       )
       toast.success(`Moved ${draggedEquipment.name} to ${newStatus}`)
+      socket.emit("equipmentUpdate", response.data)
     } catch (err) {
       setEquipments(equipments)
       toast.error(`Failed to update status: ${err.message}`)
@@ -296,7 +339,8 @@ const Equipment = () => {
 
   const filteredEquipments = equipments.filter((equipment) => {
     const roomMatch =
-      selectedRoom === "all" || equipment.room._id === selectedRoom
+      selectedRoom === "all" ||
+      (equipment.room && equipment.room._id === selectedRoom)
     const statusMatch =
       selectedStatus === "all" || equipment.status === selectedStatus
     return roomMatch && statusMatch
@@ -400,7 +444,6 @@ const Equipment = () => {
       display: "inline-block",
     }
 
-    // Calculate progress for the maintenance bar
     const today = new Date()
     const nextMaintenance = equipment.nextMaintenanceDate
       ? new Date(equipment.nextMaintenanceDate)
@@ -409,88 +452,89 @@ const Equipment = () => {
       ? new Date(equipment.lastMaintenanceDate)
       : equipment.purchaseDate
       ? new Date(equipment.purchaseDate)
-      : null // Fallback to purchaseDate if lastMaintenanceDate is unavailable
+      : null
 
     let progress = 0
-    let barColor = "#3b82f6" // Default blue
-    let maintenanceStatus = "" // To store "Due Soon" or "Overdue"
-    let showReminder = false // Determine if a reminder should be shown
-    let barLabel = "Next Maintenance" // Default label for the bar
-    let barColorOverride = null // Override color for specific statuses
+    let barColor = "#3b82f6"
+    let maintenanceStatus = ""
+    let showReminder = false
+    let barLabel = "Next Maintenance"
+    let barColorOverride = null
 
-    if (nextMaintenance && lastMaintenance) {
+    if (
+      nextMaintenance &&
+      lastMaintenance &&
+      equipment.status !== "MAINTENANCE"
+    ) {
       const totalDuration = nextMaintenance - lastMaintenance
       const timePassed = today - lastMaintenance
 
       if (totalDuration > 0) {
         progress = (timePassed / totalDuration) * 100
-        if (progress < 0) progress = 0 // Before last maintenance or purchase date
-        if (progress > 100) progress = 100 // Overdue
+        if (progress < 0) progress = 0
+        if (progress > 100) progress = 100
 
         if (progress < 50) {
-          barColor = "#22c55e" // Green for < 50%
+          barColor = "#22c55e"
         } else if (progress < 100) {
-          barColor = "#f59e0b" // Yellow for 50%-100%
+          barColor = "#f59e0b"
           if (progress >= 80) {
-            maintenanceStatus = "Due Soon" // Alert when within 20% of the deadline
+            maintenanceStatus = "Due Soon"
           }
         } else {
-          barColor = "#dc2626" // Red for overdue
+          barColor = "#dc2626"
           maintenanceStatus = "Overdue"
         }
       }
-    } else if (nextMaintenance) {
-      // No lastMaintenanceDate or purchaseDate, check if overdue
+    } else if (nextMaintenance && equipment.status !== "MAINTENANCE") {
       if (today > nextMaintenance) {
         progress = 100
-        barColor = "#dc2626" // Red for overdue
+        barColor = "#dc2626"
         maintenanceStatus = "Overdue"
       } else {
-        progress = 0 // No progress yet
-        barColor = "#3b82f6" // Blue as default
-        // Check if within 7 days of nextMaintenanceDate
+        progress = 0
+        barColor = "#3b82f6"
         const daysUntilMaintenance = Math.ceil(
           (nextMaintenance - today) / (1000 * 60 * 60 * 24)
         )
         if (daysUntilMaintenance <= 7) {
           maintenanceStatus = "Due Soon"
-          barColor = "#f59e0b" // Yellow to indicate urgency
+          barColor = "#f59e0b"
         }
       }
     }
 
-    // Adjust bar label and color based on status
     if (equipment.status === "MAINTENANCE") {
-      barLabel = "Scheduled Next Maintenance" // Indicate this is the next cycle
-      barColorOverride = maintenanceStatus === "Overdue" ? "#dc2626" : "#6b7280" // Gray unless overdue
+      barLabel = "Scheduled Next Maintenance"
+      barColorOverride = maintenanceStatus === "Overdue" ? "#dc2626" : "#6b7280"
     } else if (equipment.status === "OUT_OF_ORDER") {
-      barLabel = "Next Maintenance (Pending Repair)" // Indicate repair is needed first
-      barColorOverride = "#6b7280" // Gray to de-emphasize
+      barLabel = "Next Maintenance (Pending Repair)"
+      barColorOverride = "#6b7280"
     }
 
-    // Determine if a reminder should be shown based on status
-    if (maintenanceStatus) {
+    if (maintenanceStatus && equipment.status !== "MAINTENANCE") {
       if (equipment.status === "OUT_OF_ORDER") {
-        showReminder = false // Skip reminders for OUT_OF_ORDER
-      } else if (equipment.status === "MAINTENANCE") {
-        // Only show reminder if overdue (maintenance process is delayed)
-        showReminder = maintenanceStatus === "Overdue"
+        showReminder = false
       } else {
-        // Show reminder for AVAILABLE and IN_USE
         showReminder = true
       }
     }
 
-    // Function to send a maintenance reminder notification
     const handleSendReminder = async () => {
+      setSendingReminder((prev) => ({ ...prev, [equipment._id]: true }))
       try {
+        const message = `Manual reminder: ${equipment.name} (Serial: ${equipment.serialNumber}) is due for maintenance soon!`
         const response = await axios.post(
           `http://localhost:3000/equipments/${equipment._id}/notify`,
-          { type: "maintenance" }
+          { type: "maintenance", message }
         )
         toast.success(response.data.message || "Reminder sent successfully!")
       } catch (err) {
-        toast.error(`Failed to send reminder: ${err.message}`)
+        toast.error(
+          `Failed to send reminder: ${err.response?.data?.error || err.message}`
+        )
+      } finally {
+        setSendingReminder((prev) => ({ ...prev, [equipment._id]: false }))
       }
     }
 
@@ -543,8 +587,7 @@ const Equipment = () => {
         >
           Room: {equipment.room?.name || "N/A"}
         </div>
-        {/* Always show the maintenance bar if nextMaintenance exists, with adjusted label and color */}
-        {nextMaintenance && (
+        {nextMaintenance && equipment.status !== "MAINTENANCE" && (
           <div style={{ marginTop: "8px" }}>
             <div
               style={{
@@ -572,8 +615,7 @@ const Equipment = () => {
             </div>
           </div>
         )}
-        {/* Display maintenance reminder alert only if showReminder is true */}
-        {showReminder && (
+        {showReminder && equipment.status !== "MAINTENANCE" && (
           <div
             style={{
               color: maintenanceStatus === "Overdue" ? "#dc2626" : "#f59e0b",
@@ -596,8 +638,7 @@ const Equipment = () => {
             gap: "8px",
           }}
         >
-          {/* Show notification button only if showReminder is true */}
-          {showReminder && (
+          {showReminder && equipment.status !== "MAINTENANCE" && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -606,9 +647,13 @@ const Equipment = () => {
               style={{
                 background: "none",
                 border: "none",
-                cursor: "pointer",
+                cursor: sendingReminder[equipment._id]
+                  ? "not-allowed"
+                  : "pointer",
+                opacity: sendingReminder[equipment._id] ? 0.5 : 1,
               }}
               title='Send maintenance reminder'
+              disabled={sendingReminder[equipment._id]}
             >
               <AlertCircle
                 size={16}
@@ -659,7 +704,7 @@ const Equipment = () => {
       room: PropTypes.shape({
         _id: PropTypes.string.isRequired,
         name: PropTypes.string.isRequired,
-      }).isRequired,
+      }),
       status: PropTypes.oneOf([
         "AVAILABLE",
         "IN_USE",
@@ -678,13 +723,15 @@ const Equipment = () => {
     const { setNodeRef, isOver } = useDroppable({ id: status })
 
     const style = {
-      flex: "1 1 250px",
+      flex: "1 1 0",
+      width: "250px",
       backgroundColor: "#fff",
       borderRadius: "8px",
       padding: "16px",
       border: `2px dashed ${isOver ? "#3b82f6" : statusColors[status].color}`,
       minHeight: "200px",
       transition: "border-color 0.2s ease",
+      boxSizing: "border-box",
     }
 
     const statusEquipments = filteredEquipments.filter(
@@ -766,7 +813,7 @@ const Equipment = () => {
             display: "flex",
             alignItems: "center",
             padding: "8px 16px",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "#ff3b3f",
             color: "#fff",
             border: "none",
             borderRadius: "4px",

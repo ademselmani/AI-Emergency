@@ -110,51 +110,17 @@ const Statleaves = () => {
           className="view-all-button"
           style={{
             backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
+            color: '#ff3b3f',
             padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
+            border: '1px solid #ff3b3f',
             borderRadius: '6px',
-            borderColor:'#03c3ec',
+            borderColor:'#ff3b3f',
             textDecoration: 'none',
             fontSize: '0.9rem',
             transition: 'background-color 0.2s'
           }}
         >
           View all leaves
-        </Link>
-        <Link 
-          to="/forecast" 
-          className="view-all-button"
-          style={{
-            backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
-            padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
-            borderRadius: '6px',
-            borderColor:'#03c3ec',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'background-color 0.2s'
-          }}
-        >
-           Leave Forecast
-        </Link>
-        <Link 
-          to="/anomalies" 
-          className="view-all-button"
-          style={{
-            backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
-            padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
-            borderRadius: '6px',
-            borderColor:'#03c3ec',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'background-color 0.2s'
-          }}
-        >
-          Anomaly Leaves
         </Link>
       </div>
       

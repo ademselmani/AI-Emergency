@@ -5,7 +5,12 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import Popup from "reactjs-popup";
 import { useState, useEffect } from "react";
 import axios from "axios";
-
+import { 
+  PlusIcon, 
+  PencilIcon, 
+  TrashIcon, 
+  XMarkIcon 
+} from '@heroicons/react/24/outline';
 export function ShiftDashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState([]);
@@ -557,65 +562,91 @@ export function ShiftDashboard() {
   }
 
   return (
-    <div>
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
-        }}
-        initialView="timeGridWeek"
-        weekends={true}
-        events={shifts}
-        editable={ localStorage.getItem("role") == "admin" }
-        eventDrop={updateShift}
-        eventContent={renderEventContent}
-        dateClick={handleDateSelect}
-        eventClick={handleEventClick}
-      />
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          weekends={true}
+          events={shifts}
+          editable={localStorage.getItem("role") == "admin"}
+          eventDrop={updateShift}
+          eventContent={renderEventContent}
+          dateClick={handleDateSelect}
+          eventClick={handleEventClick}
+          themeSystem="standard"
+          height="auto"
+          dayHeaderClassNames="bg-white text-[#ff3b3f]  font-semibold py-2"
+          dayCellClassNames="bg-white text-[#ff3b3f] transition-colors"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
+          buttonText={{
+            today: "Today",
+            month: "Month",
+            week: "Week",
+            day: "Day",
+          }}
+          eventClassNames="!rounded-lg !border-0 !text-sm !shadow-sm"
+        />
+      </div>
 
-      <Popup open={showPopup} onClose={() => setShowPopup(false)} modal>
-        <div className="bg-white p-[15px] shadow-xl max-w-lg w-full mx-auto border border-gray-300">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Shift for {selectedDate.split("T")[0]}
-          </h2>
+      <Popup
+        open={showPopup}
+        onClose={() => setShowPopup(false)}
+        modal
+        nested
+        contentStyle={{ borderRadius: '1rem', border: 'none' }}
+      >
+        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-xl w-full mx-auto relative">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Shift Planning<br />
+              <span className="text-lg text-gray-600">{selectedDate.split("T")[0]}</span>
+            </h2>
+            <button
+              onClick={() => setShowPopup(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 -m-2"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
 
           {validationError && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              <p>{validationError}</p>
+            <div className="mb-6 p-4 bg-red-50 rounded-xl flex items-center gap-3 text-red-700">
+              <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">{validationError}</span>
             </div>
           )}
 
-          <div className="flex gap-4 mb-4">
-            <div className="w-1/2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Shift type
-              </label>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Shift Type</label>
               <select
                 id="siftType"
-                className="w-full p-2 border rounded-lg bg-gray-50"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={(e) => setselectedShiftType(e.target.value)}
                 value={selectedShiftType}
               >
-                <option value="Day_shift">Day shift</option>
-                <option value="Evening_shift">Evening shift</option>
-                <option value="Night_shift">Night shift</option>
+                <option value="Day_shift">Day Shift</option>
+                <option value="Evening_shift">Evening Shift</option>
+                <option value="Night_shift">Night Shift</option>
               </select>
             </div>
-            <div className="w-1/2">
-              <label className="block text-sm font-semibold text-gray-700">
-                Area
-              </label>
+            
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Area</label>
               <select
                 id="area"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 onChange={(e) => {
                   setSelectedArea(e.target.value);
                   setSelectedEmployees({});
                   setValidationError("");
                 }}
                 value={selectedArea}
-                className="w-full p-2 border rounded-lg bg-gray-50"
               >
                 <option value="">Select an area</option>
                 <option value="Triage">Triage</option>
@@ -626,91 +657,80 @@ export function ShiftDashboard() {
             </div>
           </div>
 
-          {selectedArea &&
-            Object.entries(staffingRules[selectedArea] || {}).map(
-              ([role, count]) => (
-                <div key={role} className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    {role} ({count} required)
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {[...Array(count)].map((_, index) => {
-                      const allSelectedIds = getAllSelectedEmployeeIds();
-                      const currentValue =
-                        selectedEmployees[role]?.[index] || "";
+          {selectedArea && Object.entries(staffingRules[selectedArea] || {}).map(([role, count]) => (
+            <div key={role} className="mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-gray-900">{role}</span>
+                <span className="text-sm text-gray-500">{count} required</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                {[...Array(count)].map((_, index) => {
+                  const allSelectedIds = getAllSelectedEmployeeIds();
+                  const currentValue = selectedEmployees[role]?.[index] || "";
 
-                      return (
-                        <select
-                          key={index}
-                          className="w-full p-2 border rounded-lg bg-gray-50"
-                          value={currentValue}
-                          onChange={(e) =>
-                            handleEmployeeSelection(role, index, e.target.value)
-                          }
-                        >
-                          <option value="">Select {role}</option>
-                          {activeEmployees
-                            .filter((employee) => employee.role === role)
-                            .map((employee) => {
-                              const isDisabled =
-                                allSelectedIds.includes(employee._id) &&
-                                currentValue !== employee._id;
-                              return (
-                                <option
-                                  key={employee._id}
-                                  value={employee._id}
-                                  disabled={isDisabled}
-                                >
-                                  {employee.name}{" "}
-                                  {isDisabled ? "(Already selected)" : ""}
-                                </option>
-                              );
-                            })}
-                        </select>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-            )}
+                  return (
+                    <select
+                      key={index}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      value={currentValue}
+                      onChange={(e) =>
+                        handleEmployeeSelection(role, index, e.target.value)
+                      }
+                    >
+                      <option value="">Select {role}</option>
+                      {activeEmployees
+                        .filter((employee) => employee.role === role)
+                        .map((employee) => {
+                          const isDisabled =
+                            allSelectedIds.includes(employee._id) &&
+                            currentValue !== employee._id;
+                          return (
+                            <option
+                              key={employee._id}
+                              value={employee._id}
+                              disabled={isDisabled}
+                            >
+                              {employee.name}{" "}
+                              {isDisabled ? "(Already selected)" : ""}
+                            </option>
+                          );
+                        })}
+                    </select>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
-          <div className="flex justify-between mt-4">
-            {
+          <div className="flex flex-col gap-3 mt-8">
+            {!showDeleteButton ? (
               <button
-                type="button"
-                onClick={handleAddEvent}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              onClick={handleAddEvent}
+              className="w-full py-4 px-6 bg-[#ff3b3f] text-white p-4 rounded hover:bg-red-700 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            
                 disabled={!selectedArea}
               >
-                Add Shift
+                <PlusIcon className="w-5 h-5" />
+                Create Shift
               </button>
-            }
-
-            {showDeleteButton && (
+            ) : (
               <>
                 <button
-                  type="button"
                   onClick={handleSubmit}
-                  className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
+                  className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  Edit Shift
+                  <PencilIcon className="w-5 h-5" />
+                  Update Shift
                 </button>
                 <button
-                  type="button"
                   onClick={handleDeleteEvent}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                  className="w-full py-4 px-6 bg-[#ff3b3f] text-white p-4 rounded hover:bg-red-700 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  Delete Event
+                  <TrashIcon className="w-5 h-5" />
+                  Delete Shift
                 </button>
               </>
             )}
-
-            <button
-              onClick={() => setShowPopup(false)}
-              className="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500"
-            >
-              Close
-            </button>
           </div>
         </div>
       </Popup>
@@ -719,11 +739,18 @@ export function ShiftDashboard() {
 }
 
 function renderEventContent(eventInfo) {
+  const areaColors = {
+    Triage: 'bg-blue-100 text-blue-800',
+    Resuscitation: 'bg-red-100 text-red-800',
+    Major_Trauma: 'bg-amber-100 text-amber-800',
+    General_ED: 'bg-emerald-100 text-emerald-800'
+  };
+
   return (
-    <>
-      <b>{eventInfo.timeText}</b>
-      <i>{eventInfo.event.title}</i>
-    </>
+    <div className={`p-2 ${areaColors[eventInfo.event.title]} rounded-lg text-sm font-medium`}>
+      <div className="text-xs opacity-75 mb-1">{eventInfo.timeText}</div>
+      <div>{eventInfo.event.title}</div>
+    </div>
   );
 }
 

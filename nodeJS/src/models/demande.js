@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const demandeSchema = new mongoose.Schema({
   name: String,
-  phone:Number,
+  phone:String,
   position: {
     lat: Number,
     lng: Number

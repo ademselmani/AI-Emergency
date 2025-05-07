@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt")
 const employeeSchema = mongoose.Schema({
   cin: {
     type: String,
-    required: [true, "Le CIN est requis"],
+    //required: [true, "Le CIN est requis"],
     unique: [true, "Ce CIN existe déjà"],
     validate: {
       validator: function (v) {
@@ -24,7 +24,6 @@ const employeeSchema = mongoose.Schema({
   },
   familyName: {
     type: String,
-    required: [true, "Le nom de famille est requis"],
     trim: true,
     minlength: [2, "Le nom de famille doit avoir au moins 2 caractères"],
     maxlength: [50, "Le nom de famille ne peut pas dépasser 50 caractères"],
@@ -91,6 +90,8 @@ const employeeSchema = mongoose.Schema({
   },
 
   leaveQuota: { type: Number, default: 25 },
+  verifyCode: { type: Number, required: false },
+
   
   shiftCount: {
     weekStart: { type: Date, default: null }, // Tracks the Monday of the week

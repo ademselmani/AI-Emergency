@@ -311,7 +311,7 @@ const Room = () => {
             display: "flex",
             alignItems: "center",
             padding: "10px 20px",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "#ff3b3f",
             color: "#fff",
             border: "none",
             borderRadius: "6px",
@@ -322,10 +322,10 @@ const Room = () => {
             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
           }}
           onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#2563eb")
+            (e.currentTarget.style.backgroundColor = "#c92024")
           }
           onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#3b82f6")
+            (e.currentTarget.style.backgroundColor = "#ff3b3f")
           }
         >
           <Plus size={20} style={{ marginRight: "8px" }} /> Add Room

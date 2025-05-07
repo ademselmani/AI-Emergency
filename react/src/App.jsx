@@ -7,6 +7,7 @@ import Profile from "./pages/Profile/AuthentificatedUserprofile";
 import Register from "./pages/Authentification/Resgister";
 import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";
+import VerficationCode from "./pages/Authentification/VerificationCode.jsx";
 
 import NotFound from "./pages/Exceptions/NotFound";
 import Layout from "./layout/Layout";
@@ -47,14 +48,16 @@ import Statleaves from "./pages/Leaves/Statleaves";
 
 import {ShiftDashboard} from "./pages/shift/ShiftDashboard.jsx";
  
+import LeaveAnomalie from "./pages/Leaves/LeaveAnomalie.jsx";
+import LeaveForecast from "./pages/Leaves/LeaveForecast.jsx"
+
    
 import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
 import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
 import HomePage from "./pages/HomePage.jsx";
+import ChatBot from "./pages/ChatBot.jsx";
 
 
-import LeaveAnomalie from "./pages/Leaves/LeaveAnomalie.jsx";
-import LeaveForecast from "./pages/Leaves/LeaveForecast.jsx"
 
 
 function App() {
@@ -169,7 +172,8 @@ element={
  
           <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/forget-password" element={<Passwordforget />} />
-        
+          <Route path="/verify" element={<VerficationCode />} />
+
         
           <Route path="/medical-treatments" element={
             <Layout>
@@ -258,10 +262,12 @@ element={
   
   } />
  <Route path="/demandeAmbulance" element={<AmbulancePatient />} />
- <Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
+ <Route path="/chatbot" element={<ChatBot />} />
 <Route path ="/home" element={<HomePage/>}/>
 <Route path="/anomalies" element={<Layout><LeaveAnomalie/></Layout>} />
 <Route path="/forecast" element={<Layout><LeaveForecast/></Layout>} />
+<Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
+
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
 

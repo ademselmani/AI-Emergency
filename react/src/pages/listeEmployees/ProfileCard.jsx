@@ -1,130 +1,227 @@
 /** @format */
 
-import React from "react"
+import React, { useState } from "react"
 import PropTypes from "prop-types"
-import "./ProfileCard.css"
 import { Link } from "react-router-dom"
+import { toast } from "react-toastify"
+import "./ProfileCard.css"
 
-// Objet de couleurs pour les rôles
+// Role and status color definitions
 const roleColors = {
-  doctor: "#FEBB0B", // Jaune
-  nurse: "#2196F3", // Bleu
-  triage_nurse: "#E91E63", // Rose
-  receptionnist: "#9C27B0", // Violet
-  ambulance_driver: "#00BCD4", // Cyan
+  doctor: "#2A6EBB",
+  nurse: "#1A8E5F",
+  triage_nurse: "#D81B60",
+  receptionnist: "#6A1B9A",
+  ambulance_driver: "#0288D1",
 }
 
-// Objet de couleurs pour les statuts
 const statusColors = {
-  active: "#4CAF50", // Vert
-  on_leave: "#FF9800", // Orange
-  retired: "#F44336", // Rouge
+  active: "#2ECC71",
+  on_leave: "#F39C12",
+  retired: "#E74C3C",
 }
 
 const ProfileCard = ({ employee = {}, onDelete }) => {
-  // Déstructuration avec valeurs par défaut
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
+
   const {
-    id, // ID de l'employé ajouté ici
+    id,
     role = "N/A",
     name = "N/A",
-    image = "N/A",
+    image,
     familyName = "N/A",
     adresse = "N/A",
+    gender = "N/A",
     status = "N/A",
     qualifications = {},
   } = employee
 
-  const {
-    degree = "N/A",
-    institution = "N/A",
-    year = "N/A",
-    certifications = {},
-  } = qualifications
+  const { degree = "N/A" } = qualifications
 
-  const { certification = "N/A" } = certifications
+  const roleColor = roleColors[role.toLowerCase()] || "#90A4AE"
+  const statusColor = statusColors[status.toLowerCase()] || "#90A4AE"
 
-  // Couleur du rôle (par défaut gris si le rôle n'est pas trouvé)
-  const roleColor = roleColors[role] || "#CCCCCC"
+  const handleDeleteClick = () => {
+    setDeleteError(null)
+    setShowDeleteModal(true)
+  }
 
-  // Couleur du statut (par défaut gris si le statut n'est pas trouvé)
-  const statusColor = statusColors[status] || "#CCCCCC"
-
-  // Fonction de suppression
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        // Appeler la fonction de suppression passée via les props (onDelete)
-        await onDelete(id)
-        alert("Employee deleted successfully")
-      } catch (error) {
-        console.error("Error deleting employee:", error)
-        alert("There was an error deleting the employee.")
-      }
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await onDelete(id)
+      setShowDeleteModal(false)
+      toast.success(
+        <div>
+          <h6>Profile Deleted Successfully</h6>
+          <p>
+            {name} {familyName}'s profile has been removed from the system.
+          </p>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+          toastId: `delete-success-${id}`,
+        }
+      )
+    } catch (error) {
+      console.error("Error deleting employee:", error)
+      setDeleteError("Failed to delete employee. Please try again.")
+      toast.error(
+        <div>
+          <h6>Deletion Failed</h6>
+          <p>
+            Could not delete {name} {familyName}'s profile. Please try again.
+          </p>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+          toastId: `delete-error-${id}`,
+        }
+      )
+    } finally {
+      setIsDeleting(false)
     }
   }
 
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false)
+    setDeleteError(null)
+  }
+
   return (
-    <div className='card-container'>
-      {/* Badge de rôle avec couleur dynamique */}
-      <span className='pro' style={{ backgroundColor: roleColor }}>
-        {role}
-      </span>
-      <img
-        className='round'
-        src={
-          image || "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg"
-        }
-        alt='user'
-      />
-      <h3>
-        {name} {familyName}
-      </h3>
-      <h6>{adresse}</h6>
-      {/* Statut avec couleur dynamique */}
-      <p>
-        {" "}
-        <span style={{ color: statusColor, fontWeight: "bold" }}>{status}</span>
-      </p>
-      <div className='buttons'>
-        <button className='primary delete' onClick={handleDelete}>
-          Delete
-        </button>
-        <Link to={`/user/profile/${id}`}>
-          <button className='primary ghost'>View Profile</button>
-        </Link>
+    <>
+      <div className='profile-card'>
+        <div className='card-header'>
+          <span className='role-badge' style={{ backgroundColor: roleColor }}>
+            {role.toUpperCase()}
+          </span>
+        </div>
+        <div className='card-content'>
+          <div className='avatar-container'>
+            <img
+              className='photo'
+              src={
+                image ||
+                "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg"
+              }
+              alt={`${name} ${familyName}`}
+            />
+            <span
+              className='status-indicator'
+              style={{ backgroundColor: statusColor }}
+            />
+          </div>
+          <h3 className='employee-name'>
+            {name} {familyName}
+          </h3>
+          <p className='employee-address'>Address: {adresse}</p>
+          <p>Gender: {gender}</p>
+          <div className='status-container'>
+            <span className='status-label'>Status: </span>
+            <span className='status-value' style={{ color: statusColor }}>
+              {status.toUpperCase()}
+            </span>
+          </div>
+        </div>
+        <div className='card-footer'>
+          <button
+            className='btn btn-outline-danger'
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <span
+                  className='spinner-border spinner-border-sm me-2'
+                  role='status'
+                  aria-hidden='true'
+                ></span>
+                Deleting...
+              </>
+            ) : (
+              "Delete Profile"
+            )}
+          </button>
+          <Link to={`/user/profile/${id}`}>
+            <button className='btn btn-primary ms-2'>View Profile</button>
+          </Link>
+        </div>
       </div>
-      <div className='skills'>
-        <h6>Qualifications</h6>
-        <ul>
-          <li>Degree: {degree}</li>
-          <li>Institution: {institution}</li>
-          <li>Year: {year}</li>
-          {certification !== "N/A" && <li>Certifications: {certification}</li>}
-        </ul>
-      </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className='modal-overlay'>
+          <div className='modal-content'>
+            <h3>Confirm Deletion</h3>
+            <p>
+              Are you sure you want to delete {name} {familyName}'s profile?
+              This action cannot be undone.
+            </p>
+            {deleteError && (
+              <div className='alert alert-danger'>{deleteError}</div>
+            )}
+            <div className='modal-actions'>
+              <button
+                className='btn btn-outline-secondary'
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className='btn btn-danger ms-2'
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <span
+                      className='spinner-border spinner-border-sm me-2'
+                      role='status'
+                      aria-hidden='true'
+                    ></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Permanently"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
-// Validation des props
 ProfileCard.propTypes = {
   employee: PropTypes.shape({
-    id: PropTypes.string.isRequired, // Assurez-vous que l'ID est passé en prop
+    id: PropTypes.string.isRequired,
     role: PropTypes.string,
     name: PropTypes.string,
     familyName: PropTypes.string,
+    image: PropTypes.string,
     adresse: PropTypes.string,
+    gender: PropTypes.string,
     status: PropTypes.string,
     qualifications: PropTypes.shape({
       degree: PropTypes.string,
-      institution: PropTypes.string,
-      year: PropTypes.number,
-      certifications: PropTypes.shape({
-        certification: PropTypes.string,
-      }),
     }),
   }),
-  // Fonction de suppression passée en prop
   onDelete: PropTypes.func.isRequired,
 }
 
