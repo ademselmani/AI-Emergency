@@ -64,7 +64,7 @@ const ListeEmployees = () => {
           <ProfileCard
             key={employee.id}
             employee={employee}
-            onDelete={deleteEmployee} // Passer la fonction onDelete à ProfileCard
+            onDelete={deleteEmployee} 
           />
         ))}
       </div>

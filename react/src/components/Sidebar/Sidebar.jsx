@@ -40,8 +40,7 @@ const Sidebar = () => {
       },
     ],
     nurse: [
-      { to: "/profile", icon: "bx bx-user-plus", label: "Patients in my area" },
-      { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
+       { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
       { 
         to: "/MyLeaveRequests", 
         icon: "fas fa-calendar-check", 

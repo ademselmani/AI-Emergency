@@ -1,4 +1,5 @@
 const Treatment = require('../models/Treatment');
+const DeepLController = require('./DeepLController'); // Import the DeepL translation controller
 
  
 // Créer un traitement
@@ -44,12 +45,35 @@ exports.createTreatment = async (req, res) => {
 
  
 
-// Obtenir tous les traitements d'un patient
 exports.getTreatmentsByPatient = async (req, res) => {
   try {
     const treatments = await Treatment.find({ patient: req.params.patientId });
-    res.status(200).json(treatments);
+    
+    // If treatments are found, translate the description field (or other relevant fields)
+    if (treatments.length > 0) {
+      const targetLanguage = req.query.language || 'EN'; // Default to 'EN', or use the language query parameter
+
+      // Translate descriptions (or any other field you want)
+      const translatedTreatments = await Promise.all(
+        treatments.map(async (treatment) => {
+          try {
+            if (treatment.details) {
+              treatment.details = await DeepLController.translateText(treatment.details, targetLanguage);
+            }
+            return treatment;
+          } catch (error) {
+            console.error(`Error translating treatment ${treatment._id}:`, error);
+            return treatment; // Return the original treatment in case of a translation error
+          }
+        })
+      );
+      
+      res.status(200).json(translatedTreatments);
+    } else {
+      res.status(404).json({ message: 'Aucun traitement trouvé pour ce patient' });
+    }
   } catch (error) {
+    console.error('Error fetching treatments:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -140,4 +164,132 @@ exports.getAllTreatments = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+  
+}
+
+
+
+ 
+// Statistiques mensuelles des traitements
+// Obtenir les statistiques mensuelles
+exports.getMonthlyTreatmentStats = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const stats = await Treatment.aggregate([
+      {
+        $match: { patient: new mongoose.Types.ObjectId(patientId) } // Use `new` for ObjectId
+      },
+      {
+        $group: {
+          _id: { month: { $month: "$startDate" }, year: { $year: "$startDate" } },
+          active: { $sum: { $cond: [{ $eq: ["$status", true] }, 1, 0] } },
+          completed: { $sum: { $cond: [{ $eq: ["$status", false] }, 1, 0] } },
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error('Error in getMonthlyTreatmentStats:', error);
+    res.status(500).json({ error: 'Erreur serveur lors de la récupération des statistiques mensuelles', message: error.message });
+  }
 };
+
+ 
+// Statistiques par catégorie
+exports.getTreatmentByCategoryStats = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const stats = await Treatment.aggregate([
+      { $match: { patient: new mongoose.Types.ObjectId(patientId) } }, // Correct ObjectId instantiation
+      {
+        $group: {
+          _id: "$category", // Group by category
+          count: { $sum: 1 },
+          avgDuration: {
+            $avg: {
+              $divide: [
+                { $subtract: [{ $ifNull: ["$endDate", new Date()] }, "$startDate"] },
+                1000 * 60 * 60 * 24 // Convert to days
+              ]
+            }
+          }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.status(200).json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getSuccessRateByDoctor = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const stats = await Treatment.aggregate([
+      {
+        $match: { patient: new mongoose.Types.ObjectId(patientId) }
+      },
+      { $unwind: "$treatedBy" },
+      {
+        $group: {
+          _id: "$treatedBy",
+          total: { $sum: 1 },
+          completed: {
+            $sum: { $cond: [{ $eq: ["$status", false] }, 1, 0] }
+          }
+        }
+      },
+      {
+        $project: {
+          doctorId: "$_id",
+          successRate: { $divide: ["$completed", "$total"] },
+          totalTreatments: "$total",
+          completedTreatments: "$completed"
+        }
+      },
+      {
+        $lookup: {
+          from: "employees", // Replace with your actual doctor collection name
+          localField: "doctorId",
+          foreignField: "_id",
+          as: "doctor"
+        }
+      },
+      {
+        $unwind: {
+          path: "$doctor",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          doctorId: 1,
+          successRate: 1,
+          totalTreatments: 1,
+          completedTreatments: 1,
+          name: { $ifNull: ["$doctor.name", "Unknown"] },
+          familyName: { $ifNull: ["$doctor.familyName", ""] }
+        }
+      },
+      { $sort: { successRate: -1 } }
+    ]);
+
+    res.status(200).json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+
+
+
+;

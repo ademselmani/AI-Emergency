@@ -125,54 +125,64 @@ const signup = async (data) => {
     if (!faceDescriptor || faceDescriptor.length === 0) {
       throw new Error("❌ Aucun visage détecté dans l'image !")
     }
-    // Vérifier si ce visage est déjà utilisé
-    const existingUsers = await User.find({ faceDescriptor: { $exists: true } });
 
-    let isFaceUsed = false;
+    // Vérifier si ce visage est déjà utilisé
+    const existingUsers = await User.find({ faceDescriptor: { $exists: true } })
+
+    let isFaceUsed = false
     for (const existingUser of existingUsers) {
-      if (!existingUser.faceDescriptor || existingUser.faceDescriptor.length === 0) continue;
-    
+      if (
+        !existingUser.faceDescriptor ||
+        existingUser.faceDescriptor.length === 0
+      )
+        continue
+
       // Convertir les descripteurs en Float32Array pour comparaison
-      const storedDescriptor = new Float32Array(existingUser.faceDescriptor);
-      const currentDescriptor = new Float32Array(faceDescriptor);
-    
-      const distance = faceapi.euclideanDistance(currentDescriptor, storedDescriptor);
-      console.log(`📏 Distance avec ${existingUser.email}:`, distance);
-    
-      if (distance < 0.4) { // 0.4 = seuil strict pour considérer que c'est la même personne
-        isFaceUsed = true;
-        break;
+      const storedDescriptor = new Float32Array(existingUser.faceDescriptor)
+      const currentDescriptor = new Float32Array(faceDescriptor)
+
+      const distance = faceapi.euclideanDistance(
+        currentDescriptor,
+        storedDescriptor
+      )
+      console.log(`📏 Distance avec ${existingUser.email}:`, distance)
+
+      if (distance < 0.4) {
+        // 0.4 = seuil strict pour considérer que c'est la même personne
+        isFaceUsed = true
+        break
       }
     }
-    
+
     if (isFaceUsed) {
-      throw new Error("❌ Ce visage est déjà associé à un autre compte.");
+      throw new Error("❌ Ce visage est déjà associé à un autre compte.")
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-
-    
     // Créer un nouvel utilisateur avec le descripteur facial (sans sauvegarder l'image)
-    user = new User({
+    const user = new User({
+      cin: data.cin,
       name: data.name,
-      familyName : data.familyName,
+      familyName: data.familyName,
+      gender: data.gender,
       email: data.email,
       role: data.role,
       phone: data.phone,
-      status : data.status,
-      password :data.password,
-      // Comment the imag validation to test shift management
-       image: "http://localhost:3000/"+data.imageFile.path,
+      password: data.password, // Let the pre-save hook hash the password
+      image: "http://localhost:3000/" + data.imageFile.path,
       faceDescriptor, // Stocke uniquement le descripteur facial
-      status : "active"
-    });
+      status: "active",
+    })
+
+    console.log("New User document:", user)
 
     // Sauvegarder l'utilisateur dans la base de données
-    await user.save();
-    console.log(`✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`);
+    await user.save()
+    console.log(
+      `✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`
+    )
 
     // Générer un token JWT après l'enregistrement
-    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret");
+    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret")
 
     return {
       userId: user._id,
@@ -180,14 +190,14 @@ const signup = async (data) => {
       name: user.name,
       role: user.role,
       token: token,
-      status: user.status
-    };
-
+      status: user.status,
+    }
   } catch (error) {
     console.error("❌ Erreur dans signup:", error.stack)
     throw error // Ensure error is propagated
   }
 }
+
 
 // Connexion d'un utilisateur (avec ou sans reconnaissance faciale)
 
@@ -279,5 +289,5 @@ module.exports = {
   loginface,
   signup,
   login,
-  upload, // Pour être utilisé comme middleware dans les routes
+  upload
 };

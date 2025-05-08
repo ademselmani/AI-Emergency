@@ -48,6 +48,9 @@ import Statleaves from "./pages/Leaves/Statleaves";
 
 import {ShiftDashboard} from "./pages/shift/ShiftDashboard.jsx";
  
+import LeaveAnomalie from "./pages/Leaves/LeaveAnomalie.jsx";
+import LeaveForecast from "./pages/Leaves/LeaveForecast.jsx"
+
    
 import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
 import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
@@ -167,6 +170,7 @@ element={
           <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/forget-password" element={<Passwordforget />} />
          <Route path="/verify" element={<VerficationCode />} />
+
         
           <Route path="/medical-treatments" element={
             <Layout>
@@ -257,7 +261,8 @@ element={
  <Route path="/demandeAmbulance" element={<AmbulancePatient />} />
  <Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
 <Route path ="/home" element={<HomePage/>}/>
-
+<Route path="/anomalies" element={<Layout><LeaveAnomalie/></Layout>} />
+<Route path="/forecast" element={<Layout><LeaveForecast/></Layout>} />
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
 
