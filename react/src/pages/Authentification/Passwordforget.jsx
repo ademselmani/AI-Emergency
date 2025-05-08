@@ -71,8 +71,8 @@ const PasswordForget = () => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Send Reset Link
+          <button type="submit" className="login-button" style={{ backgroundColor: '#ff3b3f' }}>
+              Enter email
           </button>
 
           <div className="forgot-password">

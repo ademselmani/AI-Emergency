@@ -81,9 +81,10 @@ const VerificationCode = () => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Submit
-          </button>
+          <button type="submit" className="login-button" style={{ backgroundColor: '#ff3b3f' }}>
+  Submit
+</button>
+
 
           <div className="forgot-password">
             <p onClick={resetToken} className="text-center">
@@ -174,7 +175,7 @@ const styles = `
   .login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #007bff;
+    background-color: #ff3b3f;
     color: #fff;
     border: none;
     border-radius: 5px;

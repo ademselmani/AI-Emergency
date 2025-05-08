@@ -263,7 +263,7 @@ const Room = () => {
       label: "Type",
       type: "select",
       optionValues: roomTypes,
-      placeholder: "Select Type",
+      
       required: true,
     },
     {
@@ -474,7 +474,7 @@ const Room = () => {
                             marginBottom: "4px",
                           }}
                         >
-                          Type: {room.type}
+                         
                         </div>
                         <div
                           style={{

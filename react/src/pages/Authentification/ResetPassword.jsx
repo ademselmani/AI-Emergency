@@ -66,8 +66,8 @@ const ResetPassword = () => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            <FaLockOpen className="button-icon" /> Reset Password
+          <button type="submit" className="login-button" style={{ backgroundColor: '#ff3b3f' }}>
+                Reset password
           </button>
 
           <div className="forgot-password">
@@ -159,7 +159,9 @@ const styles = `
   .login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #007bff;
+    background-color:   #ff3b3f
+               
+        
     color: #fff;
     border: none;
     border-radius: 5px;
