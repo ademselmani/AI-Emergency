@@ -33,9 +33,11 @@ const Login = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("role", response.data.role);
         localStorage.setItem("user_id", response.data.userId);
+
        await axios.post("http://localhost:3000/api/auth/verifyCode", { email });
         navigate("/verify", { state: { email: email } });  
         //navigate("/profile");
+
 
       } else {
         setError("An unknown error occurred");

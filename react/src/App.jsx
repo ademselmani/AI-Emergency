@@ -165,10 +165,11 @@ element={
               </Layout>
             }
           />
+
  
           <Route path="/reset/:token" element={<ResetPassword />} />
           <Route path="/forget-password" element={<Passwordforget />} />
-          <Route path="/verify" element={<VerficationCode />} />
+         <Route path="/verify" element={<VerficationCode />} />
 
         
           <Route path="/medical-treatments" element={
