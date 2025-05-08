@@ -5,6 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import Popup from "reactjs-popup";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { ScheduleGenerator } from "./ScheduleGenerator";
 
 export function ShiftDashboard() {
   const [showPopup, setShowPopup] = useState(false);
@@ -588,6 +589,7 @@ export function ShiftDashboard() {
 
   return (
     <div>
+      <ScheduleGenerator></ScheduleGenerator>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         headerToolbar={{
