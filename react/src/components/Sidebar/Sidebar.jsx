@@ -50,8 +50,7 @@ const Sidebar = () => {
       },
     ],
     doctor: [
-      { to: "/profile", icon: "bx bx-user-plus", label: "My Patients" },
-      { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
+       { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
       { 
         to: "/MyLeaveRequests", 
         icon: "fas fa-calendar-check", 
