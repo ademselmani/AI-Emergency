@@ -42,7 +42,7 @@ function isSupportedImageType(imageData) {
 }
 
 // Fonction pour extraire le descripteur facial
- async function extractFaceDescriptor(imageData) {
+async function extractFaceDescriptor(imageData) {
   try {
     console.log("🔍 Vérification du format de l'image...");
     if (!isSupportedImageType(imageData)) {
@@ -79,110 +79,79 @@ function isSupportedImageType(imageData) {
     return Array.from(detections[0].descriptor);
   } catch (error) {
     console.error("🚨 Erreur lors de l'extraction du descripteur facial :", error);
-   
+    throw error;
   }
 }
 
 const signup = async (data) => {
   try {
-    console.log("📦 Données reçues dans signup:", data)
-
-    const requiredFields = [
-      "cin",
-      "name",
-      "familyName",
-      "gender",
-      "email",
-      "role",
-      "phone",
-      "password",
-      "imageFile",
-    ]
-    const missingFields = requiredFields.filter(
-      (field) => !data[field] || data[field] === ""
-    )
-    if (missingFields.length > 0) {
-      throw new Error(`Champs requis manquants: ${missingFields.join(", ")}`)
-    }
+    console.log("📦 Données reçues :", data); // Vérifier les données reçues
 
     if (!data.imageFile || !data.imageFile.path) {
-      throw new Error("❌ Aucune image fournie !")
+      throw new Error("❌ Aucune image fournie !");
     }
 
-    const existingUser = await User.findOne({
-      $or: [{ email: data.email }, { cin: data.cin }],
-    })
-    if (existingUser) {
-      if (existingUser.email === data.email)
-        throw new Error("Email already exists")
-      if (existingUser.cin === data.cin) throw new Error("CIN already exists")
+    // Vérifier si l'email existe déjà
+    let user = await User.findOne({ email: data.email });
+    if (user) {
+      console.error("❌ Email already exists:", data.email);
+      throw new Error("Email already exists");
     }
 
-    const imageData = `data:image/jpeg;base64,${fs
-      .readFileSync(data.imageFile.path)
-      .toString("base64")}`
-    const faceDescriptor = await extractFaceDescriptor(imageData)
+    // Lire l'image en mémoire et la convertir en base64
+    const imageData = `data:image/jpeg;base64,${fs.readFileSync(data.imageFile.path).toString("base64")}`;
+    console.log("📷 Image convertie en Base64 :", imageData.substring(0, 50));
+
+    // Extraire le descripteur facial
+    const faceDescriptor = await extractFaceDescriptor(imageData);
     if (!faceDescriptor || faceDescriptor.length === 0) {
-      throw new Error("❌ Aucun visage détecté dans l'image !")
+      throw new Error("❌ Aucun visage détecté dans l'image !");
     }
-
     // Vérifier si ce visage est déjà utilisé
-    const existingUsers = await User.find({ faceDescriptor: { $exists: true } })
+    const existingUsers = await User.find({ faceDescriptor: { $exists: true } });
 
-    let isFaceUsed = false
+    let isFaceUsed = false;
     for (const existingUser of existingUsers) {
-      if (
-        !existingUser.faceDescriptor ||
-        existingUser.faceDescriptor.length === 0
-      )
-        continue
-
+      if (!existingUser.faceDescriptor || existingUser.faceDescriptor.length === 0) continue;
+    
       // Convertir les descripteurs en Float32Array pour comparaison
-      const storedDescriptor = new Float32Array(existingUser.faceDescriptor)
-      const currentDescriptor = new Float32Array(faceDescriptor)
-
-      const distance = faceapi.euclideanDistance(
-        currentDescriptor,
-        storedDescriptor
-      )
-      console.log(`📏 Distance avec ${existingUser.email}:`, distance)
-
-      if (distance < 0.4) {
-        // 0.4 = seuil strict pour considérer que c'est la même personne
-        isFaceUsed = true
-        break
+      const storedDescriptor = new Float32Array(existingUser.faceDescriptor);
+      const currentDescriptor = new Float32Array(faceDescriptor);
+    
+      const distance = faceapi.euclideanDistance(currentDescriptor, storedDescriptor);
+      console.log(`📏 Distance avec ${existingUser.email}:`, distance);
+    
+      if (distance < 0.4) { // 0.4 = seuil strict pour considérer que c'est la même personne
+        isFaceUsed = true;
+        break;
       }
     }
-
+    
     if (isFaceUsed) {
-      throw new Error("❌ Ce visage est déjà associé à un autre compte.")
+      throw new Error("❌ Ce visage est déjà associé à un autre compte.");
     }
 
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    
     // Créer un nouvel utilisateur avec le descripteur facial (sans sauvegarder l'image)
-    const user = new User({
-      cin: data.cin,
+    user = new User({
       name: data.name,
-      familyName: data.familyName,
-      gender: data.gender,
+      familyName : data.familyName,
       email: data.email,
       role: data.role,
       phone: data.phone,
-      password: data.password, // Let the pre-save hook hash the password
-      image: "http://localhost:3000/" + data.imageFile.path,
+      password :data.password,
+      image: "http://localhost:3000/"+data.imageFile.path,
       faceDescriptor, // Stocke uniquement le descripteur facial
-      status: "active",
-    })
-
-    console.log("New User document:", user)
+    });
 
     // Sauvegarder l'utilisateur dans la base de données
-    await user.save()
-    console.log(
-      `✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`
-    )
+    await user.save();
+    console.log(`✅ Utilisateur enregistré avec succès : ${user.name} (${user.email})`);
 
     // Générer un token JWT après l'enregistrement
-    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret")
+    const token = JWT.sign({ id: user._id, role: user.role }, "jwtSecret");
 
     return {
       userId: user._id,
@@ -190,13 +159,13 @@ const signup = async (data) => {
       name: user.name,
       role: user.role,
       token: token,
-      status: user.status,
-    }
+    };
+
   } catch (error) {
-    console.error("❌ Erreur dans signup:", error.stack)
-    throw error // Ensure error is propagated
+    console.error("❌ Erreur lors de l'inscription :", error.message);
+    throw error;
   }
-}
+};
 
 
 // Connexion d'un utilisateur (avec ou sans reconnaissance faciale)
@@ -285,9 +254,8 @@ const loginface = async (imageData) => {
 
 
 module.exports = {
-  extractFaceDescriptor,
   loginface,
   signup,
   login,
-  upload
+  upload, // Pour être utilisé comme middleware dans les routes
 };

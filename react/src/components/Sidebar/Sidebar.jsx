@@ -30,6 +30,8 @@ const Sidebar = () => {
         label: "Ambulance",
         notifications: ambulanceNotifications
       },
+      { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+
     ],
     triage_nurse: [
       { to: "/showTriagePatients", icon: "bx bx-group", label: "Triage patients" },
@@ -39,6 +41,8 @@ const Sidebar = () => {
         label: "Leaves",
         
       },
+      { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+
     ],
     nurse: [
        { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
@@ -48,9 +52,15 @@ const Sidebar = () => {
         label: "Leaves",
         
       },
+      { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+
     ],
     doctor: [
-       { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
+
+      { to: "/profile", icon: "bx bx-user-plus", label: "My Patients" },
+      { to: "/medical-treatments", icon: "bx bx-folder", label: "Medical Monitoring" },
+      { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+
       { 
         to: "/MyLeaveRequests", 
         icon: "fas fa-calendar-check", 
@@ -65,12 +75,15 @@ const Sidebar = () => {
       { to: "/areas", icon: "bx bx-building", label: "Areas" },
       { to: "/rooms", icon: "bx bx-home", label: "Rooms" },
       { to: "/equipments", icon: "bx bx-cog", label: "Equipment" },
+      { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+
       { 
         to: "/statleaves", 
         icon: "fas fa-calendar-check", 
         label: "Leaves",
         notifications: leaveNotifications
       },
+
     ],
   }), [leaveNotifications, ambulanceNotifications]);
 
@@ -394,3 +407,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+
