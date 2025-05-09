@@ -1,4 +1,4 @@
- import React, { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { Eye, EyeOff, Mic, Camera } from "lucide-react";
 import axios from "axios";
@@ -33,102 +33,32 @@ const VoiceToTextButton = ({ onTranscript }) => {
     </button>
   );
 };
- 
 
 const Register = () => {
-  const initialFormState = {
-    cin: "",
+  const fileInputRef = useRef();
+  const [formData, setFormData] = useState({
     name: "",
     familyName: "",
     gender: "",
-    email: "",
     role: "",
+    email: "",
     phone: "",
     password: "",
-    image: null,
-  }
-
+    cin: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [message, setMessage] = useState('');
   const [activeSection, setActiveSection] = useState('personal');
 
-  const [formData, setFormData] = useState(initialFormState)
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [statusMessage, setStatusMessage] = useState("")
-  const fileInputRef = useRef(null)
-
-  useEffect(() => {
-    setFormData(initialFormState)
-    if (fileInputRef.current) fileInputRef.current.value = ""
-  }, [])
-
-  const validateField = (name, value) => {
-    const newErrors = {}
-    switch (name) {
-      case "cin":
-        if (!value) newErrors.cin = "CIN is required"
-        else if (!/^\d{8}$/.test(value))
-          newErrors.cin = "CIN must be exactly 8 digits"
-        break
-      case "name":
-        if (!value) newErrors.name = "First Name is required"
-        else if (value.length < 2)
-          newErrors.name = "First Name must be at least 2 characters"
-        break
-      case "familyName":
-        if (!value) newErrors.familyName = "Last Name is required"
-        else if (value.length < 2)
-          newErrors.familyName = "Last Name must be at least 2 characters"
-        break
-      case "gender":
-        if (!value) newErrors.gender = "Gender is required"
-        break
-      case "email":
-        if (!value) newErrors.email = "Email is required"
-        else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value))
-          newErrors.email = "Please enter a valid email"
-        break
-      case "role":
-        if (!value) newErrors.role = "Role is required"
-        break
-      case "phone":
-        if (!value) newErrors.phone = "Phone is required"
-        else if (!/^\+?[1-9]\d{1,14}$/.test(value))
-          newErrors.phone =
-            "Please enter a valid phone number with country code"
-        break
-      case "password":
-        if (!value) newErrors.password = "Password is required"
-        else if (value.length < 8)
-          newErrors.password = "Password must be at least 8 characters"
-        break
-      default:
-        break
-    }
-    return newErrors
-  }
-
   const handleChange = (e) => {
-    const { name, value } = e.target
-    if (name === "cin") {
-      const numericValue = value.replace(/\D/g, "").slice(0,8)
-      setFormData((prev) => ({ ...prev, [name]: numericValue }))
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return { ...newErrors, ...validateField(name, numericValue) }
-      })
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return { ...newErrors, ...validateField(name, value) }
-      })
-    }
-  }
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleVoiceInput = (field) => (value) => {
     setFormData((prev) => ({
@@ -138,7 +68,7 @@ const Register = () => {
   };
 
   const handleImageChange = (e) => {
-     const file = e.target.files[0];
+    const file = e.target.files[0];
     if (file) {
       setPreviewImage(URL.createObjectURL(file));
       setFormData((prev) => ({
@@ -316,12 +246,12 @@ const Register = () => {
                 <label>Gender <span className="required">*</span></label>
                 <select
                   name="gender"
-   
                   value={formData.gender}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Gender</option>
+                  <option value="">Select 
+                  </option>
                   <option value="Man">Male</option>
                   <option value="Woman">Female</option>
                 </select>
@@ -354,7 +284,6 @@ const Register = () => {
                 <label>Role <span className="required">*</span></label>
                 <select
                   name="role"
-
                   value={formData.role}
                   onChange={handleChange}
                   required
@@ -835,7 +764,6 @@ const Register = () => {
   }
      `}</style>
     </div>
-   );
+  );
 }
 export default Register;
- 
