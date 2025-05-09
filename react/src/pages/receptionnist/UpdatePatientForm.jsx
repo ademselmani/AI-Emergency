@@ -134,17 +134,38 @@ const UpdatePatientForm = () => {
                 placeholder="Enter first name"
               />
             </div>
+          </fieldset>
 
-            <div className="input-group">
-              <label>Last Name <span className="required">*</span></label>
-              <input 
-                type="text" 
-                name="lastName" 
-                value={patient.lastName} 
-                onChange={handleChange} 
-                required 
-                placeholder="Enter last name"
-              />
+          {/* Section 2: Arrival Mode & Emergency */}
+          <fieldset>
+            <legend>Arrival Mode & Emergency</legend>
+            <div className="row">
+              <div className="col-md-6">
+                <label>Arrival Mode:</label>
+                <select className="form-control" name="arrivalMode" value={patient.arrivalMode} onChange={handleChange} required>
+                  <option value="Ambulance">Ambulance</option>
+                  <option value="On foot">On foot</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label>Emergency Reason:</label>
+                <input type="text" className="form-control" name="emergencyReason" value={patient.emergencyReason} onChange={handleChange} required />
+              </div>
+              <div className="col-md-6">
+                <label>Status:</label>
+                <select className="form-control" name="status" value={patient.status} onChange={handleChange} required>
+                  <option value="Triage">Pending</option>
+                  <option value="Critical">Critical</option>
+                  <option value="Stable">Stable</option>
+                  <option value="Serious">Serious</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label>Emergency Area:</label>
+                <input type="text" className="form-control" name="emergencyArea" value={patient.emergencyArea} onChange={handleChange} required />
+              </div>
+
             </div>
 
             <div className="input-group">

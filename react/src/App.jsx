@@ -157,10 +157,6 @@ element={
     <Layout>
     <UpdatePatientTriage/>
   </Layout>
-   
-  
-   
-  
   } />
 
            <Route
