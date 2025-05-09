@@ -392,5 +392,5 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
-module.exports = router;
+const chatController = require('../controllers/chatController');
+router.post('/chat', chatController);module.exports = router;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "chart.js/auto";
 import "./Stats.css";
 
@@ -9,15 +9,15 @@ const Statleaves = () => {
   const [currentLeaves, setCurrentLeaves] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Options du graphique améliorées
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",
-        labels: { 
+        labels: {
           color: '#2d3748',
           font: { size: 12 }
         }
@@ -32,8 +32,8 @@ const Statleaves = () => {
           font: { size: 14 }
         },
         beginAtZero: true,
-        grid: { 
-          color: 'rgba(0,0,0,0.05)' 
+        grid: {
+          color: 'rgba(0,0,0,0.05)'
         },
         ticks: {
           stepSize: 1,
@@ -50,12 +50,12 @@ const Statleaves = () => {
           color: '#4a5568',
           font: { size: 14 }
         },
-        grid: { 
-          display: false 
+        grid: {
+          display: false
         },
-        ticks: { 
+        ticks: {
           color: '#4a5568',
-          font: { size: 12 } 
+          font: { size: 12 }
         }
       }
     }
@@ -105,59 +105,37 @@ const Statleaves = () => {
     <div className="stats-container">
       <div className="header-container">
         <h1 className="title">Leave Statistics</h1>
-        <Link 
-          to="/leaves" 
-          className="view-all-button"
+
+        {/* Menu déroulant */}
+        <select
+          className="navigation-select"
+          onChange={(e) => {
+            if (e.target.value) navigate(e.target.value);
+          }}
           style={{
-            backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
-            padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
-            borderRadius: '6px',
-            borderColor:'#03c3ec',
-            textDecoration: 'none',
+            backgroundColor: 'white',
+            color: '#ff3b3f',
+            padding: '0.6rem 1.2rem 0.6rem 0.8rem',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
             fontSize: '0.9rem',
-            transition: 'background-color 0.2s'
+            cursor: 'pointer',
+            appearance: 'none',
+            outline: 'none',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+            transition: 'all 0.2s ease',
+            minWidth: '120px',
+            fontWeight: '500',
+            paddingRight: '2rem' // Pour faire de la place pour l'icône
           }}
         >
-          View all leaves
-        </Link>
-        <Link 
-          to="/forecast" 
-          className="view-all-button"
-          style={{
-            backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
-            padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
-            borderRadius: '6px',
-            borderColor:'#03c3ec',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'background-color 0.2s'
-          }}
-        >
-          Leave Forecast
-        </Link>
-        <Link 
-          to="/anomalies" 
-          className="view-all-button"
-          style={{
-            backgroundColor: '#f5f5f9',
-            color: '#03c3ec',
-            padding: '0.5rem 1rem',
-            border: '1px solid #03c3ec',
-            borderRadius: '6px',
-            borderColor:'#03c3ec',
-            textDecoration: 'none',
-            fontSize: '0.9rem',
-            transition: 'background-color 0.2s'
-          }}
-        >
-          Leave anomalies
-        </Link>
+          <option value="">View</option>
+          <option value="/leaves">all leaves</option>
+          <option value="/anomalies">Anomalies</option>
+          <option value="/forecast">Forecast</option>
+        </select>
       </div>
-      
+
       {error && <div className="error-message">{error}</div>}
 
       <div className="charts-wrapper">
@@ -166,7 +144,7 @@ const Statleaves = () => {
             <div className="chart-header">
               <h2>Current Leaves by Role ({new Date().toLocaleDateString()})</h2>
             </div>
-            
+
             <div className="chart-wrapper">
               <Bar
                 data={chartData}

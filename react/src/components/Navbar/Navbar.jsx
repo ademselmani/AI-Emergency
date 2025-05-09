@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Search, Settings, User, LogOut, CircleUser } from "lucide-react";
 
 function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("user_id");
-
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/employee/finduser/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("user_id");
+        const response = await axios.get(
+          `http://localhost:3000/employee/finduser/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setCurrentUser(response.data);
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -24,115 +25,123 @@ function Navbar() {
     fetchUser();
   }, []);
 
-  const getRoleDescription = (role) => {
-    switch (role) {
-      case "nurse": return "Nurse 🏥";
-      case "admin": return "Administrator 🔧";
-      case "doctor": return "Doctor 🩺";
-      case "receptionnist": return "Receptionist 👨‍💻";
-      case "triage_nurse": return "Triage Nurse 👩‍⚕️";
-      default: return "Unknown role";
-    }
+  const getRoleBadge = (role) => {
+    const roleConfig = {
+      nurse: { label: "Nurse", emoji: "🏥", color: "bg-blue-100 text-blue-800" },
+      admin: { label: "Admin", emoji: "🔧", color: "bg-gray-100 text-gray-800" },
+      doctor: { label: "Doctor", emoji: "🩺", color: "bg-green-100 text-green-800" },
+      receptionnist: { label: "Receptionist", emoji: "👨💻", color: "bg-purple-100 text-purple-800" },
+      triage_nurse: { label: "Triage Nurse", emoji: "👩⚕️", color: "bg-pink-100 text-pink-800" }
+    };
+    
+    const { label, emoji, color } = roleConfig[role] || { 
+      label: "Unknown", emoji: "❓", color: "bg-gray-100 text-gray-800"
+    };
+
+    return (
+      <span className={`${color} px-2.5 py-1 rounded-full text-sm font-medium flex items-center gap-1.5`}>
+        <span>{emoji}</span>
+        {label}
+      </span>
+    );
   };
 
   return (
-    <nav
-      className="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-      id="layout-navbar"
-    >
-      <div className="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-        <a className="nav-item nav-link px-0 me-xl-4" href="">
-          <i className="bx bx-menu bx-sm"></i>
-        </a>
-      </div>
-
-      <div className="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-        <div className="navbar-nav align-items-center">
-          <div className="nav-item d-flex align-items-center">
-            <i className="bx bx-search fs-4 lh-0"></i>
-            <input
-              type="text"
-              className="form-control border-0 shadow-none"
-              placeholder="Search..."
-              aria-label="Search..."
-            />
+    <nav className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          
+          {/* Left Section - Search */}
+          <div className="flex flex-1 items-center gap-4">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search .."
+                className="w-full rounded-lg border-0 bg-gray-100 pl-10 pr-4 py-2.5 text-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
 
-        <ul className="navbar-nav flex-row align-items-center ms-auto">
-          <li className="nav-item lh-1 me-3"></li>
+          {/* Right Section - User Menu */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center gap-2 rounded-full p-1 hover:bg-gray-100 transition-colors"
+              >
+                {currentUser?.image ? (
+                  <img
+                    src={currentUser.image}
+                    alt="User Avatar"
+                    className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm"
+                  />
+                ) : (
+                  <CircleUser className="h-9 w-9 text-gray-400" />
+                )}
+              </button>
 
-          <li className="nav-item navbar-dropdown dropdown-user dropdown">
-            <a className="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
-              <div className="avatar avatar-online">
-              <img
-  src={currentUser?.image || "../assets/img/avatars/1.png"}
-  alt="User Avatar"
-  className="rounded-circle border border-white shadow"
-  style={{
-    width: "45px",
-    height: "45px",
-    objectFit: "cover",
-    display: "block",
-  }}
-/>
-
-              </div>
-            </a>
-            <ul className="dropdown-menu dropdown-menu-end">
-              <li>
-                <a className="dropdown-item" href="#">
-                  <div className="d-flex">
-                    <div className="flex-shrink-0 me-3">
-                      <div className="avatar avatar-online">
+              {/* Dropdown Menu */}
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl bg-white p-2 shadow-lg ring-1 ring-black/5 focus:outline-none">
+                  <div className="flex items-center gap-3 p-3">
+                    {currentUser?.image ? (
                       <img
-  src={currentUser?.image || "../assets/img/avatars/1.png"}
-  alt="User Avatar"
-  className="rounded-circle border border-white shadow"
-  style={{
-    width: "45px",
-    height: "45px",
-    objectFit: "cover",
-    display: "block",
-  }}
-/>
-                      </div>
-                    </div>
-                    <div className="flex-grow-1">
-                      <span className="fw-semibold d-block">
-                        {currentUser ? `${currentUser.name} ` : "Loading..."}
-                      </span>
-                      <small className="text-muted">
-                        {currentUser ? getRoleDescription(currentUser.role) : ""}
-                      </small>
+                        src={currentUser.image}
+                        alt="User Avatar"
+                        className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-sm"
+                      />
+                    ) : (
+                      <CircleUser className="h-12 w-12 text-gray-400" />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {currentUser?.name || "Anonymous User"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {currentUser ? getRoleBadge(currentUser.role) : "Loading..."}
+                      </p>
                     </div>
                   </div>
-                </a>
-              </li>
-              <li><div className="dropdown-divider"></div></li>
-              <li>
-                <a className="dropdown-item" href="/profile">
-                  <i className="bx bx-user me-2"></i>
-                  <span className="align-middle">My Profile</span>
-                </a>
-              </li>
-              <li>
-                <a className="dropdown-item" href="#">
-                  <i className="bx bx-cog me-2"></i>
-                  <span className="align-middle">Settings</span>
-                </a>
-              </li>
-              <li><div className="dropdown-divider"></div></li>
-              <li>
-                <a className="dropdown-item" href="/login">
-                  <i className="bx bx-power-off me-2"></i>
-                  <span className="align-middle">Log Out</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
+
+                  <div className="divider my-1" />
+
+                  <div className="space-y-1">
+                    <a
+                      href="/profile"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </a>
+                    <a
+                      href="#"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Account Settings
+                    </a>
+                  </div>
+
+                  <div className="divider my-1" />
+
+                  <a
+                    href="/login"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 bg-red-500"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+
+      
     </nav>
   );
 }

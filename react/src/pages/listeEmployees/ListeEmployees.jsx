@@ -58,7 +58,7 @@ const ListeEmployees = () => {
   // Affichage principal
   return (
     <div className='liste-employees'>
-      <h1>Liste des Employés</h1>
+      <h1>Employee List</h1>
       <div className='card-list'>
         {employees.map((employee) => (
           <ProfileCard

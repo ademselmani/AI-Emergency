@@ -89,7 +89,7 @@ const StyledTable = styled(Table)(({ theme }) => ({
   }
 }));
 
-const COLORS = ['#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#e91e63', '#9c27b0'];
+const COLORS = ['#c2f1f0', '#f9b3b3', '#00bcd4', '#f7c2ad', '#f3f5c3', '#e91e63', '#9c27b0'];
 
 const LeaveForecast = () => {
   const theme = useTheme();

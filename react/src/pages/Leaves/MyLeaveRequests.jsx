@@ -74,7 +74,7 @@ const MyLeaveRequests = () => {
       marginBottom: '20px'
     },
     newButton: {
-      background: '#4299e1',
+      background: '#ff3b3f',
       color: 'white',
       padding: '10px 20px',
       borderRadius: '6px',
@@ -84,7 +84,7 @@ const MyLeaveRequests = () => {
       fontWeight: '600',
       transition: 'all 0.2s ease',
       ':hover': {
-        background: '#3182ce'
+        background: '#ff3b3f'
       }
     },
     modalOverlay: {
@@ -135,7 +135,7 @@ const MyLeaveRequests = () => {
       pending: { background: '#fefcbf', color: '#744210' },
       rejected: { background: '#fed7d7', color: '#822727' }
     };
-    return statusColors[status] || { background: '#f1f5f9', color: '#4a5568' };
+    return statusColors[status] || { background: '#ff3b3f', color: '#ff3b3f' };
   };
 
   const handleNewRequestSuccess = () => {

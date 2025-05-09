@@ -15,7 +15,7 @@ const fs = require("fs");
 const { Server } = require("socket.io");
 require("dotenv").config();
 require("./src/config/passport");
-
+const axios = require('axios');
 // Canvas setup pour face-api.js
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -200,6 +200,11 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.json({ error: err.message });
 });
+
+const chatRoutes = require('../nodeJS/src/routes/leaveRoute');
+app.use('/api', chatRoutes);
+
+
 
 // Démarrage du serveur
 server.listen(3000, () => {

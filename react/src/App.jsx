@@ -54,7 +54,11 @@ import LeaveForecast from "./pages/Leaves/LeaveForecast.jsx"
    
 import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
 import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
-import HomePage from "./pages/HomePage.jsx"
+import HomePage from "./pages/HomePage.jsx";
+import ChatBot from "./pages/ChatBot.jsx";
+
+
+
 
 function App() {
   return (
@@ -259,10 +263,12 @@ element={
   
   } />
  <Route path="/demandeAmbulance" element={<AmbulancePatient />} />
- <Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
+ <Route path="/chatbot" element={<ChatBot />} />
 <Route path ="/home" element={<HomePage/>}/>
 <Route path="/anomalies" element={<Layout><LeaveAnomalie/></Layout>} />
 <Route path="/forecast" element={<Layout><LeaveForecast/></Layout>} />
+<Route path="/Ambulance" element={<Layout><AmbulanceReceptionniste /></Layout>} />
+
 <Route path='*' element={<NotFound />} /> {/* Page 404 */}
 
 
