@@ -11,6 +11,7 @@ import {
   TrashIcon, 
   XMarkIcon 
 } from '@heroicons/react/24/outline';
+
 export function ShiftDashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState([]);
@@ -24,12 +25,14 @@ export function ShiftDashboard() {
   const [validationError, setValidationError] = useState("");
   const [employeeShiftAssignments, setEmployeeShiftAssignments] = useState({});
   const [currentShiftEmployees, setCurrentShiftEmployees] = useState([]);
+  const [roleInputCounts, setRoleInputCounts] = useState({}); // Track number of input fields per role
 
   function handleDateSelect(selectInfo) {
     if(localStorage.getItem("role") != "admin") return
     setSelectedDate(selectInfo.dateStr);
     setShowPopup(true);
     setSelectedEmployees({});
+    setRoleInputCounts({}); // Reset input counts
     setValidationError("");
     setCurrentShiftEmployees([]);
     setSelectedEvent({});
@@ -178,7 +181,7 @@ export function ShiftDashboard() {
     return employeeShiftAssignments[key] === true;
   };
 
-  const validateAllPositionsFilled = () => {
+  const validateMinimumPositionsFilled = () => {
     if (!selectedArea) {
       setValidationError("Please select an area");
       return false;
@@ -187,28 +190,26 @@ export function ShiftDashboard() {
     const areaRules = staffingRules[selectedArea];
     if (!areaRules) return true;
 
-    let allFilled = true;
+    let allMinimumFilled = true;
     let missingPositions = [];
 
-    Object.entries(areaRules).forEach(([role, count]) => {
-      for (let i = 0; i < count; i++) {
-        const isPositionFilled = selectedEmployees[role]?.[i];
-        if (!isPositionFilled) {
-          allFilled = false;
-          missingPositions.push(`${role} #${i + 1}`);
-        }
+    Object.entries(areaRules).forEach(([role, minCount]) => {
+      const filledCount = Object.values(selectedEmployees[role] || {}).filter(id => id).length;
+      if (filledCount < minCount) {
+        allMinimumFilled = false;
+        missingPositions.push(`${role} (at least ${minCount} required, ${filledCount} filled)`);
       }
     });
 
-    if (!allFilled) {
+    if (!allMinimumFilled) {
       setValidationError(
-        `Please fill all required positions: ${missingPositions.join(", ")}`
+        `Please fill the minimum required positions: ${missingPositions.join(", ")}`
       );
     } else {
       setValidationError("");
     }
 
-    return allFilled;
+    return allMinimumFilled;
   };
 
   function handleEmployeeSelection(role, index, value) {
@@ -247,9 +248,35 @@ export function ShiftDashboard() {
     setValidationError("");
   }
 
+  function handleAddEmployeeField(role, minCount) {
+    setRoleInputCounts((prev) => ({
+      ...prev,
+      [role]: (prev[role] || minCount) + 1,
+    }));
+  }
+
+  function handleRemoveEmployeeField(role, index, minCount) {
+    if ((roleInputCounts[role] || minCount) <= minCount) return; // Prevent removing below minimum
+
+    setRoleInputCounts((prev) => ({
+      ...prev,
+      [role]: (prev[role] || minCount) - 1,
+    }));
+
+    setSelectedEmployees((prev) => {
+      const updatedRole = { ...(prev[role] || {}) };
+      delete updatedRole[index];
+      return {
+        ...prev,
+        [role]: updatedRole,
+      };
+    });
+  }
+
   function handleEventClick(eventClickInfo) {
     if(localStorage.getItem("role") != "admin") return
     setSelectedEmployees({});
+    setRoleInputCounts({}); // Reset input counts
     setValidationError("");
 
     let starTime = eventClickInfo.event.start.toString().split(" ")[4];
@@ -275,6 +302,8 @@ export function ShiftDashboard() {
 
         const employeeSelections = {};
         const employeesByRole = {};
+        const roleCounts = {};
+
         shift.employees.forEach((emp) => {
           if (!employeesByRole[emp.role]) {
             employeesByRole[emp.role] = [];
@@ -287,9 +316,11 @@ export function ShiftDashboard() {
           ids.forEach((id, index) => {
             employeeSelections[role][index] = id;
           });
+          roleCounts[role] = ids.length;
         });
 
         setSelectedEmployees(employeeSelections);
+        setRoleInputCounts(roleCounts);
       }
     } catch (error) {
       console.error("Error loading existing employees:", error);
@@ -297,7 +328,7 @@ export function ShiftDashboard() {
   }
 
   async function handleSubmit() {
-    if (!validateAllPositionsFilled()) {
+    if (!validateMinimumPositionsFilled()) {
       return;
     }
 
@@ -353,16 +384,16 @@ export function ShiftDashboard() {
     newShift.id = eventId;
 
     Object.entries(staffingRules[selectedArea] || {}).forEach(
-      ([role, count]) => {
-        for (let i = 0; i < count; i++) {
-          const selectedValue = selectedEmployees[role]?.[i] || "";
-          if (selectedValue) {
+      ([role, _]) => {
+        const roleSelections = selectedEmployees[role] || {};
+        Object.entries(roleSelections).forEach(([index, employeeId]) => {
+          if (employeeId) {
             newShift.employees.push({
-              employeeId: selectedValue,
+              employeeId: employeeId,
               role: role,
             });
           }
-        }
+        });
       }
     );
 
@@ -476,7 +507,7 @@ export function ShiftDashboard() {
   };
 
   async function handleAddEvent() {
-    if (!validateAllPositionsFilled()) {
+    if (!validateMinimumPositionsFilled()) {
       return;
     }
 
@@ -532,16 +563,16 @@ export function ShiftDashboard() {
     }
 
     Object.entries(staffingRules[selectedArea] || {}).forEach(
-      ([role, count]) => {
-        for (let i = 0; i < count; i++) {
-          const selectedValue = selectedEmployees[role]?.[i] || "";
-          if (selectedValue) {
+      ([role, _]) => {
+        const roleSelections = selectedEmployees[role] || {};
+        Object.entries(roleSelections).forEach(([index, employeeId]) => {
+          if (employeeId) {
             newShift.employees.push({
-              employeeId: selectedValue,
+              employeeId: employeeId,
               role: role,
             });
           }
-        }
+        });
       }
     );
 
@@ -614,6 +645,7 @@ export function ShiftDashboard() {
             </button>
           </div>
 
+
           {validationError && (
             <div className="mb-6 p-4 bg-red-50 rounded-xl flex items-center gap-3 text-red-700">
               <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
@@ -644,6 +676,7 @@ export function ShiftDashboard() {
                 onChange={(e) => {
                   setSelectedArea(e.target.value);
                   setSelectedEmployees({});
+                  setRoleInputCounts({}); // Reset input counts when area changes
                   setValidationError("");
                 }}
                 value={selectedArea}
@@ -701,6 +734,7 @@ export function ShiftDashboard() {
               </div>
             </div>
           ))}
+
 
           <div className="flex flex-col gap-3 mt-8">
             {!showDeleteButton ? (

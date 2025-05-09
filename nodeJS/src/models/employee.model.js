@@ -98,6 +98,11 @@ const employeeSchema = mongoose.Schema({
     count: { type: Number, default: 0 }, // Shifts worked this week
   },
 
+  verifyCode: {
+    type: Number,
+    required: false, // optional
+  },
+
   qualifications: {
     degree: String,
     institution: String,
