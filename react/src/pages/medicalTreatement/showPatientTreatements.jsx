@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Select from 'react-select';
 import { Card, Container, Row, Col, Button, Collapse, Spinner, Form, Badge } from 'react-bootstrap';
-import { motion } from 'framer-motion';
+import { color, motion } from 'framer-motion';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,14 +14,13 @@ import Barcode from 'react-barcode';
 import * as QRCode from 'qrcode';
 import JsBarcode from 'jsbarcode';
 import { User, PlusCircle, Stethoscope } from 'lucide-react';
-import TreatmentStatsPage from './TreatmentStatsPage'; // Importez la page des stats
 import { Line } from 'react-chartjs-2';
 import { Bar } from 'react-chartjs-2';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-   ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, BarElement, Title, Tooltip, Legend);
-       
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, BarElement, Title, Tooltip, Legend);
+
 const ShowPatientTreatments = () => {
   const location = useLocation();
   const selectedPatient = location.state?.patient || null;
@@ -38,11 +37,11 @@ const ShowPatientTreatments = () => {
   const [loading, setLoading] = useState(true);
   const [emailLoading, setEmailLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
-    basicInfo: false,
-    emergencyInfo: false,
-    insuranceInfo: false,
-    contactInfo: false,
-    timestamps: false
+    basicInfo: true,
+    emergencyInfo: true,
+    insuranceInfo: true,
+    contactInfo: true,
+    timestamps: true
   });
   const [patientDetails, setPatientDetails] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -667,368 +666,846 @@ const ShowPatientTreatments = () => {
 
   };
   return (
-    <Container className="mt-5">
-      <ToastContainer />
-      <Row className="mb-3">
-        <Col md={12} className="d-flex justify-content-end">
-
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="treatments-page"
+    >
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        toastClassName="salmon-toast"
+        progressClassName="salmon-progress"
+      />
       
+      <Container className="mt-4">
+        {/* Action Buttons Row */}
+        <Row className="mb-4">
+          <Col md={12} className="d-flex justify-content-end gap-2">
+            <Button 
+              variant="salmon-light" 
+              onClick={exportToCSV} 
+              className="action-btn"
+            >
+              <FontAwesomeIcon icon={faFileCsv} className="me-2" />
+              Export to CSV
+            </Button>
+            <Button 
+              variant="salmon" 
+              onClick={exportToPDF} 
+              className="action-btn"
+            >
+              <FontAwesomeIcon icon={faFilePdf} className="me-2" />
+              Export to PDF
+            </Button>
+            <Button 
+              variant="salmon-dark" 
+              onClick={sendEmail} 
+              disabled={emailLoading}
+              className="action-btn"
+            >
+              <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+              {emailLoading ? 'Sending...' : 'Send Email'}
+            </Button>
+          </Col>
+        </Row>
 
+        {loading ? (
+          <div className="d-flex justify-content-center my-5">
+            <Spinner animation="border" variant="salmon" />
+          </div>
+        ) : (
+          <>
+            {/* Header and Filters */}
+            <Card className="mb-4 salmon-card">
+              <Card.Body>
+                <h2 className="page-title mb-4">Medical Monitoring</h2>
+                
+                {/* Language Selector */}
+                <Form.Select
+                  onChange={(e) => setLanguage(e.target.value)}
+                  value={language}
+                  className="mb-4 salmon-select"
+                >
+                  <option value="ar">Arabic - العربية</option>
+                  <option value="en">English</option>
+                  <option value="fr">French - Français</option>
+                  {/* ... other language options ... */}
+                </Form.Select>
 
-          <Button variant="success" onClick={exportToCSV} className="me-2">
-            <FontAwesomeIcon icon={faFileCsv} className="me-2" />
-            Export to CSV
-          </Button>
-          <Button variant="danger" onClick={exportToPDF} className="me-2">
-            <FontAwesomeIcon icon={faFilePdf} className="me-2" />
-            Export to PDF
-          </Button>
-          <Button variant="primary" onClick={sendEmail} disabled={emailLoading}>
-            <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
-            {emailLoading ? 'Sending...' : 'Send Email'}
-          </Button>
-        </Col>
-      </Row>
+                <Row className="g-3">
+                  <Col md={4}>
+                    <Form.Control
+                      type="text"
+                      placeholder="Search treatments..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="salmon-input"
+                    />
+                  </Col>
+                  <Col md={2}>
+                    <Select
+                      options={[
+                        { value: '', label: 'Sort by...' },
+                        { value: 'category', label: 'Category' },
+                        { value: 'status', label: 'Status' },
+                        { value: 'startDate', label: 'Start Date' },
+                        { value: 'endDate', label: 'End Date' },
+                        { value: 'treatedBy', label: 'Doctor' },
+                      ]}
+                      onChange={(option) => setSortCriteria(option?.value || '')}
+                      placeholder="Sort by..."
+                      className="salmon-react-select"
+                      classNamePrefix="select"
+                    />
+                  </Col>
+                  <Col md={2}>
+                    <Select
+                      options={[
+                        { value: '', label: 'Filter by status...' },
+                        { value: 'active', label: 'Active' },
+                        { value: 'completed', label: 'Completed' },
+                      ]}
+                      onChange={(option) => setStatusFilter(option?.value || '')}
+                      placeholder="Filter by status..."
+                      className="salmon-react-select"
+                      classNamePrefix="select"
+                    />
+                  </Col>
+                  <Col md={2}>
+                    <Select
+                      options={[
+                        { value: '', label: 'Filter by doctor...' },
+                        ...doctors.map(doctor => ({
+                          value: doctor._id,
+                          label: `${doctor.name} ${doctor.familyName}`,
+                        })),
+                      ]}
+                      onChange={(option) => setDoctorFilter(option?.value || '')}
+                      placeholder="Filter by doctor..."
+                      className="salmon-react-select"
+                      classNamePrefix="select"
+                    />
+                  </Col>
+                  <Col md={2}>
+                    <Button 
+                      variant="salmon-outline" 
+                      onClick={resetFilters} 
+                      className="w-100"
+                    >
+                      Reset Filters
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
 
-      {loading ? (
-        <div className="d-flex justify-content-center mt-4">
-          <Spinner animation="border" variant="primary" />
-        </div>
-      ) : (
-        <>
-          <h2 className="my-4">Medical Monitoring</h2>
-           {/* Language Selector */}
-           <select
-  onChange={(e) => setLanguage(e.target.value)}
-  value={language}
-  className="mt-2 mb-4 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-sm"
->
-  <option value="ar">Arabic - العربية</option>
-  <option value="en">English - English</option>
-  <option value="fr">French - Français</option>
-  <option value="es">Spanish - Español</option>
-  <option value="de">German - Deutsch</option>
-  <option value="it">Italian - Italiano</option>
-  <option value="pt">Portuguese - Português</option>
-  <option value="ru">Russian - Русский</option>
-  <option value="zh">Chinese (Simplified) - 中文</option>
-  <option value="ja">Japanese - 日本語</option>
-  <option value="ko">Korean - 한국어</option>
-  <option value="nl">Dutch - Nederlands</option>
-  <option value="pl">Polish - Polski</option>
-  <option value="tr">Turkish - Türkçe</option>
-  <option value="sv">Swedish - Svenska</option>
-  <option value="uk">Ukrainian - Українська</option>
-</select>
-
-          <Card className="mb-4 shadow-sm">
-            <Card.Body>
-              <Row>
-                <Col md={4}>
-                  <Form.Control
-                    type="text"
-                    placeholder="Search treatments..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </Col>
-                <Col md={2}>
-                  <Select
-                    options={[
-                      { value: '', label: 'Sort by...' },
-                      { value: 'category', label: 'Category' },
-                      { value: 'status', label: 'Status' },
-                      { value: 'startDate', label: 'Start Date' },
-                      { value: 'endDate', label: 'End Date' },
-                      { value: 'treatedBy', label: 'Doctor' },
-                    ]}
-                    onChange={(option) => setSortCriteria(option?.value || '')}
-                    placeholder="Sort by..."
-                  />
-                </Col>
-                <Col md={2}>
-                  <Select
-                    options={[
-                      { value: '', label: 'Filter by status...' },
-                      { value: 'active', label: 'Active' },
-                      { value: 'completed', label: 'Completed' },
-                    ]}
-                    onChange={(option) => setStatusFilter(option?.value || '')}
-                    placeholder="Filter by status..."
-                  />
-                </Col>
-                <Col md={2}>
-                  <Select
-                    options={[
-                      { value: '', label: 'Filter by doctor...' },
-                      ...doctors.map(doctor => ({
-                        value: doctor._id,
-                        label: `${doctor.name} ${doctor.familyName}`,
-                      })),
-                    ]}
-                    onChange={(option) => setDoctorFilter(option?.value || '')}
-                    placeholder="Filter by doctor..."
-                  />
-                </Col>
-                <Col md={2}>
-                  <Button variant="outline-secondary" onClick={resetFilters} className="w-100">
-                    Reset Filters
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-
-          <Row>
-            <Col>
-              <Badge bg="info" className="me-2">
+            {/* Stats Badges */}
+            <div className="d-flex gap-3 mb-4">
+              <Badge pill bg="salmon" className="stat-badge">
                 Active Treatments: {activeTreatments}
               </Badge>
-              <Badge bg="secondary">
+              <Badge pill bg="salmon-light" className="stat-badge">
                 Completed Treatments: {completedTreatments}
               </Badge>
-            </Col>
-          </Row>
-          <NavLink
-                  to={`/medical-treatments/patient/add/${selectedPatient._id}`}
-                  state={{ patient: selectedPatient }}
-                  className="btn btn-success d-flex col-2 me-5 align-items-center gap-1"
-                >
-                  <PlusCircle size={18} /> Add Monitoring
-                </NavLink>
+            </div>
 
-          <Row className="mt-4">
-            {currentTreatments.length ? (
-              currentTreatments.map((treatment) => (
-                <Col key={treatment._id} md={4} className="mb-4">
-                  <motion.div whileHover={{ scale: 1.03 }} transition={{ type: 'spring', stiffness: 300 }}>
-                    <Card className="h-100 shadow-sm">
-                      <Card.Body>
-                        <Card.Title className="text-primary">{treatment.category}</Card.Title>
-                        <Card.Text>
-                          <strong>Status:</strong> {treatment.status ? (
-                            <Badge bg="success">Active</Badge>
-                          ) : (
-                            <Badge bg="secondary">Completed</Badge>
-                          )}
-                        </Card.Text>
-                        <Card.Text><strong>Details:</strong> {treatment.details}</Card.Text>
-                        <Card.Text>
-                          <strong>Start:</strong> {new Date(treatment.startDate).toLocaleDateString()}
-                        </Card.Text>
-                        <Card.Text>
-                          <strong>End:</strong> {treatment.endDate ? (
-                            new Date(treatment.endDate).toLocaleDateString()
-                          ) : (
-                            'Ongoing'
-                          )}
-                        </Card.Text>
-                        <Card.Text>
-                          <strong>Doctors:</strong> {getDoctorNamesByIds(treatment.treatedBy)}
-                        </Card.Text>
-                        {treatment.equipment?.length > 0 && (
-                          <Card.Text>
-                            <strong>Equipment:</strong> {getEquipmentNamesByIds(treatment.equipment)}
-                          </Card.Text>
-                        )}
-                        <div className="d-flex justify-content-between mt-3">
-                          <NavLink
-                            to={`/medical-treatments/edit/${treatment._id}`}
-                            state={{ treatment, patient: selectedPatient }}
-                            className="btn btn-secondary btn-sm"
-                          >
-                            Edit
-                          </NavLink>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDelete(treatment._id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </motion.div>
-                </Col>
-              ))
-            ) : (
-              <Col>
-                <p className="text-muted text-center">No treatments found matching your criteria.</p>
-              </Col>
+            {/* Add Treatment Button */}
+            {selectedPatient && (
+              <NavLink
+                to={`/medical-treatments/patient/add/${selectedPatient._id}`}
+                state={{ patient: selectedPatient }}
+                className="btn btn-salmon mb-4 d-inline-flex align-items-center gap-2"
+              >
+                <PlusCircle size={18} /> Add New Treatment
+              </NavLink>
             )}
-          </Row>
 
-          <Row className="mt-4">
-            <Col className="d-flex justify-content-center">
-              <Button
-                variant="outline-primary"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="me-2"
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline-primary"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={indexOfLastTreatment >= filteredTreatments.length}
-              >
-                Next
-              </Button>
-            </Col>
-          </Row>
-        </>
-      )}
+            {/* Treatments Grid */}
+            <Row className="g-4">
+              {currentTreatments.length ? (
+                currentTreatments.map((treatment) => (
+                  <Col key={treatment._id} md={4}>
+                    <motion.div 
+                      whileHover={{ y: -5 }}
+                      transition={{ type: 'spring', stiffness: 300 }}
+                    >
+                      <Card className="h-100 treatment-card">
+                        <Card.Body>
+                          <Card.Title className="treatment-title">
+                            {treatment.category}
+                          </Card.Title>
+                          
+                          <div className="treatment-status ">
+                            <Badge pill bg={treatment.status ? "salmon" : "salmon-light"}>
+                              {treatment.status ? 'Active' : 'Completed'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="treatment-details">
+                            <p>Description : </p>
+                            <p>{treatment.details}</p>
+                            
+                            <div className="treatment-dates">
+                              <div>
+                                <small className="text-muted">Start:</small>
+                                <div>{new Date(treatment.startDate).toLocaleDateString()}</div>
+                              </div>
+                              <div>
+                                <small className="text-muted">End:</small>
+                                <div>
+                                  {treatment.endDate 
+                                    ? new Date(treatment.endDate).toLocaleDateString()
+                                    : 'Ongoing'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="treatment-staff">
+                              <small className="text-muted">Doctors:</small>
+                              <div>{getDoctorNamesByIds(treatment.treatedBy)}</div>
+                            </div>
+                            
+                            {treatment.equipment?.length > 0 && (
+                              <div className="treatment-equipment">
+                                <small className="text-muted">Equipment:</small>
+                                <div>{getEquipmentNamesByIds(treatment.equipment)}</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="d-flex justify-content-between mt-3">
+                            <NavLink
+                              to={`/medical-treatments/edit/${treatment._id}`}
+                              state={{ treatment, patient: selectedPatient }}
+                              className="btn btn-salmon-outline btn-sm"
+                            >
+                              Edit
+                            </NavLink>
+                            <Button
+                              variant="salmon-danger"
+                              size="sm"
+                              onClick={() => handleDelete(treatment._id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </motion.div>
+                  </Col>
+                ))
+              ) : (
+                <Col>
+                  <div className="empty-state text-center p-5">
+                    <h4 className="text-muted">No treatments found matching your criteria</h4>
+                  </div>
+                </Col>
+              )}
+            </Row>
 
-      {patientDetails && (
-        <Card className="mt-4 shadow-sm border-primary">
-          <Card.Header className="bg-secondary text-white">
-            <h3 className="mb-0">Patient Information</h3>
-          </Card.Header>
+            {/* Pagination */}
+            {filteredTreatments.length > treatmentsPerPage && (
+              <div className="d-flex justify-content-center mt-4">
+                <nav>
+                  <ul className="pagination">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link salmon-page-link"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                      >
+                        Previous
+                      </button>
+                    </li>
+                    {[...Array(Math.ceil(filteredTreatments.length / treatmentsPerPage)).keys()].map(number => (
+                      <li 
+                        key={number + 1} 
+                        className={`page-item ${currentPage === number + 1 ? 'active' : ''}`}
+                      >
+                        <button 
+                          className="page-link salmon-page-link"
+                          onClick={() => setCurrentPage(number + 1)}
+                        >
+                          {number + 1}
+                        </button>
+                      </li>
+                    ))}
+                    <li className={`page-item ${indexOfLastTreatment >= filteredTreatments.length ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link salmon-page-link"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                      >
+                        Next
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Patient Information Section */}
+        {patientDetails && (
+          <Card className="mt-5 patient-info-card">
+            <Card.Header className="patient-info-header">
+              <h3 >Patient Information</h3>
+            </Card.Header>
+            <Card.Body>
+              {/* Basic Information */}
+              <div className="info-section mt-2 mb-4">
+                <div 
+                  className="section-header"
+                  onClick={() => toggleSection('basicInfo')}
+                >
+                  <h5>
+                    <FontAwesomeIcon icon={faUserCircle} className="me-2" />
+                    Basic Information
+                  </h5>
+                  
+                </div>
+                   <div className="section-content">
+                    <Row>
+                      <Col md={6}>
+                        <InfoItem label="Full Name" value={`${patientDetails.firstName} ${patientDetails.lastName}`} />
+                        <InfoItem label="Birth Date" value={new Date(patientDetails.birthDate).toLocaleDateString()} />
+                        <InfoItem label="Birth Place" value={patientDetails.birthPlace} />
+                      </Col>
+                      <Col md={6}>
+                        <InfoItem label="Gender" value={patientDetails.sex} />
+                        <InfoItem label="Phone" value={patientDetails.phone} />
+                      </Col>
+                    </Row>
+                  </div>
+               </div>
+
+              {/* Emergency Information */}
+              <div className="info-section mb-4">
+                <div 
+                  className="section-header"
+                  onClick={() => toggleSection('emergencyInfo')}
+                >
+                  <h5>
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" />
+                    Emergency Information
+                  </h5>
+                  
+                </div>
+                   <div className="section-content">
+                    <Row>
+                      <Col md={6}>
+                        <InfoItem label="Arrival Mode" value={patientDetails.arrivalMode} />
+                        <InfoItem label="Emergency Reason" value={patientDetails.emergencyReason} />
+                      </Col>
+                      <Col md={6}>
+                        <InfoItem label="Status" value={patientDetails.status} />
+                        <InfoItem label="Emergency Area" value={patientDetails.emergencyArea} />
+                      </Col>
+                    </Row>
+                    <InfoItem label="Observations" value={patientDetails.observations} />
+                  </div>
+               </div>
+
+              {/* Insurance Information */}
+              <div className="info-section mb-4">
+                <div 
+                  className="section-header"
+                  onClick={() => toggleSection('insuranceInfo')}
+                >
+                  <h5>
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" />
+                    Insurance Details
+                  </h5>
+                   
+                </div>
+                   <div className="section-content">
+                    <Row>
+                      <Col md={6}>
+                        <InfoItem label="Card Number" value={patientDetails.insurance?.cardNumber || 'N/A'} />
+                      </Col>
+                      <Col md={6}>
+                        <InfoItem label="Provider" value={patientDetails.insurance?.provider || 'N/A'} />
+                      </Col>
+                    </Row>
+                  </div>
+               </div>
+
+              {/* Contact Information */}
+              <div className="info-section mb-4">
+                <div 
+                  className="section-header"
+                  onClick={() => toggleSection('contactInfo')}
+                >
+                  <h5>
+                    <FontAwesomeIcon icon={faAddressBook} className="me-2" />
+                    Contact Person
+                  </h5>
+               
+                </div>
+                   <div className="section-content">
+                    <Row>
+                      <Col md={6}>
+                        <InfoItem label="Name" value={patientDetails.contact?.name || 'N/A'} />
+                        <InfoItem label="Relation" value={patientDetails.contact?.relation || 'N/A'} />
+                      </Col>
+                      <Col md={6}>
+                        <InfoItem label="Phone" value={patientDetails.contact?.phone || 'N/A'} />
+                        <InfoItem label="Email" value={patientDetails.contact?.email || 'N/A'} />
+                      </Col>
+                    </Row>
+                  </div>
+               </div>
+
+              {/* Timestamps */}
+              <div className="info-section">
+                <div 
+                  className="section-header"
+                  onClick={() => toggleSection('timestamps')}
+                >
+                  <h5>
+                    <FontAwesomeIcon icon={faClock} className="me-2" />
+                    Timestamps
+                  </h5>
+                 
+                </div>
+                   <div className="section-content">
+                    <InfoItem label="Arrival Time" value={new Date(patientDetails.arrivalTime).toLocaleString()} />
+                    <InfoItem label="Created At" value={new Date(patientDetails.createdAt).toLocaleString()} />
+                    <InfoItem label="Updated At" value={new Date(patientDetails.updatedAt).toLocaleString()} />
+                  </div>
+               </div>
+            </Card.Body>
+          </Card>
+        )}
+
+        {/* Statistics Section */}
+        <Card className="mt-5 stats-card">
           <Card.Body>
-            <div className="info-section mb-4 border-bottom">
-              <div
-                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
-                onClick={() => toggleSection('basicInfo')}
-              >
-                <h5 className="mb-0">
-                  <FontAwesomeIcon icon={faUserCircle} className="me-2" />
-                  Basic Information
-                </h5>
-               </div>
-                <div className="p-3">
-                  <Row>
-                    <Col md={6}>
-                      <InfoItem label="Full Name" value={`${patientDetails.firstName} ${patientDetails.lastName}`} />
-                      <InfoItem label="Birth Date" value={new Date(patientDetails.birthDate).toLocaleDateString()} />
-                      <InfoItem label="Birth Place" value={patientDetails.birthPlace} />
-                    </Col>
-                    <Col md={6}>
-                      <InfoItem label="Gender" value={patientDetails.sex} />
-                      <InfoItem label="Phone" value={patientDetails.phone} />
-                    </Col>
-                  </Row>
-                </div>
-             </div>
-
-            <div className="info-section mb-4 border-bottom">
-              <div
-                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
-                onClick={() => toggleSection('emergencyInfo')}
-              >
-                <h5 className="mb-0">
-                  <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" />
-                  Emergency Information
-                </h5>
-               </div>
-                 <div className="p-3">
-                  <Row>
-                    <Col md={6}>
-                      <InfoItem label="Arrival Mode" value={patientDetails.arrivalMode} />
-                      <InfoItem label="Emergency Reason" value={patientDetails.emergencyReason} />
-                    </Col>
-                    <Col md={6}>
-                      <InfoItem label="Status" value={patientDetails.status} />
-                      <InfoItem label="Emergency Area" value={patientDetails.emergencyArea} />
-                    </Col>
-                  </Row>
-                  <InfoItem label="Observations" value={patientDetails.observations} />
-                </div>
-             </div>
-
-            <div className="info-section mb-4 border-bottom">
-              <div
-                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
-                onClick={() => toggleSection('insuranceInfo')}
-              >
-                <h5 className="mb-0">
-                  <FontAwesomeIcon icon={faFileInvoiceDollar} className="me-2" />
-                  Insurance Details
-                </h5>
-               </div>
-                 <div className="p-3">
-                  <Row>
-                    <Col md={6}>
-                      <InfoItem label="Card Number" value={patientDetails.insurance?.cardNumber || 'N/A'} />
-                    </Col>
-                    <Col md={6}>
-                      <InfoItem label="Provider" value={patientDetails.insurance?.provider || 'N/A'} />
-                    </Col>
-                  </Row>
-                </div>
-             </div>
-
-            <div className="info-section mb-4 border-bottom">
-              <div
-                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
-                onClick={() => toggleSection('contactInfo')}
-              >
-                <h5 className="mb-0">
-                  <FontAwesomeIcon icon={faAddressBook} className="me-2" />
-                  Contact Person
-                </h5>
-               </div>
-                 <div className="p-3">
-                  <Row>
-                    <Col md={6}>
-                      <InfoItem label="Name" value={patientDetails.contact?.name || 'N/A'} />
-                      <InfoItem label="Relation" value={patientDetails.contact?.relation || 'N/A'} />
-                    </Col>
-                    <Col md={6}>
-                      <InfoItem label="Phone" value={patientDetails.contact?.phone || 'N/A'} />
-                      <InfoItem label="Email" value={patientDetails.contact?.email || 'N/A'} />
-                    </Col>
-                  </Row>
-                </div>
-             </div>
-
-            <div className="info-section">
-              <div
-                className="section-header d-flex justify-content-between align-items-center p-3 bg-light rounded cursor-pointer"
-                onClick={() => toggleSection('timestamps')}
-              >
-                <h5 className="mb-0">
-                  <FontAwesomeIcon icon={faClock} className="me-2" />
-                  Timestamps
-                </h5>
-               </div>
-                 <div className="p-3">
-                  <InfoItem label="Arrival Time" value={new Date(patientDetails.arrivalTime).toLocaleString()} />
-                  <InfoItem label="Created At" value={new Date(patientDetails.createdAt).toLocaleString()} />
-                  <InfoItem label="Updated At" value={new Date(patientDetails.updatedAt).toLocaleString()} />
-                </div>
-             </div>
+            <h2 className="text-center mb-5">Treatment Statistics</h2>
+            
+            <Row className="g-4">
+              {/* Monthly Stats */}
+              <Col lg={4}>
+                <Card className="h-100 stat-card">
+                  <Card.Body>
+                    <h3 className="stat-title">Monthly Treatment Trends</h3>
+                    {monthlyData ? (
+                      <Line 
+                        data={monthlyData}
+                        options={{
+                          responsive: true,
+                          plugins: {
+                            legend: {
+                              position: 'bottom',
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true
+                            }
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" variant="salmon" />
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+              
+              {/* Success Rate by Doctor */}
+              <Col lg={4}>
+                <Card className="h-100 stat-card">
+                  <Card.Body>
+                    <h3 className="stat-title">Success Rate by Doctor</h3>
+                    {successRateData ? (
+                      <Bar 
+                        data={successRateData}
+                        options={{
+                          responsive: true,
+                          plugins: {
+                            legend: {
+                              display: false
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              max: 100,
+                              title: {
+                                display: true,
+                                text: 'Success Rate (%)'
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" variant="salmon" />
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+              
+              {/* Category Stats */}
+              <Col lg={4}>
+                <Card className="h-100 stat-card">
+                  <Card.Body>
+                    <h3 className="stat-title">Treatments by Category</h3>
+                    {categoryData ? (
+                      <Pie 
+                        data={categoryData}
+                        options={{
+                          responsive: true,
+                          plugins: {
+                            legend: {
+                              position: 'bottom',
+                            },
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center py-4">
+                        <Spinner animation="border" variant="salmon" />
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
           </Card.Body>
         </Card>
-      )}
+      </Container>
 
-<div>
- <div className="container mt-5 p-5 card">
-      <h1 className="text-center mb-4 ">Treatment Statistics</h1>
-      <div className="row">
-        {/* Graph for Monthly Stats */}
-        <div className="col-md-4">
-          <h2>Monthly Stats</h2>
-          {monthlyData && <Line data={monthlyData} />}
-        </div>
-
-        {/* Graph for Success Rate by Doctor */}
-        <div className="col-md-4">
-          <h2>Success Rate by Doctor</h2>
-          {successRateData && <Bar data={successRateData} />}
-        </div>
-
-        {/* Graph for Category Stats */}
-        <div className="col-md-4">
-          <h2>Category Stats</h2>
-          {categoryData && <Pie data={categoryData} />}
-        </div>
-      </div>
-    </div>      </div>
-      
-      
-          </Container>
+      {/* Custom Styles */}
+      <style jsx global>{`
+        :root {
+          --salmon: #ff6b6b;
+          --salmon-light: #ff8e8e;
+          --salmon-dark: #e05454;
+          --salmon-bg: #fff5f5;
+          --salmon-text: #5c2e2e;
+        }
+        
+        body {
+          background-color: #f8f9fa;
+        }
+        
+        /* Toast Styles */
+        .salmon-toast {
+          background-color: var(--salmon-bg);
+          color: var(--salmon-text);
+          border-left: 5px solid var(--salmon);
+        }
+        
+        .salmon-progress {
+          background: var(--salmon);
+        }
+        
+        /* Button Styles */
+        .btn-salmon {
+          background-color: var(--salmon);
+          border-color: var(--salmon);
+          color: white;
+        }
+        
+        .btn-salmon:hover {
+          background-color: var(--salmon-dark);
+          border-color: var(--salmon-dark);
+        }
+        
+        .btn-salmon-light {
+          background-color: var(--salmon-light);
+          border-color: var(--salmon-light);
+          color: white;
+        }
+        
+        .btn-salmon-light:hover {
+          background-color: var(--salmon);
+          border-color: var(--salmon);
+        }
+        
+        .btn-salmon-dark {
+          background-color: var(--salmon-dark);
+          border-color: var(--salmon-dark);
+          color: white;
+        }
+        
+        .btn-salmon-dark:hover {
+          background-color: var(--salmon);
+          border-color: var(--salmon);
+        }
+        
+        .btn-salmon-outline {
+          background-color: transparent;
+          border-color: var(--salmon);
+          color: var(--salmon);
+        }
+        
+        .btn-salmon-outline:hover {
+          background-color: var(--salmon-bg);
+          color: var(--salmon-dark);
+        }
+        
+        .btn-salmon-danger {
+          background-color: #dc3545;
+          border-color: #dc3545;
+          color: white;
+        }
+        
+        .btn-salmon-danger:hover {
+          background-color: #bb2d3b;
+          border-color: #b02a37;
+        }
+        
+        /* Card Styles */
+        .salmon-card {
+          border: none;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          background-color: white;
+        }
+        
+        .salmon-card .card-header {
+          background-color: var(--salmon);
+          color: white;
+          border-radius: 12px 12px 0 0 !important;
+        }
+        
+        .treatment-card {
+          border: none;
+          border-radius: 12px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+          transition: all 0.3s ease;
+          overflow: hidden;
+        }
+        
+        .treatment-card:hover {
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .treatment-title {
+          color: var(--salmon-dark);
+          font-weight: 600;
+          border-bottom: 1px solid #f0f0f0;
+          padding-bottom: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        
+        .treatment-status .badge {
+          font-size: 0.8rem;
+          padding: 0.35rem 0.75rem;
+          font-weight: 500;
+        }
+        
+        .treatment-dates {
+          display: flex;
+          gap: 1rem;
+          margin: 1rem 0;
+        }
+        
+        /* Form Styles */
+        .salmon-input {
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          padding: 0.5rem 1rem;
+          transition: all 0.3s ease;
+        }
+        
+        .salmon-input:focus {
+          border-color: var(--salmon-light);
+          box-shadow: 0 0 0 0.25rem rgba(255, 107, 107, 0.25);
+        }
+        
+        .salmon-select {
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          padding: 0.5rem 1rem;
+          transition: all 0.3s ease;
+        }
+        
+        .salmon-select:focus {
+          border-color: var(--salmon-light);
+          box-shadow: 0 0 0 0.25rem rgba(255, 107, 107, 0.25);
+        }
+        
+        /* React Select Styles */
+        .salmon-react-select .select__control {
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          min-height: 44px;
+          transition: all 0.3s ease;
+        }
+        
+        .salmon-react-select .select__control--is-focused {
+          border-color: var(--salmon-light);
+          box-shadow: 0 0 0 1px var(--salmon-light);
+        }
+        
+        .salmon-react-select .select__option--is-focused {
+          background-color: var(--salmon-bg);
+        }
+        
+        .salmon-react-select .select__option--is-selected {
+          background-color: var(--salmon);
+        }
+        
+        /* Pagination Styles */
+        .salmon-page-link {
+          color: var(--salmon);
+          border: 1px solid #dee2e6;
+        }
+        
+        .salmon-page-link:hover {
+          color: var(--salmon-dark);
+          background-color: var(--salmon-bg);
+          border-color: #dee2e6;
+        }
+        
+        .page-item.active .salmon-page-link {
+          background-color: var(--salmon);
+          border-color: var(--salmon);
+          color: white;
+        }
+        
+        /* Patient Info Section */
+        .patient-info-card {
+          border: none;
+          
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .patient-info-header {
+          background-color: var(--salmon);
+                    color: #dee2e6;
+          border-radius: 12px 12px 0 0 !important;
+          font-weight: 600;
+        }
+        
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          background-color: var(--salmon-bg);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .section-header:hover {
+          background-color: #ffebeb;
+        }
+        
+        .section-header h5 {
+          color: var(--salmon-dark);
+          margin: 0;
+          font-weight: 600;
+        }
+        
+        .toggle-icon {
+          color: var(--salmon);
+          transition: transform 0.3s ease;
+        }
+        
+        .section-content {
+          padding: 1rem;
+          background-color: white;
+          border-radius: 0 0 8px 8px;
+          margin-top: 0.5rem;
+        }
+        
+        /* Stats Section */
+        .stats-card {
+          border: none;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          background-color: white;
+          margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+          border: none;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-title {
+          color: var(--salmon-dark);
+          font-size: 1.1rem;
+          margin-bottom: 1.5rem;
+          text-align: center;
+        }
+        
+        /* Badges */
+        .badge-salmon {
+          background-color: var(--salmon);
+        }
+        
+        .badge-salmon-light {
+          background-color: var(--salmon-light);
+        }
+        
+        .stat-badge {
+          font-size: 0.9rem;
+          padding: 0.5rem 1rem;
+          font-weight: 500;
+        }
+        
+        /* Page Title */
+        .page-title {
+          color: var(--salmon-dark);
+          font-weight: 600;
+          position: relative;
+          padding-bottom: 0.5rem;
+        }
+        
+        .page-title::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 60px;
+          height: 3px;
+          background-color: var(--salmon);
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+          border-radius: 8px;
+          padding: 0.5rem 1.25rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+          .treatment-dates {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          
+          .section-header h5 {
+            font-size: 1rem;
+          }
+        }
+      `}</style>
+    </motion.div>
   );
 };
 

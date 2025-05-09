@@ -149,14 +149,14 @@ const AddMedicalTreatment = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="add-treatment-container">
       <ToastContainer />
-      <h1 className="text-center mb-4 card p-3">Add Medical Monitoring</h1>
-      <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-light" noValidate>
-        <div className="mb-3">
-          <label className="form-label">Category</label>
+      <h1 className="add-treatment-title">Add Medical Monitoring</h1>
+      <form onSubmit={handleSubmit} className="add-treatment-form" noValidate>
+        <div className="form-group">
+          <label>Category</label>
           <select
-            className={`form-select ${focusState.category === false && !treatment.category && !useCustomCategory ? 'is-invalid' : ''}`}
+            className={focusState.category === false && !treatment.category && !useCustomCategory ? 'invalid' : ''}
             name="category"
             value={treatment.category}
             onChange={handleCategoryChange}
@@ -173,11 +173,11 @@ const AddMedicalTreatment = () => {
         </div>
 
         {useCustomCategory && (
-          <div className="mb-3">
+          <div className="form-group">
             <input
               type="text"
               name="customCategory"
-              className={`form-control ${focusState.customCategory === false && treatment.customCategory.length < 3 ? 'is-invalid' : ''}`}
+              className={focusState.customCategory === false && treatment.customCategory.length < 3 ? 'invalid' : ''}
               value={treatment.customCategory}
               onChange={handleChange}
               onFocus={() => handleFocus('customCategory')}
@@ -188,9 +188,9 @@ const AddMedicalTreatment = () => {
           </div>
         )}
 
-        <div className="mb-3">
+        <div className="form-group">
           <textarea
-            className={`form-control ${focusState.details === false && treatment.details.length < 10 ? 'is-invalid' : ''}`}
+            className={focusState.details === false && treatment.details.length < 10 ? 'invalid' : ''}
             name="details"
             rows="3"
             value={treatment.details}
@@ -202,53 +202,197 @@ const AddMedicalTreatment = () => {
           />
         </div>
 
-        <label className="form-label">Start Date</label>
-        <input
-          type="date"
-          className={`form-control mb-3 ${focusState.startDate === false && !treatment.startDate ? 'is-invalid' : ''}`}
-          name="startDate"
-          value={treatment.startDate}
-          onChange={handleChange}
-          onFocus={() => handleFocus('startDate')}
-          onBlur={() => handleBlur('startDate')}
-          required
-        />
+        <div className="form-group">
+          <label>Start Date</label>
+          <input
+            type="date"
+            className={focusState.startDate === false && !treatment.startDate ? 'invalid' : ''}
+            name="startDate"
+            value={treatment.startDate}
+            onChange={handleChange}
+            onFocus={() => handleFocus('startDate')}
+            onBlur={() => handleBlur('startDate')}
+            required
+          />
+        </div>
 
-        <label className="form-label">End Date</label>
-        <input
-          type="date"
-          className={`form-control mb-3 ${focusState.endDate === false && treatment.endDate && new Date(treatment.endDate) < new Date(treatment.startDate) ? 'is-invalid' : ''}`}
-          name="endDate"
-          value={treatment.endDate}
-          onChange={handleChange}
-          onFocus={() => handleFocus('endDate')}
-          onBlur={() => handleBlur('endDate')}
-        />
+        <div className="form-group">
+          <label>End Date</label>
+          <input
+            type="date"
+            className={focusState.endDate === false && treatment.endDate && new Date(treatment.endDate) < new Date(treatment.startDate) ? 'invalid' : ''}
+            name="endDate"
+            value={treatment.endDate}
+            onChange={handleChange}
+            onFocus={() => handleFocus('endDate')}
+            onBlur={() => handleBlur('endDate')}
+          />
+        </div>
 
-        <label className="form-label">Doctors</label>
-        <Select
-          options={doctors}
-          isLoading={loading}
-          onChange={handleDoctorSelect}
-          placeholder="Select doctors"
-          isMulti
-          onFocus={() => handleFocus('treatedBy')}
-          onBlur={() => handleBlur('treatedBy')}
-          className={focusState.treatedBy === false && treatment.treatedBy.length === 0 ? 'border border-danger rounded' : ''}
-        />
+        <div className="form-group">
+          <label>Doctors</label>
+          <Select
+            options={doctors}
+            isLoading={loading}
+            onChange={handleDoctorSelect}
+            placeholder="Select doctors"
+            isMulti
+            onFocus={() => handleFocus('treatedBy')}
+            onBlur={() => handleBlur('treatedBy')}
+            className={focusState.treatedBy === false && treatment.treatedBy.length === 0 ? 'invalid-select' : ''}
+            classNamePrefix="select"
+          />
+        </div>
 
-        <label className="form-label mt-3">Equipment</label>
-        <Select
-          options={equipmentOptions}
-          isLoading={loading}
-          isMulti
-          onChange={handleEquipmentSelect}
-          placeholder="Select equipment"
-          isSearchable
-        />
+        <div className="form-group">
+          <label>Equipment</label>
+          <Select
+            options={equipmentOptions}
+            isLoading={loading}
+            isMulti
+            onChange={handleEquipmentSelect}
+            placeholder="Select equipment"
+            isSearchable
+            classNamePrefix="select"
+          />
+        </div>
 
-        <button type="submit" className="btn btn-primary d-block mt-3">Add Medical Monitoring</button>
+        <button type="submit" className="submit-button">Add Medical Monitoring</button>
       </form>
+
+      <style jsx>{`
+        .add-treatment-container {
+          padding: 2rem;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .add-treatment-title {
+          color: #5c2c22;
+          text-align: center;
+          margin-bottom: 2rem;
+          font-weight: 600;
+          padding: 1rem;
+          background: #fff9f7;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(255, 140, 105, 0.1);
+          border: 1px solid #ffe5dd;
+        }
+
+        .add-treatment-form {
+          background: #fff9f7;
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 4px 20px rgba(255, 140, 105, 0.1);
+          border: 1px solid #ffe5dd;
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 0.5rem;
+          color: #5c2c22;
+          font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 8px;
+          border: 1px solid #ffb8a6;
+          background: #fff0eb;
+          color: #5c2c22;
+          transition: all 0.2s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #FF8C69;
+          box-shadow: 0 0 0 2px rgba(255, 140, 105, 0.2);
+        }
+
+        .form-group textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        .invalid,
+        .invalid-select :global(.select__control) {
+          border-color: #ff6b6b !important;
+        }
+
+        .submit-button {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 8px;
+          border: none;
+          background: #FF8C69;
+          color: white;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          margin-top: 1.5rem;
+        }
+
+        .submit-button:hover {
+          background: #e67d5b;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(255, 140, 105, 0.3);
+        }
+
+        /* Custom styles for react-select */
+        :global(.select__control) {
+          border-radius: 8px !important;
+          border: 1px solid #ffb8a6 !important;
+          min-height: 44px !important;
+          box-shadow: none !important;
+          background: #fff0eb !important;
+        }
+
+        :global(.select__control--is-focused) {
+          border-color: #FF8C69 !important;
+          box-shadow: 0 0 0 1px #FF8C69 !important;
+        }
+
+        :global(.select__option--is-focused) {
+          background-color: #fff0eb !important;
+        }
+
+        :global(.select__option--is-selected) {
+          background-color: #FF8C69 !important;
+        }
+
+        :global(.select__multi-value) {
+          background-color: #ffe5dd !important;
+          border-radius: 6px !important;
+        }
+
+        :global(.select__multi-value__label) {
+          color: #5c2c22 !important;
+        }
+
+        :global(.select__multi-value__remove:hover) {
+          background-color: #ffb8a6 !important;
+          color: #5c2c22 !important;
+        }
+
+        @media (max-width: 768px) {
+          .add-treatment-container {
+            padding: 1rem;
+          }
+          
+          .add-treatment-form {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
     </div>
   );
 };
