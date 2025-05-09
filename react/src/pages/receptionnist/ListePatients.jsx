@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ListePatients.css';
@@ -33,31 +34,6 @@ const PatientList = () => {
     }
   };
 
-  const handleViewDetails = (patient) => {
-    setSelectedPatient(patient);
-  };
-
-  const handleEditPatient = (id) => {
-    navigate(`/UpdatePatient/${id}`);
-  };
-
-  const handleAddPatientClick = () => {
-    navigate('/AddPatient');
-  };
-
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'Critical':
-        return 'status-Critical';
-      case 'Stable':
-        return 'status-Stable';
-      case 'Triage':
-        return 'status-default';
-      case 'Serious':
-        return 'status-Serious';
-      default:
-        return 'status-default';
-    }
   const getStatusStyle = (status) => {
     const styles = {
       Critical: { color: '#dc3545', bg: '#f8d7da' },
