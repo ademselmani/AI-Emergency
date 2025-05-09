@@ -146,10 +146,10 @@ const styles = `
   
   .accept-button {
     width: 100%;
-    background-color: #3a86ff;
+    background-color: #ff3b3f;
     color: white;
     border: none;
-    padding: 12px;
+    padding: 5px;
     border-radius: 8px;
     font-weight: bold;
     display: flex;
@@ -160,7 +160,7 @@ const styles = `
   }
   
   .accept-button:hover {
-    background-color: #2563eb;
+    background-color:rgb(211, 18, 34);
   }
   
   .button-icon {
@@ -200,7 +200,7 @@ const styles = `
   .ambulance-legend-icon {
     width: 16px;
     height: 16px;
-    background-color: #3a86ff;
+    background-color: #ff3b3f;
     border-radius: 50%;
   }
   
@@ -416,9 +416,7 @@ const AmbulanceReceptionniste = () => {
         <div className="demandes-list">
           <div className="demandes-header">
             <h2>Pending requests</h2>
-            <div className="badge">
-              {demandes.filter(demande => !demande.status || demande.status === 'Pending').length}
-            </div>
+           
           </div>
           
           <div className="trip-info-card">

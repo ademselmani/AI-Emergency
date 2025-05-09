@@ -11,15 +11,15 @@ CORS(app, origins=["http://localhost:5173"])
 @app.route('/anomalies', methods=['GET'])
 def detect_anomalies():
     data = pd.read_csv("src/leave-ai/leave_data.csv")
-    # Convertir les dates en datetime
+   
     data['startDate'] = pd.to_datetime(data['startDate'])
     data['endDate'] = pd.to_datetime(data['endDate'])
     data['days'] = (data['endDate'] - data['startDate']).dt.days
     
-    model = IsolationForest(contamination=0.2)  # Augmenter la proportion des anomalies
+    model = IsolationForest(contamination=0.2)  
     data['anomaly'] = model.fit_predict(data[['days']])
     
-    # Afficher les résultats pour mieux comprendre
+   
     print(data[['employee', 'days', 'anomaly']])
 
     anomalies = data[data['anomaly'] == -1]
@@ -31,22 +31,21 @@ def detect_anomalies():
 def forecast():
     data = pd.read_csv("src/leave-ai/leave_data.csv")
     
-    # Vérifie si la colonne 'startDate' contient des valeurs non-nulles
-    data['startDate'] = pd.to_datetime(data['startDate'], errors='coerce')
-    data = data.dropna(subset=['startDate'])  # Supprimer les lignes avec des dates invalides
     
-    # Extraction du mois et de l'année
+    data['startDate'] = pd.to_datetime(data['startDate'], errors='coerce')
+    data = data.dropna(subset=['startDate'])  
+    
+    
     data['month'] = data['startDate'].dt.month
     data['year'] = data['startDate'].dt.year
     
-    # Groupement par mois et année pour éviter de mélanger les années
+    
     grouped = data.groupby(['year', 'month']).size().reset_index(name='count')
 
-    # Si le groupement ne donne pas assez de données, on peut tenter de calculer des moyennes pour chaque mois
     if len(grouped) < 12:
         print("⚠️ Pas assez de données disponibles pour chaque mois")
 
-    X = grouped[['year', 'month']].values  # Utiliser année et mois pour plus de précision
+    X = grouped[['year', 'month']].values 
     y = grouped['count'].values
     
     # On évite d'ajuster un modèle si les données sont trop petites ou anormales

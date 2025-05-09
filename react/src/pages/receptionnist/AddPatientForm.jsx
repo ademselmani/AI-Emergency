@@ -15,11 +15,12 @@ const AddPatientForm = () => {
     insurance: { cardNumber: '', provider: '' },
     contact: { name: '', relation: '', phone: '', email: '' },
     observations: '',
-    status: 'Triage',   // Translation of "En attente"
-    emergencyArea: ''    // Translation of "Zone d'urgence"
+    status: 'Triage',
+    emergencyArea: ''
   });
 
   const [message, setMessage] = useState('');
+  const [activeSection, setActiveSection] = useState('personal');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,7 +38,6 @@ const AddPatientForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send the form data to the backend
       await axios.post('http://localhost:3000/api/patients', patient);
       setMessage('Patient added successfully!');
       setPatient({
@@ -47,13 +47,13 @@ const AddPatientForm = () => {
         birthPlace: '',
         sex: '',
         phone: '',
-        arrivalMode: 'Ambulance',  // Reset to default value
+        arrivalMode: 'Ambulance',
         emergencyReason: '',
         insurance: { cardNumber: '', provider: '' },
         contact: { name: '', relation: '', phone: '', email: '' },
         observations: '',
-        status: 'Triage',  // Reset status
-        emergencyArea: ''   // Reset emergency area
+        status: 'Triage',
+        emergencyArea: ''
       });
     } catch (error) {
       setMessage(`Error: ${error.response?.data?.error || error.message}`);
@@ -61,76 +61,195 @@ const AddPatientForm = () => {
   };
 
   return (
-    <div className="container">
-      <div className="card p-4 shadow">
-        <h2 className="text-center mb-4">Add Patient</h2>
+    <div className="modern-form-container">
+      <div className="form-card">
+        <div className="form-header">
+          <h2>New Patient Registration</h2>
+          <p className="form-subtitle">Please fill in all required fields</p>
+        </div>
         
-        {message && <div className="alert alert-info">{message}</div>}
+        {message && (
+          <div className={`message-alert ${message.includes('Error') ? 'error' : 'success'}`}>
+            {message}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="row g-3">
-          {/* Section 1: Personal Information */}
-          <fieldset>
-            <legend>Personal Information</legend>
-            <div className="row">
-              <div className="col-md-6">
-                <label>First Name:</label>
-                <input type="text" className="form-control" name="firstName" value={patient.firstName} onChange={handleChange} required />
+        <div className="form-navigation">
+          <button 
+            className={`nav-btn ${activeSection === 'personal' ? 'active' : ''}`}
+            onClick={() => setActiveSection('personal')}
+          >
+            <i className="fas fa-user"></i> Personal
+          </button>
+          <button 
+            className={`nav-btn ${activeSection === 'arrival' ? 'active' : ''}`}
+            onClick={() => setActiveSection('arrival')}
+          >
+            <i className="fas fa-ambulance"></i> Arrival
+          </button>
+          {patient.arrivalMode === 'Ambulance' && (
+            <button 
+              className={`nav-btn ${activeSection === 'insurance' ? 'active' : ''}`}
+              onClick={() => setActiveSection('insurance')}
+            >
+              <i className="fas fa-credit-card"></i> Insurance
+            </button>
+          )}
+          <button 
+            className={`nav-btn ${activeSection === 'contact' ? 'active' : ''}`}
+            onClick={() => setActiveSection('contact')}
+          >
+            <i className="fas fa-address-book"></i> Contact
+          </button>
+          <button 
+            className={`nav-btn ${activeSection === 'observations' ? 'active' : ''}`}
+            onClick={() => setActiveSection('observations')}
+          >
+            <i className="fas fa-notes-medical"></i> Notes
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Personal Information Section */}
+          <div className={`form-section ${activeSection === 'personal' ? 'active' : ''}`}>
+            <h3 className="section-title">Personal Information</h3>
+            <div className="form-grid">
+              <div className="input-group">
+                <label>First Name <span className="required">*</span></label>
+                <input 
+                  type="text" 
+                  name="firstName" 
+                  value={patient.firstName} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Enter first name"
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Last Name:</label>
-                <input type="text" className="form-control" name="lastName" value={patient.lastName} onChange={handleChange} required />
+              <div className="input-group">
+                <label>Last Name <span className="required">*</span></label>
+                <input 
+                  type="text" 
+                  name="lastName" 
+                  value={patient.lastName} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Enter last name"
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Birth Date:</label>
-                <input type="date" className="form-control" name="birthDate" value={patient.birthDate} onChange={handleChange} required />
+              <div className="input-group">
+                <label>Date of Birth <span className="required">*</span></label>
+                <input 
+                  type="date" 
+                  name="birthDate" 
+                  value={patient.birthDate} 
+                  onChange={handleChange} 
+                  required 
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Birth Place:</label>
-                <input type="text" className="form-control" name="birthPlace" value={patient.birthPlace} onChange={handleChange} />
+              <div className="input-group">
+                <label>Place of Birth</label>
+                <input 
+                  type="text" 
+                  name="birthPlace" 
+                  value={patient.birthPlace} 
+                  onChange={handleChange} 
+                  placeholder="City, Country"
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Sex:</label>
-                <select className="form-control" name="sex" value={patient.sex} onChange={handleChange} required>
-                  <option value="">Select</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+              <div className="input-group">
+                <label>Gender <span className="required">*</span></label>
+                <div className="radio-group">
+                  <label className="radio-option">
+                    <input 
+                      type="radio" 
+                      name="sex" 
+                      value="Male" 
+                      checked={patient.sex === 'Male'} 
+                      onChange={handleChange} 
+                      required 
+                    />
+                    <span className="radio-label">Male</span>
+                  </label>
+                  <label className="radio-option">
+                    <input 
+                      type="radio" 
+                      name="sex" 
+                      value="Female" 
+                      checked={patient.sex === 'Female'} 
+                      onChange={handleChange} 
+                    />
+                    <span className="radio-label">Female</span>
+                  </label>
+                  <label className="radio-option">
+                    <input 
+                      type="radio" 
+                      name="sex" 
+                      value="Other" 
+                      checked={patient.sex === 'Other'} 
+                      onChange={handleChange} 
+                    />
+                    <span className="radio-label">Other</span>
+                  </label>
+                </div>
               </div>
 
-              <div className="col-md-6">
-                <label>Phone Number:</label>
-                <input type="text" className="form-control" name="phone" value={patient.phone} onChange={handleChange} />
+              <div className="input-group">
+                <label>Phone Number</label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={patient.phone} 
+                  onChange={handleChange} 
+                  placeholder="+1 (___) ___-____"
+                />
               </div>
             </div>
-          </fieldset>
+          </div>
 
-          {/* Section 2: Arrival Mode & Emergency */}
-          <fieldset>
-            <legend>Arrival Mode & Emergency</legend>
-            <div className="row">
-              <div className="col-md-6">
-                <label>Arrival Mode:</label>
-                <select className="form-control" name="arrivalMode" value={patient.arrivalMode} onChange={handleChange} required>
+          {/* Arrival & Emergency Section */}
+          <div className={`form-section ${activeSection === 'arrival' ? 'active' : ''}`}>
+            <h3 className="section-title">Arrival & Emergency Information</h3>
+            <div className="form-grid">
+              <div className="input-group">
+                <label>Arrival Mode <span className="required">*</span></label>
+                <select 
+                  className="modern-select" 
+                  name="arrivalMode" 
+                  value={patient.arrivalMode} 
+                  onChange={handleChange} 
+                  required
+                >
                   <option value="Ambulance">Ambulance</option>
                   <option value="On foot">On foot</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
 
-              <div className="col-md-6">
-                <label>Emergency Reason:</label>
-                <input type="text" className="form-control" name="emergencyReason" value={patient.emergencyReason} onChange={handleChange} required />
+              <div className="input-group">
+                <label>Emergency Reason <span className="required">*</span></label>
+                <input 
+                  type="text" 
+                  name="emergencyReason" 
+                  value={patient.emergencyReason} 
+                  onChange={handleChange} 
+                  required 
+                  placeholder="Brief description"
+                />
               </div>
 
-              {/* New field: Status */}
-              <div className="col-md-6">
-                <label>Status:</label>
-                <select className="form-control" name="status" value={patient.status} onChange={handleChange} required>
+              <div className="input-group">
+                <label>Status <span className="required">*</span></label>
+                <select 
+                  className="modern-select" 
+                  name="status" 
+                  value={patient.status} 
+                  onChange={handleChange} 
+                  required
+                >
                   <option value="Triage">Triage</option>
                   <option value="Critical">Critical</option>
                   <option value="Stable">Stable</option>
@@ -138,65 +257,133 @@ const AddPatientForm = () => {
                 </select>
               </div>
 
-              {/* New field: Emergency Area */}
-              <div className="col-md-6">
-                <label>Emergency Area:</label>
-                <input type="text" className="form-control" name="emergencyArea" value={patient.emergencyArea} onChange={handleChange} required />
+              <div className="input-group">
+                <label>Emergency Area <span className="required">*</span></label>
+                <select 
+                  className="modern-select" 
+                  name="emergencyArea" 
+                  value={patient.emergencyArea} 
+                  onChange={handleChange} 
+                  required
+                >
+                  <option value="">Select area</option>
+                  <option value="Trauma">Trauma</option>
+                  <option value="Cardiac">Cardiac</option>
+                  <option value="Pediatric">Pediatric</option>
+                  <option value="Respiratory">Respiratory</option>
+                  <option value="Neurology">Neurology</option>
+                </select>
               </div>
             </div>
-          </fieldset>
+          </div>
 
-          {/* Section 3: Insurance Information (only visible if arrival mode is Ambulance) */}
+          {/* Insurance Section (conditional) */}
           {patient.arrivalMode === 'Ambulance' && (
-            <fieldset>
-              <legend>Insurance Information</legend>
-              <div className="row">
-                <div className="col-md-6">
-                  <label>Card Number:</label>
-                  <input type="text" className="form-control" name="cardNumber" value={patient.insurance.cardNumber} onChange={(e) => handleNestedChange(e, 'insurance')} />
+            <div className={`form-section ${activeSection === 'insurance' ? 'active' : ''}`}>
+              <h3 className="section-title">Insurance Information</h3>
+              <div className="form-grid">
+                <div className="input-group">
+                  <label>Insurance Card Number</label>
+                  <input 
+                    type="text" 
+                    name="cardNumber" 
+                    value={patient.insurance.cardNumber} 
+                    onChange={(e) => handleNestedChange(e, 'insurance')} 
+                    placeholder="Enter card number"
+                  />
                 </div>
 
-                <div className="col-md-6">
-                  <label>Provider:</label>
-                  <input type="text" className="form-control" name="provider" value={patient.insurance.provider} onChange={(e) => handleNestedChange(e, 'insurance')} />
+                <div className="input-group">
+                  <label>Insurance Provider</label>
+                  <input 
+                    type="text" 
+                    name="provider" 
+                    value={patient.insurance.provider} 
+                    onChange={(e) => handleNestedChange(e, 'insurance')} 
+                    placeholder="Provider name"
+                  />
                 </div>
               </div>
-            </fieldset>
+            </div>
           )}
 
-          {/* Section 4: Emergency Contact */}
-          <fieldset>
-            <legend>Emergency Contact</legend>
-            <div className="row">
-              <div className="col-md-6">
-                <label>Name:</label>
-                <input type="text" className="form-control" name="name" value={patient.contact.name} onChange={(e) => handleNestedChange(e, 'contact')} />
+          {/* Emergency Contact Section */}
+          <div className={`form-section ${activeSection === 'contact' ? 'active' : ''}`}>
+            <h3 className="section-title">Emergency Contact</h3>
+            <div className="form-grid">
+              <div className="input-group">
+                <label>Contact Name</label>
+                <input 
+                  type="text" 
+                  name="name" 
+                  value={patient.contact.name} 
+                  onChange={(e) => handleNestedChange(e, 'contact')} 
+                  placeholder="Full name"
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Relation:</label>
-                <input type="text" className="form-control" name="relation" value={patient.contact.relation} onChange={(e) => handleNestedChange(e, 'contact')} />
+              <div className="input-group">
+                <label>Relationship</label>
+                <select 
+                  className="modern-select" 
+                  name="relation" 
+                  value={patient.contact.relation} 
+                  onChange={(e) => handleNestedChange(e, 'contact')}
+                >
+                  <option value="">Select relationship</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Child">Child</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Friend">Friend</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
-              <div className="col-md-6">
-                <label>Phone:</label>
-                <input type="text" className="form-control" name="phone" value={patient.contact.phone} onChange={(e) => handleNestedChange(e, 'contact')} />
+              <div className="input-group">
+                <label>Contact Phone</label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={patient.contact.phone} 
+                  onChange={(e) => handleNestedChange(e, 'contact')} 
+                  placeholder="+1 (___) ___-____"
+                />
               </div>
 
-              <div className="col-md-6">
-                <label>Email:</label>
-                <input type="email" className="form-control" name="email" value={patient.contact.email} onChange={(e) => handleNestedChange(e, 'contact')} />
+              <div className="input-group">
+                <label>Contact Email</label>
+                <input 
+                  type="email" 
+                  name="email" 
+                  value={patient.contact.email} 
+                  onChange={(e) => handleNestedChange(e, 'contact')} 
+                  placeholder="email@example.com"
+                />
               </div>
             </div>
-          </fieldset>
+          </div>
 
-          {/* Section 5: Observations */}
-          <fieldset>
-            <legend>Observations</legend>
-            <textarea className="form-control" name="observations" value={patient.observations} onChange={handleChange}></textarea>
-          </fieldset>
+          {/* Observations Section */}
+          <div className={`form-section ${activeSection === 'observations' ? 'active' : ''}`}>
+            <h3 className="section-title">Medical Observations</h3>
+            <div className="input-group">
+              <label>Initial Observations</label>
+              <textarea 
+                name="observations" 
+                value={patient.observations} 
+                onChange={handleChange}
+                placeholder="Enter any relevant medical observations..."
+                rows="5"
+              ></textarea>
+            </div>
+          </div>
 
-          <button type="submit" className="btn btn-primary w-100 mt-3">Add Patient</button>
+          <div className="form-actions">
+            <button type="submit" className="submit-btn">
+              <i className="fas fa-save"></i> Save Patient Record
+            </button>
+          </div>
         </form>
       </div>
     </div>

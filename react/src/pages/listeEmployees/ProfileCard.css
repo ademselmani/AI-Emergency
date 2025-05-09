@@ -132,21 +132,21 @@
 }
 
 .btn-delete {
-  background: #dc3545; /* Bootstrap btn-danger color */
+  background: #FF3B3B; /* Bootstrap btn-danger color */
   color: #ffffff;
   border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-delete:hover {
-  background: #c82333; /* Bootstrap btn-danger hover color */
+  background: #ff3b3b; /* Bootstrap btn-danger hover color */
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 2px rgba(0, 0, 0, 0.15);
 }
 
 .btn-view {
   background: transparent;
-  color: #007bff; /* Bootstrap btn-primary color */
+  color: #6c97c2; /* Bootstrap btn-primary color */
   border: 1px solid #007bff; /* Bootstrap btn-primary border color */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -163,8 +163,8 @@
 /* Delete Button Styles */
 .btn-delete {
   background: #fff;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+  color: #FF3B3B;
+  border: 1px solid #FF3B3B;
   transition: all 0.2s ease;
 }
 
@@ -237,17 +237,17 @@
 }
 
 .btn-confirm-delete {
-  background: #e74c3c;
+  background: #FF3B3B;
   color: white;
   border: none;
 }
 
 .btn-confirm-delete:hover {
-  background: #c53030;
+  background: #FF3B3B;
 }
 
 .error-message {
-  color: #e53e3e;
+  color: #FF3B3B;
   margin: -10px 0 15px;
   font-size: 14px;
 }

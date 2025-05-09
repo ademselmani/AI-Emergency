@@ -39,14 +39,12 @@ const Login = () => {
         localStorage.setItem("role", response.data.role);
         localStorage.setItem("user_id", response.data.userId);
 
-        // 2. Configurer Axios pour injecter le JWT partout
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${response.data.token}`;
+       await axios.post("http://localhost:3000/api/auth/verifyCode", { email });
+        navigate("/verify", { state: { email: email } });  
+        //navigate("/profile");
 
-        // 3. Lancer la vérification (2FA ou code)
-        await axios.post("/api/auth/verifyCode", { email });
-        navigate("/verify", { state: { email } });
+
+
       } else {
         setError("An unknown error occurred");
       }
@@ -151,9 +149,10 @@ const Login = () => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Sign in
+          <button type="submit" className="login-button" style={{ backgroundColor: '#ff3b3f' }}>
+                Sign in
           </button>
+
 
           <div className="alternative-login">
             <button
@@ -255,7 +254,7 @@ const styles = `
   .login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #007bff;
+    background-color:  #ff3b3f;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -265,7 +264,7 @@ const styles = `
   }
 
   .login-button:hover {
-    background-color: #0056b3;
+    background-color:rgb(179, 0, 27);
   }
 
   .alternative-login {
@@ -294,7 +293,7 @@ const styles = `
   .google-login-button {
     width: 100%;
     padding: 0.75rem;
-    background-color: #db4437;
+    background-color:rgb(13, 165, 225);
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -308,7 +307,7 @@ const styles = `
   }
 
   .google-login-button:hover {
-    background-color: #c23321;
+    background-color:rgb(40, 156, 214);
   }
 
   .google-icon {

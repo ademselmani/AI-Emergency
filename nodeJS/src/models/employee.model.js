@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt")
 const employeeSchema = mongoose.Schema({
   cin: {
     type: String,
+
    required: [true, "Le CIN est requis"],
    unique: [true, "Ce CIN existe déjà"],
     validate: {
@@ -96,6 +97,11 @@ const employeeSchema = mongoose.Schema({
   shiftCount: {
     weekStart: { type: Date, default: null }, // Tracks the Monday of the week
     count: { type: Number, default: 0 }, // Shifts worked this week
+  },
+
+  verifyCode: {
+    type: Number,
+    required: false, // optional
   },
 
   qualifications: {

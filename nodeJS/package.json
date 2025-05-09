@@ -14,6 +14,7 @@
     "@tensorflow/tfjs-core": "^4.22.0",
     "@types/chai": "^5.0.1",
     "@types/chai-http": "^4.2.4",
+    "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
@@ -56,7 +57,7 @@
     "sinon": "^19.0.2",
     "socket.io": "^4.8.1",
     "supertest": "^7.0.0",
-    "twilio": "^5.5.1",
+    "twilio": "^5.5.2",
     "yup": "^1.6.1"
   },
   "devDependencies": {

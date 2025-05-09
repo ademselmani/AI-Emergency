@@ -206,7 +206,7 @@ const Area = () => {
             display: "flex",
             alignItems: "center",
             padding: "8px 16px",
-            backgroundColor: "#3b82f6",
+            backgroundColor: "#ff3b3f",
             color: "#fff",
             border: "none",
             borderRadius: "4px",

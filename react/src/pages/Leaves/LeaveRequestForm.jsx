@@ -238,7 +238,7 @@ const LeaveRequestForm = ({ onSuccess, onClose }) => {
         <button
           type="submit"
           style={{
-            background: '#2196F3',
+            background: '#ff3b3f',
             color: 'white',
             padding: '12px',
             border: 'none',

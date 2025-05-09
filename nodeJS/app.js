@@ -14,7 +14,11 @@ const faceapi = require("face-api.js");
 const canvas = require("canvas");
 const { Server } = require("socket.io");
 
-// Monkey patch pour face-api.js
+require("dotenv").config();
+require("./src/config/passport");
+const axios = require('axios');
+// Canvas setup pour face-api.js
+
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
@@ -212,10 +216,15 @@ app.use((err, req, res, next) => {
   res.json({ error: err.message });
 });
 
-// Lancement serveur
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Serveur actif sur http://localhost:${PORT}`);
+const chatRoutes = require('../nodeJS/src/routes/leaveRoute');
+app.use('/api', chatRoutes);
+
+
+
+// Démarrage du serveur
+server.listen(3000, () => {
+  console.log("🚀 Serveur en ligne sur http://localhost:3000");
+
 });
 
 module.exports = { app, server, io };
