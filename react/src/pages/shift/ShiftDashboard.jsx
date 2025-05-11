@@ -9,7 +9,8 @@ import {
   PlusIcon, 
   PencilIcon, 
   TrashIcon, 
-  XMarkIcon 
+  XMarkIcon,
+  MinusIcon
 } from '@heroicons/react/24/outline';
 
 export function ShiftDashboard() {
@@ -607,7 +608,7 @@ export function ShiftDashboard() {
           eventClick={handleEventClick}
           themeSystem="standard"
           height="auto"
-          dayHeaderClassNames="bg-white text-[#ff3b3f]  font-semibold py-2"
+          dayHeaderClassNames="bg-white text-[#ff3b3f] font-semibold py-2"
           dayCellClassNames="bg-white text-[#ff3b3f] transition-colors"
           headerToolbar={{
             left: "prev,next today",
@@ -645,10 +646,8 @@ export function ShiftDashboard() {
             </button>
           </div>
 
-
           {validationError && (
             <div className="mb-6 p-4 bg-red-50 rounded-xl flex items-center gap-3 text-red-700">
-              <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium">{validationError}</span>
             </div>
           )}
@@ -690,58 +689,77 @@ export function ShiftDashboard() {
             </div>
           </div>
 
-          {selectedArea && Object.entries(staffingRules[selectedArea] || {}).map(([role, count]) => (
-            <div key={role} className="mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm font-medium text-gray-900">{role}</span>
-                <span className="text-sm text-gray-500">{count} required</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                {[...Array(count)].map((_, index) => {
-                  const allSelectedIds = getAllSelectedEmployeeIds();
-                  const currentValue = selectedEmployees[role]?.[index] || "";
+          {selectedArea && Object.entries(staffingRules[selectedArea] || {}).map(([role, minCount]) => {
+            const inputCount = roleInputCounts[role] || minCount;
+            return (
+              <div key={role} className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm font-medium text-gray-900">{role}</span>
+                  <span className="text-sm text-gray-500">{minCount} minimum required</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {[...Array(inputCount)].map((_, index) => {
+                    const allSelectedIds = getAllSelectedEmployeeIds();
+                    const currentValue = selectedEmployees[role]?.[index] || "";
 
-                  return (
-                    <select
-                      key={index}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      value={currentValue}
-                      onChange={(e) =>
-                        handleEmployeeSelection(role, index, e.target.value)
-                      }
-                    >
-                      <option value="">Select {role}</option>
-                      {activeEmployees
-                        .filter((employee) => employee.role === role)
-                        .map((employee) => {
-                          const isDisabled =
-                            allSelectedIds.includes(employee._id) &&
-                            currentValue !== employee._id;
-                          return (
-                            <option
-                              key={employee._id}
-                              value={employee._id}
-                              disabled={isDisabled}
-                            >
-                              {employee.name}{" "}
-                              {isDisabled ? "(Already selected)" : ""}
-                            </option>
-                          );
-                        })}
-                    </select>
-                  );
-                })}
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        <select
+                          className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                          value={currentValue}
+                          onChange={(e) =>
+                            handleEmployeeSelection(role, index, e.target.value)
+                          }
+                        >
+                          <option value="">Select {role}</option>
+                          {activeEmployees
+                            .filter((employee) => employee.role === role)
+                            .map((employee) => {
+                              const isDisabled =
+                                allSelectedIds.includes(employee._id) &&
+                                currentValue !== employee._id;
+                              return (
+                                <option
+                                  key={employee._id}
+                                  value={employee._id}
+                                  disabled={isDisabled}
+                                >
+                                  {employee.name}{" "}
+                                  {isDisabled ? "(Already selected)" : ""}
+                                </option>
+                              );
+                            })}
+                        </select>
+                        {index >= minCount && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveEmployeeField(role, index, minCount)}
+                            className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+                          >
+                            <MinusIcon className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAddEmployeeField(role, minCount)}
+                  className="mt-3 flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-all"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  Add {role}
+                </button>
               </div>
-            </div>
-          ))}
-
+            );
+          })}
 
           <div className="flex flex-col gap-3 mt-8">
             {!showDeleteButton ? (
               <button
-              onClick={handleAddEvent}
-              className="w-full py-4 px-6 bg-[#ff3b3f] text-white p-4 rounded hover:bg-red-700 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            
+                onClick={handleAddEvent}
+                className="w-full py-4 px-6 bg-[#ff3b3f] text-white p-4 rounded hover:bg-red-700 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 disabled={!selectedArea}
               >
                 <PlusIcon className="w-5 h-5" />
