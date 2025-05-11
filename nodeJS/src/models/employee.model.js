@@ -6,16 +6,7 @@ const bcrypt = require("bcrypt")
 const employeeSchema = mongoose.Schema({
   cin: {
     type: String,
-
-   required: [true, "Le CIN est requis"],
-   unique: [true, "Ce CIN existe déjà"],
-    validate: {
-      validator: function (v) {
-        return /^[0-9]{8}$/.test(v)
-      },
-      message: "Le CIN doit avoir exactement 8 chiffres",
-    },
-  },
+  } ,
   name: {
     type: String,
     required: [true, "Le prénom est requis"],
@@ -99,19 +90,15 @@ const employeeSchema = mongoose.Schema({
     count: { type: Number, default: 0 }, // Shifts worked this week
   },
 
-  verifyCode: {
-    type: Number,
-    required: false, // optional
-  },
 
-  qualifications: {
-    degree: String,
-    institution: String,
-    year: Number,
-    certifications: {
-      certification: String,
-    },
-  },
+  // qualifications: {
+  //   degree: String,
+  //   institution: String,
+  //   year: Number,
+  //   certifications: {
+  //     certification: String,
+  //   },
+  // },
 })
 
 employeeSchema.pre("save", async function (next) {
