@@ -1,181 +1,10 @@
- /* --- Styles principaux --- */
-.patient-list-container {
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
-  }
-  
-  .patient-list-card {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .patient-list-card h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-  }
-  
-  .patient-list-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .patient-list-table th, .patient-list-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .patient-list-table th {
-    background-color: #f4f4f4;
-  }
-  
-  .patient-list-no-data {
-    text-align: center;
-    font-size: 1.2rem;
-    color: #555;
-  }
-  
-  /* --- Boutons de la table --- */
-  .patient-list-table td button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-    margin: 5px;
-  }
-  
-  /* --- Bouton Supprimer (rouge) --- */
-  .patient-list-table td button.delete {
-    background-color: #e74c3c; /* Rouge pour supprimer */
-    color: white;
-  }
-  
-  .patient-list-table td button.delete:hover {
-    background-color: #c0392b; /* Rouge vif au survol */
-  }
-  
-  .patient-list-table td button.delete:active {
-    background-color: #e74c3c; /* Reste rouge vif lors du clic */
-  }
-  
-  /* --- Bouton Modifier (jaune) --- */
-  .patient-list-table td button.edit {
-    background-color: #f39c12; /* Jaune pour modifier */
-    color: white;
-  }
-  
-  .patient-list-table td button.edit:hover {
-    background-color: #e67e22; /* Jaune foncé au survol */
-  }
-  
-  .patient-list-table td button.edit:active {
-    background-color: #f39c12; /* Reste jaune lors du clic */
-  }
-  
-  /* --- Bouton Détails (souligné) --- */
-  .patient-list-table td button.details {
-    background-color: transparent; /* Pas de fond */
-    color: #007bff; /* Bleu pour le texte */
-    border-bottom: 2px solid #007bff; /* Ligne sous le texte */
-    padding: 8px 16px;
-  }
-  
-  .patient-list-table td button.details:hover {
-    color: #0056b3; /* Change de couleur en bleu foncé lors du survol */
-    border-bottom: 2px solid #0056b3; /* Change la couleur de la ligne */
-  }
-  
-  .patient-list-table td button.details:active {
-    color: #004085; /* Bleu très foncé lors du clic */
-    border-bottom: 2px solid #004085; /* Ligne sous le texte en bleu foncé */
-  }
-  
-  /* --- Statut coloré --- */
-  
-  
-  /* Stable - Vert */
-  
-  
-  
-  
-  /* Critique - Rouge */
-  .status-Critical {
-    background-color: rgb(255, 0, 0);
-    color: white;
-  }
-  .status-Serious {
-    background-color: #15ff00;
-    color: white;
-  }
-  /* Par défaut - Gris */
-  .status-default {
-    background-color: #95a5a6;
-    color: white;
-  }
-  .status-Triage {
-    background-color: #95a5a6;
-    color: white;
-  }
-  
-  /* --- Détails du patient --- */
-  .patient-details {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .patient-details h2 {
-    margin-bottom: 20px;
-  }
-  
-  .patient-details p {
-    font-size: 1rem;
-    margin-bottom: 10px;
-    color: #333;
-  }
-  
-  /* --- Styles pour le bouton Ajouter un patient --- */
-  .patient-list-button {
-    background-color: #3498db;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-  
-  .patient-list-button:hover {
-    background-color: #2980b9;
-  }
-  
-  .patient-list-button:active {
-    background-color: #3498db;
-  }
-  .search-bar {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-  }
-  /* --- Status Circle --- */
-.status-circle {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 10px;
-  display: inline-block;
-  animation: blink 1.5s infinite;
-
+:root {
+  --primary: #ff3b3f;
+  --secondary: #264653;
+  --background: #f8f9fa;
+  --text: #212529;
+  --border: #dee2e6;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .patient-management {
@@ -213,18 +42,14 @@
   transition: all 0.3s ease;
 }
 
- /* Recovered - Light Green */
-.status-Serious {
-  background-color: #ff8800;
-  color: rgb(0, 0, 0);
- .search-icon {
+.search-icon {
   position: absolute;
   right: 1rem;
   top: 50%;
   transform: translateY(-50%);
   height: 1.2rem;
   fill: #6c757d;
- }
+}
 
 .primary-button {
   background: var(--primary);
@@ -445,4 +270,4 @@
     align-items: flex-start;
     gap: 0.5rem;
   }
-}}
+}

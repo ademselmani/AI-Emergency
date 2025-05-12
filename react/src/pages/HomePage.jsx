@@ -5,6 +5,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import AmbulancePatient from './Ambulance/AmbulancePatient';
 import logo from "../../public/assets/img/logoPI.png";
 import ChatBot from './ChatBot';
+import { Helmet } from 'react-helmet';
 
 const features = [
   {
@@ -66,12 +67,17 @@ function HomePage() {
   };
 
   return (
+
+    <>
+      <Helmet>
+        <title>RescueOn - Smart Emergency Response</title>
+      </Helmet>
     <div className="app-container">
       <nav className="glass-navbar">
         <div className="nav-content">
           <div className="brand-wrapper" onClick={() => scrollToSection(homeRef)}>
             <img src={logo} alt="RescueOn" className="logo" />
-            <span className="app-name">RescueOn</span>
+            <span className="app-name"></span>
           </div>
 
           <div className="nav-links">
@@ -90,7 +96,7 @@ function HomePage() {
                 {item.name}
               </button>
             ))}
-            <a href="/login" className="login-button">
+            <a href="/login">
               Login <FiArrowUpRight />
             </a>
           </div>
@@ -217,6 +223,7 @@ function HomePage() {
               <a href="#about" onClick={() => scrollToSection(aboutRef)}>About</a>
               <a href="#ambulance" onClick={() => scrollToSection(ambulanceRef)}>Ambulance</a>
               <a href="/login">Login</a>
+
             </nav>
           </div>
 
@@ -314,24 +321,11 @@ function HomePage() {
         }
 
         .nav-link:hover {
-          color: var(--primary);
+          color: black;
         }
 
-        .login-button {
-          background: var(--primary);
-          color: white;
-          padding: 0.8rem 1.5rem;
-          border-radius: 50px;
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition: transform 0.3s ease;
-        }
+      
 
-        .login-button:hover {
-          transform: translateY(-2px);
-        }
 
         .hero-section {
           margin-top: 80px;
@@ -584,7 +578,7 @@ function HomePage() {
         }
 
         .slider-arrow:hover {
-          background: var(--primary);
+          background: black;
           transform: translateY(-50%) scale(1.1);
         }
 
@@ -600,7 +594,7 @@ function HomePage() {
           bottom: 2rem;
           right: 2rem;
           background: var(--primary);
-          color: white;
+          color: black;
           border: none;
           border-radius: 50%;
           width: 60px;
@@ -631,7 +625,7 @@ function HomePage() {
 
         .chat-header {
           background: var(--primary);
-          color: white;
+          color: black;
           padding: 1.2rem;
           display: flex;
           justify-content: space-between;
@@ -827,6 +821,7 @@ function HomePage() {
         }
       `}</style>
     </div>
+    </>
   );
 }
 
