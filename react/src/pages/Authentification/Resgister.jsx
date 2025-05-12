@@ -250,7 +250,8 @@ const Register = () => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Gender</option>
+                  <option value="">Select 
+                  </option>
                   <option value="Man">Male</option>
                   <option value="Woman">Female</option>
                 </select>
@@ -765,4 +766,5 @@ const Register = () => {
     </div>
   );
 }
-export default Register;
+ export default Register;
+ 

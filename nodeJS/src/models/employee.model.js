@@ -6,7 +6,16 @@ const bcrypt = require("bcrypt")
 const employeeSchema = mongoose.Schema({
   cin: {
     type: String,
-  } ,
+
+    //required: [true, "Le CIN est requis"],
+    unique: [true, "Ce CIN existe déjà"],
+    validate: {
+      validator: function (v) {
+        return /^[0-9]{8}$/.test(v)
+      },
+      message: "Le CIN doit avoir exactement 8 chiffres",
+    },
+  },
   name: {
     type: String,
     required: [true, "Le prénom est requis"],
@@ -24,7 +33,7 @@ const employeeSchema = mongoose.Schema({
   birthday: Date,
   gender: {
     type: String,
-    required: [true, "Le genre est requis"],
+    //required: [true, "Le genre est requis"],
     enum: {
       values: ["Man", "Woman"],
       message: "Le genre doit être 'Man' ou 'Woman'",
