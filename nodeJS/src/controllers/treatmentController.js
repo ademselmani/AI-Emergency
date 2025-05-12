@@ -289,6 +289,30 @@ exports.getSuccessRateByDoctor = async (req, res) => {
 
 
 
+///////////////////////////
+exports.getAllTreatmentsInDateRange = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate et endDate sont requis' });
+    }
+
+    const treatments = await Treatment.find({
+      startDate: { $gte: new Date(startDate) },
+      endDate: { $lte: new Date(endDate) }
+      
+    })
+      .populate('patient')
+      .populate('treatedBy', 'name familyName') // Ajuste selon ton schéma User
+      .populate('equipment');
+
+    res.status(200).json(treatments);
+  } catch (error) {
+    console.error('Erreur dans getAllTreatmentsInDateRange:', error);
+    res.status(500).json({ error: 'Erreur serveur', message: error.message });
+  }
+};
 
 
 

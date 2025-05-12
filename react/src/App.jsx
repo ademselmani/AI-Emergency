@@ -57,6 +57,7 @@ import AmbulancePatient from "./pages/Ambulance/AmbulancePatient.jsx";
 import AmbulanceReceptionniste  from "./pages/Ambulance/AmbulanceReceptionniste.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ChatBot from "./pages/ChatBot.jsx";
+import Supervision from "./pages/supervision.jsx";
 
 
 
@@ -202,7 +203,12 @@ element={
             </Layout>
 
           } />
+<Route path="/super-vision" element={
+            <Layout>
+              <Supervision />
+            </Layout>
 
+          } />
   
 
           <Route path="/leaverequest" element={<Layout><LeaveRequestForm /></Layout>} />

@@ -810,12 +810,12 @@ const ShowPatientTreatments = () => {
 
             {/* Stats Badges */}
             <div className="d-flex gap-3 mb-4">
-              <Badge pill bg="salmon" className="stat-badge">
+              <p pill bg="salmon" className="bg-danger br text-white p-3">
                 Active Treatments: {activeTreatments}
-              </Badge>
-              <Badge pill bg="salmon-light" className="stat-badge">
+              </p>
+              <p pill  className="bg-success text-white br  p-3 ">
                 Completed Treatments: {completedTreatments}
-              </Badge>
+              </p>
             </div>
 
             {/* Add Treatment Button */}
@@ -844,10 +844,10 @@ const ShowPatientTreatments = () => {
                             {treatment.category}
                           </Card.Title>
                           
-                          <div className="treatment-status ">
-                            <Badge pill bg={treatment.status ? "salmon" : "salmon-light"}>
+                          <div className=" salmon-light ">
+                            <p pill bg={treatment.status ? "salmon" : "salmon-light"}>
                               {treatment.status ? 'Active' : 'Completed'}
-                            </Badge>
+                            </p>
                           </div>
                           
                           <div className="treatment-details">
@@ -1231,7 +1231,10 @@ const ShowPatientTreatments = () => {
           border-color: var(--salmon-light);
           color: white;
         }
+        .br{
+        border-radius: 15px;
         
+        }
         .btn-salmon-light:hover {
           background-color: var(--salmon);
           border-color: var(--salmon);

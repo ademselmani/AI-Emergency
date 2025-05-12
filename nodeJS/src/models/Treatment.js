@@ -8,7 +8,7 @@ const treatmentSchema = new mongoose.Schema({
   endDate: { type: Date },
   patient: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true }, 
 
-   treatedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }], 
+   treatedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'employees', required: true }], 
   equipment: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Equipment' }], 
 });
 

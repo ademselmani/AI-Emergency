@@ -11,7 +11,11 @@ const Treatments = () => {
   const [sortCriteria, setSortCriteria] = useState('urgency');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const getTriageLevel = (patient) =>
+    Array.isArray(patient.medicalRecords) && patient.medicalRecords.length > 0
+      ? patient.medicalRecords[0].triageLevel
+      : Infinity;
+  
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -36,14 +40,14 @@ const Treatments = () => {
     let sorted = [...patientsData];
     switch (criteria) {
       case 'urgency':
-        sorted.sort((a, b) => (a.medicalRecords[0]?.triageLevel || 0) - (b.medicalRecords[0]?.triageLevel || 0));
+        sorted.sort((a, b) => getTriageLevel(a) - getTriageLevel(b));
         break;
       case 'date':
         sorted.sort((a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0));
         break;
       case 'both':
         sorted.sort((a, b) => {
-          const triageDiff = (a.medicalRecords[0]?.triageLevel || 0) - (b.medicalRecords[0]?.triageLevel || 0);
+          const triageDiff = getTriageLevel(a) - getTriageLevel(b);
           if (triageDiff !== 0) return triageDiff;
           return new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0);
         });
@@ -53,6 +57,7 @@ const Treatments = () => {
     }
     setPatients(sorted);
   };
+  
 
   const handleFilterChange = (criteria) => {
     setSortCriteria(criteria);

@@ -13,5 +13,6 @@ router.put('/:id', treatmentController.updateTreatment);
  router.get("/success-rate-by-doctor/:patientId", treatmentController.getSuccessRateByDoctor);
 
  router.get("/category-stats/:patientId", treatmentController.getTreatmentByCategoryStats);
+ router.get("/all/stats", treatmentController.getAllTreatmentsInDateRange);
 
 module.exports = router;

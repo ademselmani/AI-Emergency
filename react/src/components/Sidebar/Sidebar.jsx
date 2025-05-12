@@ -23,6 +23,7 @@ const Sidebar = () => {
         icon: "fas fa-calendar-check", 
         label: "Leaves",
         
+        
       },
       { 
         to: "/ambulance", 
@@ -31,6 +32,8 @@ const Sidebar = () => {
         notifications: ambulanceNotifications
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+
 
     ],
     triage_nurse: [
@@ -42,6 +45,8 @@ const Sidebar = () => {
         
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+
 
     ],
     nurse: [
@@ -53,6 +58,8 @@ const Sidebar = () => {
         
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
+      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+
 
     ],
     doctor: [
@@ -66,6 +73,8 @@ const Sidebar = () => {
         label: "Leaves",
         
       },
+      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+
     ],
     admin: [
       { to: "/dashboard", icon: "bx bx-home-circle", label: "Dashboard" },
@@ -82,6 +91,8 @@ const Sidebar = () => {
         label: "Leaves",
         notifications: leaveNotifications
       },
+      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+
 
     ],
   }), [leaveNotifications, ambulanceNotifications]);
