@@ -49,6 +49,7 @@ const ListePatientTriage = () => {
 
   const getStatusClass = (status) => {
     switch (status) {
+
       case 'Critical': return { backgroundColor: '#fee2e2', color: '#b91c1c' };
       case 'Stable': return { backgroundColor: '#dcfce7', color: '#166534' };
       case 'Triage': return { backgroundColor: '#fef9c3', color: '#854d0e' };

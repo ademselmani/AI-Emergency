@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { FiSearch, FiMessageSquare, FiSend, FiUser, FiChevronLeft } from 'react-icons/fi';
+import "./messenger.module.css"
+ import { FiSearch, FiMessageSquare, FiSend, FiUser, FiChevronLeft } from 'react-icons/fi';
 import { IoMdNotifications } from 'react-icons/io';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const socket = io('http://localhost:3000');
+
+ const socket = io('http://localhost:3000');
 
 const Messenger = () => {
   const [userId, setUserId] = useState(null);

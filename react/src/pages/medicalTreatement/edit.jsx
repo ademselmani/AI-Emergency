@@ -188,15 +188,14 @@ const EditMedicalTreatment = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="edit-treatment-container">
       <ToastContainer />
-      <h1 className="text-center mb-4 card p-3">Update medical monitoring</h1>
-      <form onSubmit={handleSubmit} noValidate className="border p-4 rounded shadow-sm bg-light">
+      <h1 className="edit-treatment-title">Update medical monitoring</h1>
+      <form onSubmit={handleSubmit} noValidate className="edit-treatment-form">
         {/* Category */}
-        <div className="mb-3">
-          <label htmlFor="category" className="form-label">Category</label>
+        <div className="form-group">
+          <label htmlFor="category">Category</label>
           <select
-            className="form-select"
             id="category"
             name="category"
             value={treatment.category}
@@ -216,11 +215,10 @@ const EditMedicalTreatment = () => {
 
         {/* Custom Category */}
         {useCustomCategory && (
-          <div className="mb-3">
-            <label htmlFor="customCategory" className="form-label">New Category</label>
+          <div className="form-group">
+            <label htmlFor="customCategory">New Category</label>
             <input
               type="text"
-              className="form-control"
               id="customCategory"
               name="customCategory"
               value={treatment.customCategory}
@@ -231,10 +229,9 @@ const EditMedicalTreatment = () => {
         )}
 
         {/* Details */}
-        <div className="mb-3">
-          <label htmlFor="details" className="form-label">Treatment Details</label>
+        <div className="form-group">
+          <label htmlFor="details">Treatment Details</label>
           <textarea
-            className="form-control"
             id="details"
             name="details"
             rows="3"
@@ -245,11 +242,10 @@ const EditMedicalTreatment = () => {
         </div>
 
         {/* Start Date */}
-        <div className="mb-3">
-          <label htmlFor="startDate" className="form-label">Start Date</label>
+        <div className="form-group">
+          <label htmlFor="startDate">Start Date</label>
           <input
             type="date"
-            className="form-control"
             id="startDate"
             name="startDate"
             value={treatment.startDate}
@@ -259,11 +255,10 @@ const EditMedicalTreatment = () => {
         </div>
 
         {/* End Date */}
-        <div className="mb-3">
-          <label htmlFor="endDate" className="form-label">End Date (optional)</label>
+        <div className="form-group">
+          <label htmlFor="endDate">End Date (optional)</label>
           <input
             type="date"
-            className="form-control"
             id="endDate"
             name="endDate"
             value={treatment.endDate}
@@ -272,8 +267,8 @@ const EditMedicalTreatment = () => {
         </div>
 
         {/* Doctors */}
-        <div className="mb-3">
-          <label className="form-label">Treating Doctors</label>
+        <div className="form-group">
+          <label>Treating Doctors</label>
           <Select
             isMulti
             options={doctors}
@@ -283,12 +278,14 @@ const EditMedicalTreatment = () => {
             placeholder="Select doctors..."
             isSearchable
             required
+            className="select-input"
+            classNamePrefix="select"
           />
         </div>
 
         {/* Equipment */}
-        <div className="mb-3">
-          <label className="form-label">Equipment</label>
+        <div className="form-group">
+          <label>Equipment</label>
           <Select
             isMulti
             options={equipmentList}
@@ -297,16 +294,150 @@ const EditMedicalTreatment = () => {
             value={equipmentList.filter((eq) => treatment.equipment.includes(eq.value))}
             placeholder="Select equipment..."
             isSearchable
+            className="select-input"
+            classNamePrefix="select"
           />
         </div>
 
         {/* Submit Button */}
-        <div className="d-grid">
-          <button type="submit" className="btn btn-primary">
+        <div className="form-submit">
+          <button type="submit">
             Update Treatment
           </button>
         </div>
       </form>
+
+      <style jsx>{`
+        .edit-treatment-container {
+          padding: 2rem;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .edit-treatment-title {
+          color: #5c2c22;
+          text-align: center;
+          margin-bottom: 2rem;
+          font-weight: 600;
+          padding: 1rem;
+          background: #fff9f7;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(255, 140, 105, 0.1);
+          border: 1px solid #ffe5dd;
+        }
+
+        .edit-treatment-form {
+          background:rgb(255, 255, 255);
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 4px 20px rgba(255, 140, 105, 0.1);
+          border: 1px solid #ffe5dd;
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 0.5rem;
+          color: #5c2c22;
+          font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 8px;
+          border: 1px solid #ffb8a6;
+          background:rgb(255, 255, 255);
+          color: #5c2c22;
+          transition: all 0.2s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #FF8C69;
+          box-shadow: 0 0 0 2px rgba(255, 140, 105, 0.2);
+        }
+
+        .form-group textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        .form-submit {
+          margin-top: 2rem;
+        }
+
+        .form-submit button {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 8px;
+          border: none;
+          background: #FF8C69;
+          color: white;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .form-submit button:hover {
+          background: #e67d5b;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(255, 140, 105, 0.3);
+        }
+
+        /* Custom styles for react-select */
+        :global(.select__control) {
+          border-radius: 8px !important;
+          border: 1px solid #ffb8a6 !important;
+          min-height: 44px !important;
+          box-shadow: none !important;
+          background: #fff0eb !important;
+        }
+
+        :global(.select__control--is-focused) {
+          border-color: #FF8C69 !important;
+          box-shadow: 0 0 0 1px #FF8C69 !important;
+        }
+
+        :global(.select__option--is-focused) {
+          background-color: #fff0eb !important;
+        }
+
+        :global(.select__option--is-selected) {
+          background-color: #FF8C69 !important;
+        }
+
+        :global(.select__multi-value) {
+          background-color: #ffe5dd !important;
+          border-radius: 6px !important;
+        }
+
+        :global(.select__multi-value__label) {
+          color: #5c2c22 !important;
+        }
+
+        :global(.select__multi-value__remove:hover) {
+          background-color: #ffb8a6 !important;
+          color: #5c2c22 !important;
+        }
+
+        @media (max-width: 768px) {
+          .edit-treatment-container {
+            padding: 1rem;
+          }
+          
+          .edit-treatment-form {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
     </div>
   );
 };

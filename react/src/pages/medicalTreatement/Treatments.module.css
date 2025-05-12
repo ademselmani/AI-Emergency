@@ -1,0 +1,95 @@
+/* Treatments.module.css */
+.container {
+    padding: 2rem 0;
+  }
+  
+  .card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .title {
+    color: #495057;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 500;
+  }
+  
+  .subtitle {
+    color: #6c757d;
+    margin-bottom: 1rem;
+  }
+  
+  .btnGroup {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .btn {
+    transition: all 0.2s ease;
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn:hover {
+    background-color: #dee2e6 !important;
+    transform: translateY(-1px);
+  }
+  
+  .btnActive {
+    background-color: #e9ecef;
+    font-weight: 500;
+  }
+  
+  .patientCard {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .patientList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .patientListItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+  }
+  
+  .patientListItem:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .badge {
+    background-color: #e9ecef;
+    color: #6c757d;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+  
+  .actionButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
