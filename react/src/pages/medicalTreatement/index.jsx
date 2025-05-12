@@ -38,12 +38,19 @@ const Treatments = () => {
 
   const sortPatients = (criteria, patientsData) => {
     let sorted = [...patientsData];
+    const getTriageLevel = (patient) =>
+      Array.isArray(patient.medicalRecords) && patient.medicalRecords.length > 0
+        ? patient.medicalRecords[0].triageLevel || 0
+        : 0;
+  
     switch (criteria) {
       case 'urgency':
         sorted.sort((a, b) => getTriageLevel(a) - getTriageLevel(b));
         break;
       case 'date':
-        sorted.sort((a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0));
+        sorted.sort(
+          (a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0)
+        );
         break;
       case 'both':
         sorted.sort((a, b) => {

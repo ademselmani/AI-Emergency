@@ -212,7 +212,7 @@ const AmbulancePatient = () => {
           align-items: center;
           gap: 1rem;
           margin-bottom: 2rem;
-          color: #ff3b3f;
+          color: black;
         }
 
         .header-icon {
@@ -244,7 +244,7 @@ const AmbulancePatient = () => {
         }
 
         .input-icon {
-          color: #ff3b3f;
+          color: black;
         }
 
         .instruction {
@@ -292,7 +292,7 @@ const AmbulancePatient = () => {
         .submit-button {
           width: 100%;
           padding: 1rem;
-          background: #ff3b3f;
+          background: black;
           color: white;
           border: none;
           border-radius: 8px;
