@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Features:</strong> Live triage tracking · AI-based ambulance dispatch · Decision support tools
+  <strong>Features:</strong> Live triage tracking · Decision support tools
 </p>
 
 ---
@@ -24,7 +24,6 @@
 
 - 🏥 Real-time resource and patient management
 - 👩‍⚕️ Employees management
-- 📊 AI-powered ambulance dispatch prediction
 - 🧠 Smart triage decision support
 
 ---
