@@ -96,9 +96,9 @@ function HomePage() {
                 {item.name}
               </button>
             ))}
-            <a href="/login">
-              Login <FiArrowUpRight />
-            </a>
+            <a href="/login" style={{ color: '#000000' }}>
+  Login <FiArrowUpRight />
+</a>
           </div>
         </div>
       </nav>
@@ -172,7 +172,7 @@ function HomePage() {
                   whileHover={{ scale: 1.05 }}
                 >
                   <div className="card-icon">{card.icon}</div>
-                  <h3>{card.title}</h3>
+                 <h3 style={{ color: '#000000' }}>{card.title}</h3>
                   <p>{card.text}</p>
                 </motion.div>
               ))}
@@ -191,7 +191,7 @@ function HomePage() {
                   whileHover={{ y: -10 }}
                 >
                   <div className="feature-icon">{feature.icon}</div>
-                  <h3>{feature.title}</h3>
+                  <h3 style={{ color: '#000000' }}>{feature.title}</h3>
                   <p>{feature.description}</p>
                 </motion.div>
               ))}
@@ -222,7 +222,8 @@ function HomePage() {
               <a href="#home" onClick={() => scrollToSection(homeRef)}>Home</a>
               <a href="#about" onClick={() => scrollToSection(aboutRef)}>About</a>
               <a href="#ambulance" onClick={() => scrollToSection(ambulanceRef)}>Ambulance</a>
-              <a href="/login">Login</a>
+              <a href="/login" style={{ color: '#000000' }}>Login</a>
+
 
             </nav>
           </div>
@@ -255,7 +256,8 @@ function HomePage() {
           --primary: #ff3b3f;
           --secondary: #2d2d2d;
           --accent: #007bff;
-          --text: #333;
+             --text: #000000;      // Texte principal en noir
+
           --light: #f8f9fa;
         }
 
@@ -401,11 +403,12 @@ function HomePage() {
           font-size: 2.5rem;
           text-align: center;
           margin-bottom: 3rem;
-          color: var(--secondary);
+          color: #000000;
         }
 
         .mission-grid {
           display: grid;
+          color:black;
           grid-template-columns: repeat(3, 1fr);
           gap: 2rem;
           margin-top: 2rem;
@@ -413,6 +416,7 @@ function HomePage() {
 
         .mission-card {
           background: white;
+          color:black;
           border-radius: 20px;
           padding: 2rem;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -430,6 +434,7 @@ function HomePage() {
           grid-template-columns: repeat(4, 1fr);
           gap: 2rem;
           margin-top: 2rem;
+          color: #000000;
         }
 
         .feature-card {
@@ -437,8 +442,8 @@ function HomePage() {
           border-radius: 20px;
           padding: 2rem;
           text-align: center;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
+          color: #000000;
+         
         }
 
         .feature-icon {
@@ -455,6 +460,7 @@ function HomePage() {
         .main-content {
           flex: 1;
           padding-bottom: 2rem;
+          color: #000000;
         }
 
         .footer-content {
@@ -503,6 +509,7 @@ function HomePage() {
           display: flex;
           flex-direction: column;
           gap: 1rem;
+          
         }
 
         .footer-links a {

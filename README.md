@@ -1,7 +1,10 @@
 <h1 align="center">🚑 RescueOn - Intelligent Emergency </h1>
 
 <p align="center">
-  <em>RescueOn is a web application that improves emergency department efficiency by enabling real-time coordination between medical staff, ambulance teams, and administrators.</em>
+  <em><em>
+  RescueOn is a web application designed to enhance the efficiency of emergency departments by enabling real-time coordination between medical staff, ambulance teams, and administrators. It features real-time patient triage tracking, allowing for better visibility and prioritization of critical cases.
+</em>
+ .</em>
 </p>
 
 <p align="center">
@@ -64,12 +67,31 @@ Before running the project, ensure you have the following installed:
 
 Follow these steps to set up and run the project locally:
 
-### 🔁 Installation
-
 ```bash
 # 1. Clone the repository
 git clone https://github.com/MedEzzedineBenZbiba/PI_JS.git
 ```
 
+```bash
+# 2.Installing dependencies
+npm install
+```
 
+### 🔁 Running the application
 
+```bash
+# 1. 🔧 Backend (Node.js)
+cd nodeJS
+npm start
+```
+
+```bash
+# 2. 💻 Frontend (React)
+cd react
+npm run dev
+```
+
+```bash
+# 3. 🧠 AI Service (Python)
+python app.py 
+```
