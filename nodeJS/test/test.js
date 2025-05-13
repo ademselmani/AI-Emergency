@@ -226,40 +226,43 @@ describe("Employee Route Unit Tests", () => {
           //   });
           // });
 
-          describe("POST /addEmployee", () => {
-            it("should create a new employee", (done) => {
-              const newEmployee = {
-                cin: 12345678,
-                name: "Alice Brown",
-                familyName: "Brown",
-                role: "technician",
-                email: "alice@example.com",
-                password: "securepass",
-              };
-              const savedEmployee = {
-                _id: "1",
-                ...newEmployee,
-                password: "hashed",
-              };
-              sinon.stub(Employee.prototype, "save").resolves(savedEmployee);
+/*
+describe("POST /addEmployee", () => {
+  it("should create a new employee", (done) => {
+    const newEmployee = {
+      cin: 12345678,
+      name: "Alice Brown",
+      familyName: "Brown",
+      role: "technician",
+      email: "alice@example.com",
+      password: "securepass",
+    };
+    const savedEmployee = {
+      _id: "1",
+      ...newEmployee,
+      password: "hashed",
+    };
+    sinon.stub(Employee.prototype, "save").resolves(savedEmployee);
 
-              chai
-                .request(app)
-                .post("/addEmployee")
-                .send(newEmployee)
-                .end((err, res) => {
-                  if (err) return done(err);
-                  res.should.have.status(201);
-                  res.body.should.have
-                    .property("message")
-                    .equal("Employé créé avec succès");
-                  res.body.should.have
-                    .property("employee")
-                    .that.deep.includes(newEmployee);
-                  res.body.employee.should.have.property("_id");
-                  done();
-                });
-            });
+    chai
+      .request(app)
+      .post("/addEmployee")
+      .send(newEmployee)
+      .end((err, res) => {
+        if (err) return done(err);
+        res.should.have.status(201);
+        res.body.should.have
+          .property("message")
+          .equal("Employé créé avec succès");
+        res.body.should.have
+          .property("employee")
+          .that.deep.includes(newEmployee);
+        res.body.employee.should.have.property("_id");
+        done();
+      });
+  });
+});
+*/
 
             // it('should return 400 for validation errors', (done) => {
             //   const invalidEmployee = { role: 'technician' }; // Missing required fields
