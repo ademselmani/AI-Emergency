@@ -19,7 +19,7 @@ before(async () => {
 
   if (!server.listening) {
     await new Promise((resolve) => {
-      server.listen(3000, () => {
+      server.listen(5001, () => {
         console.log("🚀 Serveur lancé pour les tests !");
         resolve();
       });
