@@ -157,7 +157,7 @@ const ShowPatientTreatments = () => {
     setSortCriteria('');
     setCurrentPage(1);
   };
-  const [language, setLanguage] = useState('en'); // 🆕 Add language state
+  const [language, setLanguage] = useState('en'); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,7 +167,7 @@ const ShowPatientTreatments = () => {
           axios.get('http://localhost:3000/equipments'),
           patientId
             ? axios.get(`http://localhost:3000/api/treatments/patient/${patientId}`, {
-                params: { language }, // 🆕 Pass language param
+                params: { language }, 
               })
             : Promise.resolve({ data: [] })
         ]);

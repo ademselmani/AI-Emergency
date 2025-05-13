@@ -314,6 +314,56 @@ exports.getAllTreatmentsInDateRange = async (req, res) => {
   }
 };
 
+/////////////////////////////////////////////////////////////
+const { PythonShell } = require('python-shell');
+const path = require('path'); // Make sure to require path module
 
+// PythonShell options
+let options = {
+  pythonPath: 'C:/Users/Administrator/AppData/Local/Programs/Python/Python313/python.exe', // Update your Python path here
+  scriptPath: 'src/models', // Path to where your Python script is located
+};
 
-;
+PythonShell.run('detect_anomalies.py', options, function (err, results) {
+  if (err) throw err;
+  console.log('results:', results);
+});
+
+// Express controller for handling anomaly detection request
+const { spawn } = require('child_process');
+ 
+exports.detectAnomalies = async (req, res) => {
+  try {
+    const pythonProcess = spawn('python', [
+      path.join(__dirname, '../models/detect_anomalies.py')
+    ]);
+
+    let data = '';
+    pythonProcess.stdout.on('data', (chunk) => {
+      data += chunk.toString();
+    });
+
+    pythonProcess.stderr.on('data', (err) => {
+      console.error('Python stderr:', err.toString());
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        return res.status(500).json({ error: 'Python script failed' });
+      }
+
+      try {
+        // Nettoyer les sauts de ligne ou autres caractères inutiles
+        const cleanData = data.trim();
+
+        const result = JSON.parse(cleanData);
+        res.status(200).json(result);
+      } catch (e) {
+        console.error('Failed to parse Python output:', data);
+        res.status(500).json({ error: 'Failed to parse Python output' });
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

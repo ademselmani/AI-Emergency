@@ -1,32 +1,395 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Lundi', valeur: 30 },
-  { name: 'Mardi', valeur: 50 },
-  { name: 'Mercredi', valeur: 40 },
-  { name: 'Jeudi', valeur: 70 },
-  { name: 'Vendredi', valeur: 60 },
-];
+const SupervisionAnomalies = () => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [patientId, setpatientId] = useState(null);
 
-const Supervision = () => {
+  useEffect(() => {
+    const fetchAnomalies = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/treatments/anomalies');
+        if (!response.ok) throw new Error('Erreur de réseau');
+        const data = await response.json();
+        
+        const formattedData = data.map(item => ({
+          id: item._id, 
+          category: item.category,
+          patientId: item.patient,
+          date: new Date(item.startDate).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }),
+          duration: item.duration_days,
+          isAnomaly: item.anomaly === -1,
+          rawDate: new Date(item.startDate)
+        }));
+        
+        formattedData.sort((a, b) => a.rawDate - b.rawDate);
+        setChartData(formattedData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnomalies();
+  }, []);
+
+
+  if (loading) return (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <style jsx>{`
+        .loading-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 50vh;
+        }
+        .loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid rgba(229, 107, 107, 0.2);
+          border-radius: 50%;
+          border-top-color: #e56b6b;
+          animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+
+  if (error) return (
+    <div className="error-container">
+      <p>{error}</p>
+      <style jsx>{`
+        .error-container {
+          padding: 1.5rem;
+          text-align: center;
+          color: #b53d3d;
+          background-color: #fff0f0;
+          border-radius: 0.5rem;
+          border-left: 4px solid #e56b6b;
+          margin: 2rem;
+        }
+      `}</style>
+    </div>
+  );
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Page de Supervision</h1>
-      <p className="mb-6">
-        Voici la courbe de supervision de la semaine. Elle vous permet de visualiser les données de manière efficace.
-      </p>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid stroke="#ccc" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Line type="monotone" dataKey="valeur" stroke="#8884d8" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <h1>Vigilance Médicale</h1>
+        <p>Tableau de bord de gestion des anomalies de traitement</p>
+      </header>
+
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <h3>Anomalies détectées</h3>
+          <p>{chartData.filter(item => item.isAnomaly).length}</p>
+        </div>
+        <div className="metric-card">
+          <h3>Durée moyenne</h3>
+          <p>{chartData.length > 0 ? Math.round(chartData.reduce((a,b) => a + b.duration, 0) / chartData.length) : 0} jours</p>
+        </div>
+        <div className="metric-card">
+          <h3>Dernière détection</h3>
+          <p>{chartData.length > 0 ? chartData[chartData.length - 1].date : '--/--/----'}</p>
+        </div>
+      </div>
+
+      <div className="chart-container">
+        <div className="chart-header">
+          <h2>Évolution des anomalies</h2>
+          <div className="chart-legend">
+            <span className="legend-dot"></span>
+            <span>Durée anormale</span>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#fbd5d5" />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fill: '#9b6a6c' }}
+              axisLine={{ stroke: '#e5a5a5' }}
+            />
+            <YAxis 
+              tick={{ fill: '#9b6a6c' }}
+              axisLine={{ stroke: '#e5a5a5' }}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: '#fff7f7',
+                borderColor: '#f5b8b8',
+                borderRadius: '8px'
+              }}
+              formatter={(value) => [`${value} jours`, 'Durée']}
+              labelFormatter={(date) => `Date: ${date}`}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="duration" 
+              stroke="#e56b6b"
+              strokeWidth={3}
+              dot={{ r: 5, fill: '#e56b6b', strokeWidth: 2 }}
+              activeDot={{ r: 8, fill: '#d14f4f' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="anomalies-table">
+        <div className="table-header">
+          <h2>Détail des anomalies</h2>
+        </div>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Catégorie</th>
+                <th>Date</th>
+                <th>Durée</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {chartData.filter(item => item.isAnomaly).map((item) => (
+                <tr key={item.id}>
+                  <td>#{item.id.slice(-6)}</td>
+                  <td>
+                    <span className={`category-badge ${
+                      item.category === 'TRAUMA' ? 'trauma' : 'psychiatric'
+                    }`}>
+                      {item.category}
+                    </span>
+                  </td>
+                  <td>{item.date}</td>
+                  <td>
+                    <span className="duration-value">
+                      {item.duration} <span className="duration-unit">jours</span>
+                    </span>
+                  </td>
+                  <td>
+                  <td>
+                  <td>
+                  <td>
+  <NavLink 
+    to={`/medical-treatments/patient/show/${item.patientId}`}
+    state={{ 
+      patientId: item.patientId,
+      patient: { _id: item.patientId } 
+    }}
+    className="view-link"
+  > 
+    <i className="fa-solid fa-eye"></i>
+  </NavLink>
+</td>
+</td>
+                  </td>
+
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .dashboard-container {
+          min-height: 100vh;
+          background-color: #fff9f9;
+          padding: 2rem;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-header {
+          margin-bottom: 2rem;
+        }
+        
+        .dashboard-header h1 {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #7a4a4c;
+          margin-bottom: 0.5rem;
+        }
+        
+        .dashboard-header p {
+          color: #9b6a6c;
+          font-size: 1rem;
+        }
+        
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(1, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        
+        @media (min-width: 1024px) {
+          .metrics-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        
+        .metric-card {
+          background: white;
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          border-left: 4px solid #e56b6b;
+        }
+        
+        .metric-card h3 {
+          color: #9b6a6c;
+          font-size: 0.875rem;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+        }
+        
+        .metric-card p {
+          color: #7a4a4c;
+          font-size: 1.875rem;
+          font-weight: 700;
+        }
+        
+        .chart-container {
+          background: white;
+          border-radius: 0.75rem;
+          padding: 1.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          margin-bottom: 2rem;
+        }
+        
+        .chart-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+        
+        .chart-header h2 {
+          color: #7a4a4c;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+        
+        .chart-legend {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .legend-dot {
+          width: 0.75rem;
+          height: 0.75rem;
+          border-radius: 50%;
+          background-color: #e56b6b;
+        }
+        
+        .anomalies-table {
+          background: white;
+          border-radius: 0.75rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        
+        .table-header {
+          padding: 1.5rem 1.5rem 0;
+        }
+        
+        .table-header h2 {
+          color: #7a4a4c;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+        
+        .table-container {
+          overflow-x: auto;
+          padding: 0 1.5rem 1.5rem;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+        
+        thead {
+          background-color: #fff0f0;
+        }
+        
+        th {
+          padding: 0.75rem 1.5rem;
+          text-align: left;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #9b6a6c;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        tbody tr {
+          transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+          background-color: #fff0f0;
+        }
+        
+        td {
+          padding: 1rem 1.5rem;
+          font-size: 0.875rem;
+          color: #5c2e30;
+          border-bottom: 1px solid #fbd5d5;
+        }
+        
+        .category-badge {
+          display: inline-block;
+          padding: 0.25rem 0.5rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+        
+        .trauma {
+          background-color: #fbd5d5;
+          color: #7a4a4c;
+        }
+        
+        .psychiatric {
+          background-color: #e9d5ff;
+          color: #6b46c1;
+        }
+        
+        .duration-value {
+          font-weight: 600;
+          color: #7a4a4c;
+        }
+        
+        .duration-unit {
+          font-size: 0.75rem;
+          color: #9b6a6c;
+          margin-left: 0.25rem;
+        }
+          .ccc {
+          font-size: 1.5rem;
+          color: #9b6a6c;
+          margin-left: 0.25rem;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default Supervision;
+export default SupervisionAnomalies;

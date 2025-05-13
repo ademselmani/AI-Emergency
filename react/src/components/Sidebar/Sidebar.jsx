@@ -32,7 +32,7 @@ const Sidebar = () => {
         notifications: ambulanceNotifications
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
-      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+{ to: "/super-vision", icon: "bx bx-pulse", label: "Critical Case Monitoring" },
 
 
     ],
@@ -45,7 +45,7 @@ const Sidebar = () => {
         
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
-      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+{ to: "/super-vision", icon: "bx bx-pulse", label: "Critical Case Monitoring" },
 
 
     ],
@@ -58,7 +58,7 @@ const Sidebar = () => {
         
       },
       { to: "/messenger", icon: "bx bx-message", label: "Messenger" },
-      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+{ to: "/super-vision", icon: "bx bx-pulse", label: "Critical Case Monitoring" },
 
 
     ],
@@ -73,7 +73,7 @@ const Sidebar = () => {
         label: "Leaves",
         
       },
-      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+{ to: "/super-vision", icon: "bx bx-pulse", label: "Critical Case Monitoring" },
 
     ],
     admin: [
@@ -91,7 +91,7 @@ const Sidebar = () => {
         label: "Leaves",
         notifications: leaveNotifications
       },
-      { to: "/super-vision", icon: "bx bx-stats", label: "Super-vision" },
+{ to: "/super-vision", icon: "bx bx-pulse", label: "Critical Case Monitoring" },
 
 
     ],
