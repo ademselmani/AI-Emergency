@@ -18,7 +18,7 @@ describe("Employee Route Unit Tests", () => {
   let server;
 
   before((done) => {
-    server = app.listen(0, () => {
+    server = app.listen(5001, () => {
       // Use port 0 for a free port
       console.log("Test server running on port", server.address().port);
       done();
