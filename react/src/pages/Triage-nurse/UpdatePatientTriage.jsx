@@ -45,6 +45,7 @@ const UpdatePatientTriage = () => {
   const [errors, setErrors] = useState({});
   const [triageResult, setTriageResult] = useState({ grade: null, status: '' });
   const [clusterResult, setClusterResult] = useState({ cluster: null, distances: [] });
+  const [lengthOfStay, setLengthOfStay] = useState(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -90,7 +91,7 @@ const UpdatePatientTriage = () => {
 
     try {
       // Envoi des données en parallèle pour meilleure performance
-      const [triageResponse, clusterResponse] = await Promise.all([
+      const [triageResponse, clusterResponse, losResponse] = await Promise.all([
         axios.post('http://localhost:5000/predict', {
           age: Number(formData.age),
           PainGrade: Number(formData.painScale),
@@ -99,6 +100,13 @@ const UpdatePatientTriage = () => {
           O2Saturation: Number(formData.o2Saturation)
         }),
         axios.post('http://localhost:5000/cluster', {
+          age: Number(formData.age),
+          PainGrade: Number(formData.painScale),
+          Source: mapSourceToCode[formData.source],
+          BlooddpressurSystol: Number(formData.systolicBP),
+          O2Saturation: Number(formData.o2Saturation)
+        }),
+        axios.post('http://localhost:5000/predict_los', {
           age: Number(formData.age),
           PainGrade: Number(formData.painScale),
           Source: mapSourceToCode[formData.source],
@@ -114,6 +122,7 @@ const UpdatePatientTriage = () => {
         cluster: clusterResponse.data.cluster,
         distances: clusterResponse.data.distances
       });
+      setLengthOfStay(losResponse.data.length_of_stay);
 
       // Mise à jour du patient
       await axios.put(`http://localhost:3000/api/patients/${id}`, {
@@ -137,7 +146,7 @@ const UpdatePatientTriage = () => {
       <div className="card p-4 shadow">
         <h2 className="text-center mb-4">Patient Triage Assessment</h2>
 
-        {(triageResult.grade !== null || clusterResult.cluster !== null) && (
+        {(triageResult.grade !== null || clusterResult.cluster !== null || lengthOfStay !== null) && (
           <div className="alert alert-success">
             {triageResult.grade !== null && (
               <div>
@@ -147,6 +156,11 @@ const UpdatePatientTriage = () => {
             {clusterResult.cluster !== null && (
               <div className="mt-2">
                 <strong>📊 Patient Cluster:</strong> {clusterResult.cluster} 
+              </div>
+            )}
+            {lengthOfStay !== null && (
+              <div className="mt-2">
+                <strong>🛏️ Estimated Length of Stay:</strong> {lengthOfStay} days
               </div>
             )}
           </div>
@@ -235,56 +249,35 @@ const UpdatePatientTriage = () => {
                   className={`form-control ${errors.systolicBP ? 'is-invalid' : ''}`}
                   required
                 />
+                {errors.systolicBP && <div className="invalid-feedback">{errors.systolicBP}</div>}
               </div>
               <div className="col-md-4">
-                <label className="form-label">O₂ Saturation (%)*</label>
+                <label className="form-label">O2 Saturation (%)</label>
                 <input
                   type="number"
                   name="o2Saturation"
-                  min="0"
-                  max="100"
                   value={formData.o2Saturation}
                   onChange={handleChange}
-                  className={`form-control ${errors.o2Saturation ? 'is-invalid' : ''}`}
-                  required
+                  className="form-control"
                 />
               </div>
               <div className="col-md-4">
-                <label className="form-label">Temperature (°C)</label>
+                <label className="form-label">Body Temperature (°C)</label>
                 <input
                   type="number"
                   name="temperature"
-                  step="0.1"
                   value={formData.temperature}
                   onChange={handleChange}
-                  className={`form-control ${errors.temperature ? 'is-invalid' : ''}`}
+                  className="form-control"
                 />
               </div>
             </div>
           </fieldset>
 
-          <div className="d-flex justify-content-between mt-4">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate(-1)}
-            >
-              Cancel
+          <div className="row justify-content-center mt-4">
+            <button className="btn btn-primary" type="submit">
+              Submit Triage Assessment
             </button>
-            <button 
-  type="submit" 
-  className="btn btn-primary"
-  style={{
-    backgroundColor: 'rgb(255, 59, 63)',
-    borderColor: 'rgb(255, 59, 63)',
-    '&:hover': {
-      backgroundColor: 'rgb(230, 40, 44)',
-      borderColor: 'rgb(230, 40, 44)'
-    }
-  }}
->
-  Evaluate Patient
-</button>
           </div>
         </form>
       </div>
