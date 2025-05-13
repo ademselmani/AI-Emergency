@@ -275,7 +275,17 @@ const UpdatePatientTriage = () => {
           </fieldset>
 
           <div className="row justify-content-center mt-4">
-            <button className="btn btn-primary" type="submit">
+            <button 
+              className="btn" 
+              type="submit"
+              style={{
+                backgroundColor: '#ff3b3f',
+                color: 'white',
+                padding: '0.375rem 0.75rem',
+                fontSize: '0.875rem',
+                width: 'auto'
+              }}
+            >
               Submit Triage Assessment
             </button>
           </div>

@@ -320,7 +320,7 @@ const path = require('path'); // Make sure to require path module
 
 // PythonShell options
 let options = {
-  pythonPath: 'C:/Users/Administrator/AppData/Local/Programs/Python/Python313/python.exe', // Update your Python path here
+  pythonPath: 'C:/Users/lenovo2/AppData/Local/Programs/Python/Python313/python.exe', // Update your Python path here
   scriptPath: 'src/models', // Path to where your Python script is located
 };
 
