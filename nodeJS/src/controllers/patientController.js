@@ -1,5 +1,5 @@
 
-const { createPatient, getAllPatients , getPatientById , updatePatient, deletePatient } = require('../services/patientService');
+const { createPatient, getAllPatients , getPatientById , updatePatient, deletePatient, updatePatientTriage} = require('../services/patientService');
 
 // Créer un patient
 const patientController = async (req, res) => {
@@ -66,11 +66,23 @@ const getAllPatientss = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+const triagePatientController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await updatePatientTriage(id, req.body);
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
 module.exports = {
   patientController,
   getAllPatientss,
   getPatientsController,
   deletePatientController,
   updatePatientController,
-  getPatientByIdController, // Ajouté ici
+  getPatientByIdController, 
+  triagePatientController// Ajouté ici
  };

@@ -7,7 +7,8 @@ const {
   updatePatientController,
   deletePatientController,
   getAllPatientss,
-  getPatientByIdController
+  getPatientByIdController,
+  triagePatientController
 } = require('../controllers/patientController');
 router.get('/', getAllPatientss);
 
@@ -25,6 +26,7 @@ router.put('/patients/:id', updatePatientController);
 
 // Route pour récupérer un patient
 router.get('/patients/:id', getPatientByIdController);
+router.put('/patients/:id/triage', triagePatientController);
 
 module.exports = router;
  
