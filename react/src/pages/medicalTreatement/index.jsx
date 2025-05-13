@@ -38,19 +38,12 @@ const Treatments = () => {
 
   const sortPatients = (criteria, patientsData) => {
     let sorted = [...patientsData];
-    const getTriageLevel = (patient) =>
-      Array.isArray(patient.medicalRecords) && patient.medicalRecords.length > 0
-        ? patient.medicalRecords[0].triageLevel || 0
-        : 0;
-  
     switch (criteria) {
       case 'urgency':
         sorted.sort((a, b) => getTriageLevel(a) - getTriageLevel(b));
         break;
       case 'date':
-        sorted.sort(
-          (a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0)
-        );
+        sorted.sort((a, b) => new Date(a.arrivalTime || 0) - new Date(b.arrivalTime || 0));
         break;
       case 'both':
         sorted.sort((a, b) => {
@@ -224,7 +217,7 @@ const Treatments = () => {
   }
 
   .filter-section h5 {
-    color: #8c5d55;
+    color: #ff3b3f;
     margin-bottom: 0.75rem;
     font-weight: 500;
   }
@@ -238,8 +231,8 @@ const Treatments = () => {
     padding: 0.5rem 1.25rem;
     border-radius: 8px;
     background: #fff0eb;
-    border: 1px solid #ffd6cc;
-    color: #8c5d55;
+    border: 1px solidrgb(250, 175, 176);
+    color: #ff3b3f;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -253,7 +246,7 @@ const Treatments = () => {
   }
 
   .filter-button.active {
-    background: #FF8C69;
+    background: #ff3b3f;
     color: white;
     border-color: #FF8C69;
   }
@@ -334,7 +327,7 @@ const Treatments = () => {
   }
 
   .add-button {
-    background: #FF8C69;
+    background: #ff3b3f;
     color: white;
 
   }
@@ -349,7 +342,7 @@ const Treatments = () => {
 
   .view-button {
     background: white;
-    color: #FF8C69;
+    color: #ff3b3f;
     
     border: 1px solid #FF8C69;
   }

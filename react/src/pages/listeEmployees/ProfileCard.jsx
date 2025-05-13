@@ -113,7 +113,7 @@ const ProfileCard = ({ employee = {}, onDelete }) => {
         <div className='card-content'>
           <div className='avatar-container'>
             <img
-              className='photo'
+              className='photo text-center'
               src={
                 image ||
                 "https://www.shutterstock.com/image-vector/vector-flat-illustration-grayscale-avatar-600nw-2281862025.jpg"

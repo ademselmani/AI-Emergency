@@ -54,14 +54,7 @@ function Navbar() {
           {/* Left Section - Search */}
           <div className="flex flex-1 items-center gap-4">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search .."
-                className="w-full rounded-lg border-0 bg-gray-100 pl-10 pr-4 py-2.5 text-sm ring-1 ring-inset ring-gray-100 placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+                
             </div>
           </div>
 

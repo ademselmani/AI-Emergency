@@ -109,7 +109,9 @@ const Profile = () => {
       
       
         <div >
-          <div style={styles.avatarContainer}>
+          <div  className='m-5' style={styles.avatarContainer}
+
+          >
             {currentUser.image ? (
               <img 
                 src={currentUser.image} 
@@ -238,9 +240,11 @@ const styles = {
     position: 'relative',
   },
   avatarContainer: {
+    
     marginBottom: '20px',
   },
   profileImage: {
+
     width: '120px',
     height: '120px',
     borderRadius: '50%',

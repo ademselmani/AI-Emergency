@@ -639,7 +639,7 @@ const ShowPatientTreatments = () => {
       
       const pdfBase64 = doc.output('datauristring').split(',')[1];
       const response = await axios.post('http://localhost:3000/api/send-email', {
-        to: 'chourabiaziz007@gmail.com',
+        to: 'ellaabouaff123@gmail.com',
         subject: `Patient Treatments Report - ${patientDetails.firstName} ${patientDetails.lastName}`,
         text: `Please find attached the treatments report for ${patientDetails.firstName} ${patientDetails.lastName}`,
         pdfData: pdfBase64,
@@ -1192,11 +1192,11 @@ const ShowPatientTreatments = () => {
       {/* Custom Styles */}
       <style jsx global>{`
         :root {
-          --salmon: #ff6b6b;
-          --salmon-light: #ff8e8e;
-          --salmon-dark: #e05454;
+          --salmon:#ff3b3f;
+          --salmon-light:#ff3b3f;
+          --salmon-dark:rgb(177, 1, 1);
           --salmon-bg: #fff5f5;
-          --salmon-text: #5c2e2e;
+          --salmon-text:#ff3b3f;
         }
         
         body {

@@ -189,15 +189,7 @@ const SupervisionAnomalies = () => {
                   <td>{item.equipmentCount}</td>
                   <td>{item.treatedBy}</td>
                   <td>
-                    {item.patientId && (
-                        <NavLink 
-                         to={`/medical-treatments/patient/show/${item.patient}`}
-                         state={{ patient: item.patient }} 
-                       > 
-                         <i className="fa-solid fa-eye ccc"></i>
-                       </NavLink>
-                     )}
-                    <button 
+                     <button 
                       className="details-btn"
                       title="Voir détails"
                       onClick={() => alert(`Détails: ${item.details}`)}
