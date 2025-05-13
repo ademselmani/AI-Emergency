@@ -9,6 +9,9 @@ import ResetPassword from "./pages/Authentification/ResetPassword";
 import Passwordforget from "./pages/Authentification/Passwordforget";
 import VerficationCode from "./pages/Authentification/VerificationCode.jsx";
 
+
+
+
 import NotFound from "./pages/Exceptions/NotFound";
 import Layout from "./layout/Layout";
 import Head from "./components/head";
