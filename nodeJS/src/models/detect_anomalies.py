@@ -14,7 +14,7 @@ model = joblib.load(model_path)
 client = MongoClient("mongodb://localhost:27017/")
 db = client["emergencyDepartement"]
 treatments_collection = db["treatments"]
-patients_collection = db["patients"]  # Not used in this script, but kept for completeness
+patients_collection = db["patients"]  
 
 # Fetch treatments data with more fields
 data = list(treatments_collection.find({}, {

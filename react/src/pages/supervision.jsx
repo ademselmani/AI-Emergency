@@ -6,7 +6,6 @@ const SupervisionAnomalies = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [patientId, setpatientId] = useState(null);
 
   useEffect(() => {
     const fetchAnomalies = async () => {
@@ -15,19 +14,29 @@ const SupervisionAnomalies = () => {
         if (!response.ok) throw new Error('Erreur de réseau');
         const data = await response.json();
         
-        const formattedData = data.map(item => ({
-          id: item._id, 
-          category: item.category,
-          patientId: item.patient,
-          date: new Date(item.startDate).toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          }),
-          duration: item.duration_days,
-          isAnomaly: item.anomaly === -1,
-          rawDate: new Date(item.startDate)
-        }));
+        const formattedData = data.map(item => {
+          const startDate = new Date(item.startDate);
+          const endDate = new Date(item.endDate);
+          const duration = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+          
+          return {
+            id: item._id, 
+            category: item.category,
+            patientId: item.patient?._id || null,
+            patientName: item.patient ? `${item.patient.firstName} ${item.patient.lastName}` : 'Non assigné',
+            status: item.status ? 'Actif' : 'Terminé',
+            details: item.details,
+            startDate: startDate.toLocaleDateString('fr-FR'),
+            endDate: endDate.toLocaleDateString('fr-FR'),
+            duration: duration,
+            isAnomaly: true, // Comme c'est l'endpoint anomalies, on suppose que tous sont des anomalies
+            rawDate: startDate,
+            treatedBy: item.treatedBy.length > 0 
+              ? item.treatedBy.map(p => `${p.name} (${p.role})`).join(', ') 
+              : 'Non assigné',
+            equipmentCount: item.equipment.length
+          };
+        });
         
         formattedData.sort((a, b) => a.rawDate - b.rawDate);
         setChartData(formattedData);
@@ -41,51 +50,20 @@ const SupervisionAnomalies = () => {
     fetchAnomalies();
   }, []);
 
-
   if (loading) return (
     <div className="loading-container">
       <div className="loading-spinner"></div>
-      <style jsx>{`
-        .loading-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 50vh;
-        }
-        .loading-spinner {
-          width: 50px;
-          height: 50px;
-          border: 5px solid rgba(229, 107, 107, 0.2);
-          border-radius: 50%;
-          border-top-color: #e56b6b;
-          animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 
   if (error) return (
     <div className="error-container">
       <p>{error}</p>
-      <style jsx>{`
-        .error-container {
-          padding: 1.5rem;
-          text-align: center;
-          color: #b53d3d;
-          background-color: #fff0f0;
-          border-radius: 0.5rem;
-          border-left: 4px solid #e56b6b;
-          margin: 2rem;
-        }
-      `}</style>
     </div>
   );
 
   return (
-    <div className="dashboard-container">
+    <div className="supervision-anomalies">
       <header className="dashboard-header">
         <h1>Vigilance Médicale</h1>
         <p>Tableau de bord de gestion des anomalies de traitement</p>
@@ -94,7 +72,7 @@ const SupervisionAnomalies = () => {
       <div className="metrics-grid">
         <div className="metric-card">
           <h3>Anomalies détectées</h3>
-          <p>{chartData.filter(item => item.isAnomaly).length}</p>
+          <p>{chartData.length}</p>
         </div>
         <div className="metric-card">
           <h3>Durée moyenne</h3>
@@ -102,7 +80,7 @@ const SupervisionAnomalies = () => {
         </div>
         <div className="metric-card">
           <h3>Dernière détection</h3>
-          <p>{chartData.length > 0 ? chartData[chartData.length - 1].date : '--/--/----'}</p>
+          <p>{chartData.length > 0 ? chartData[chartData.length - 1].startDate : '--/--/----'}</p>
         </div>
       </div>
 
@@ -118,7 +96,7 @@ const SupervisionAnomalies = () => {
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#fbd5d5" />
             <XAxis 
-              dataKey="date" 
+              dataKey="startDate" 
               tick={{ fill: '#9b6a6c' }}
               axisLine={{ stroke: '#e5a5a5' }}
             />
@@ -157,46 +135,56 @@ const SupervisionAnomalies = () => {
               <tr>
                 <th>ID</th>
                 <th>Catégorie</th>
-                <th>Date</th>
+                <th>Patient</th>
+                <th>Date début</th>
+                <th>Date fin</th>
                 <th>Durée</th>
-                <th></th>
+                <th>Statut</th>
+                <th>Équipements</th>
+                <th>Traîté par</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {chartData.filter(item => item.isAnomaly).map((item) => (
+              {chartData.map((item) => (
                 <tr key={item.id}>
                   <td>#{item.id.slice(-6)}</td>
                   <td>
-                    <span className={`category-badge ${
-                      item.category === 'TRAUMA' ? 'trauma' : 'psychiatric'
-                    }`}>
+                    <span className={`category-badge ${item.category.toLowerCase()}`}>
                       {item.category}
                     </span>
                   </td>
-                  <td>{item.date}</td>
+                  <td>{item.patientName}</td>
+                  <td>{item.startDate}</td>
+                  <td>{item.endDate}</td>
                   <td>
                     <span className="duration-value">
                       {item.duration} <span className="duration-unit">jours</span>
                     </span>
                   </td>
                   <td>
-                  <td>
-                  <td>
-                  <td>
-  <NavLink 
-    to={`/medical-treatments/patient/show/${item.patientId}`}
-    state={{ 
-      patientId: item.patientId,
-      patient: { _id: item.patientId } 
-    }}
-    className="view-link"
-  > 
-    <i className="fa-solid fa-eye"></i>
-  </NavLink>
-</td>
-</td>
+                    <span className={`status-badge ${item.status === 'Actif' ? 'active' : 'inactive'}`}>
+                      {item.status}
+                    </span>
                   </td>
-
+                  <td>{item.equipmentCount}</td>
+                  <td>{item.treatedBy}</td>
+                  <td>
+                    {item.patientId && (
+                        <NavLink 
+                         to={`/medical-treatments/patient/show/${item.patient}`}
+                         state={{ patient: item.patient }} 
+                       > 
+                         <i className="fa-solid fa-eye ccc"></i>
+                       </NavLink>
+                     )}*/
+                    <button 
+                      className="details-btn"
+                      title="Voir détails"
+                      onClick={() => alert(`Détails: ${item.details}`)}
+                    >
+                      <i className="fa-solid fa-info-circle"></i>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -204,7 +192,6 @@ const SupervisionAnomalies = () => {
           </table>
         </div>
       </div>
-
       <style jsx>{`
         .dashboard-container {
           min-height: 100vh;

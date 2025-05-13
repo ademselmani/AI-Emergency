@@ -332,6 +332,8 @@ PythonShell.run('detect_anomalies.py', options, function (err, results) {
 // Express controller for handling anomaly detection request
 const { spawn } = require('child_process');
  
+ 
+// Express controller for handling anomaly detection request
 exports.detectAnomalies = async (req, res) => {
   try {
     const pythonProcess = spawn('python', [
@@ -347,20 +349,36 @@ exports.detectAnomalies = async (req, res) => {
       console.error('Python stderr:', err.toString());
     });
 
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on('close', async (code) => {
       if (code !== 0) {
         return res.status(500).json({ error: 'Python script failed' });
       }
 
       try {
-        // Nettoyer les sauts de ligne ou autres caractères inutiles
+        // Clean up data and parse the results
         const cleanData = data.trim();
-
         const result = JSON.parse(cleanData);
-        res.status(200).json(result);
+
+        // Retrieve the treatments based on the result
+        const treatments = await Treatment.find({ _id: { $in: result.map(item => item._id) } })
+          .populate('patient') // Populate patient details
+          .populate({
+            path: 'treatedBy',
+            match: { role: 'doctor' }, // Only fetch employees with "doctor" role
+            select: 'name role -_id', // Select the name and role of the employee
+          });
+
+        // Process the result to combine treatment, patient, and doctor data
+        const processedResults = treatments.map(treatment => ({
+          ...treatment.toObject(),
+          patient: treatment.patient, // Patient information
+          treatedBy: treatment.treatedBy, // Employee (doctor) information
+        }));
+
+        res.status(200).json(processedResults);
       } catch (e) {
-        console.error('Failed to parse Python output:', data);
-        res.status(500).json({ error: 'Failed to parse Python output' });
+        console.error('Failed to process the result:', e);
+        res.status(500).json({ error: 'Failed to process the anomaly data' });
       }
     });
   } catch (err) {
