@@ -56,7 +56,7 @@ Before running the project, ensure you have the following installed:
 - [Git](https://git-scm.com/)
 - [Node.js v16+](https://nodejs.org/)
 - [React 18](https://reactjs.org/)
-- [Python 3.8+](https://www.python.org/)
+- [Python 3.10+](https://www.python.org/)
 
 ---
 
