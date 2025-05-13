@@ -51,8 +51,27 @@ const SupervisionAnomalies = () => {
   }, []);
 
   if (loading) return (
-    <div className="loading-container">
-      <div className="loading-spinner"></div>
+    <div className="loading-container" style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      backgroundColor: '#fff7f7'
+    }}>
+      <div className="spinner" style={{
+        width: '50px',
+        height: '50px',
+        border: '5px solid #f3f3f3',
+        borderTop: '5px solid #e56b6b',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite'
+      }}></div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 
@@ -137,7 +156,7 @@ const SupervisionAnomalies = () => {
                 <th>Catégorie</th>
                 <th>Patient</th>
                 <th>Date début</th>
-                <th>Date fin</th>
+                <th>Date Détection/fin</th>
                 <th>Durée</th>
                 <th>Statut</th>
                 <th>Équipements</th>
@@ -177,7 +196,7 @@ const SupervisionAnomalies = () => {
                        > 
                          <i className="fa-solid fa-eye ccc"></i>
                        </NavLink>
-                     )}*/
+                     )}
                     <button 
                       className="details-btn"
                       title="Voir détails"
@@ -192,6 +211,7 @@ const SupervisionAnomalies = () => {
           </table>
         </div>
       </div>
+
       <style jsx>{`
         .dashboard-container {
           min-height: 100vh;
