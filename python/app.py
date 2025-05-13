@@ -11,6 +11,7 @@ CORS(app)
 pipeline = joblib.load("../python/triage_full_pipeline (3).joblib")
 kmeans = joblib.load('../python/kmeans_model.pkl')
 scaler = joblib.load('../python/scaler.pkl')
+decision_tree_model = joblib.load("../python/decision_tree_model.pkl")
 
 # Moyennes & écarts-types pour la normalisation
 MEANS = {
@@ -94,6 +95,36 @@ def cluster():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+
+# Charge le modèle de régression
+regression_model = joblib.load('../python/decision_tree_model.pkl')
+
+@app.route('/predict_los', methods=['POST'])
+def predict_los():
+    try:
+        data = request.get_json()
+        required = ['age','PainGrade','Source','BlooddpressurSystol','O2Saturation']
+        missing = [k for k in required if k not in data]
+        if missing:
+            return jsonify({"error": f"Champs manquants : {missing}"}), 400
+
+        data_norm = {
+            feat: (data[feat] - MEANS[feat]) / STDS[feat]
+            for feat in MEANS
+        }
+
+        df = pd.DataFrame([data_norm])
+
+        los_pred = regression_model.predict(df)[0]
+        return jsonify({"length_of_stay": float(round(los_pred, 2))}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+      
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
