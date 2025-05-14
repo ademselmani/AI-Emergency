@@ -2,7 +2,7 @@
 
 <p align="center">
   <em><em>
-  RescueOn is an intelligent emergency coordination web app for medical teams, developed as part of the coursework at Esprit School of Engineering. Features real-time triage tracking and decision support tools.
+  RescueOn is an intelligent emergency coordination web app for medical teams, developed as part of the coursework at Esprit School of Engineering. Features real-time triage tracking and decision support tools
 </em>
  .</em>
 </p>
