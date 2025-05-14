@@ -2,7 +2,7 @@
 
 <p align="center">
   <em><em>
-  RescueOn is a web application designed to enhance the efficiency of emergency departments by enabling real-time coordination between medical staff, ambulance teams, and administrators. It features real-time patient triage tracking, allowing for better visibility and prioritization of critical cases.
+  RescueOn is an intelligent emergency coordination web app for medical teams, developed as part of the coursework at Esprit School of Engineering. Features real-time triage tracking and decision support tools.
 </em>
  .</em>
 </p>
