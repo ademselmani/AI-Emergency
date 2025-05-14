@@ -15,7 +15,7 @@ pipeline {
         stage('test') {
             steps {
                 script {
-                    sh 'npm install' // Note: Should this be 'npm test'?
+                    sh 'cd nodeJS && npm install'
                 }
             }
         }
@@ -39,7 +39,7 @@ pipeline {
         stage('Deploy to Nexus') {
             steps {
                 script {
-                    sh 'npm install'
+                    sh 'cd nodeJS && npm install'
                 }
             }
         }
