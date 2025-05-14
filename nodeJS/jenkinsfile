@@ -1,60 +1,47 @@
-pipeline { 
-    agent any 
-    environment { 
-    registryCredentials = "nexus" 
-    registry = "192.167.33.10:8083" 
-    } 
-    stages { 
-        stage('Install dependencies') { 
-            steps { 
-                script { 
-                    sh 'cd nodeJS && npm install' 
-                } 
-            } 
-        } 
+pipeline {
+    agent any
+    environment {
+        registryCredentials = "nexus"
+        registry = "192.167.33.10:8083"
+    }
+    stages {
+        stage('Install dependencies') {
+            steps {
+                script {
+                    sh 'cd nodeJS && npm install'
+                }
+            }
+        }
         stage('test') {
             steps {
-                script {   
-                    sh 'npm install'    
-                    } 
-                }  
-            }   
-        } 
-
+                script {
+                    sh 'npm install' // Note: Should this be 'npm test'?
+                }
+            }
+        }
         stage('SonarQube Analysis') {
             steps {
-                script {   
-                    def scannerHome = tool 'scanner' 
-                    withSonarQubeEnv { 
-                        sh "cd nodeJS &&  ${scannerHome}/bin/sonar-scanner -X"
-                    } 
-                }  
-            }   
-        } 
-       // stage('Build application') { 
-         //   steps { 
-            //    script { 
-                   // sh 'cd nodeJS && npm run build-dev' 
-                 //   sh 'cd nodeJS && npm start' 
-             //   } 
-           // } 
-     //   }
-        
-        stage('Building images (node and mongo)') { 
-            steps { 
-                script { 
-                    sh 'cd nodeJS && docker compose build' 
-                } 
-            } 
+                script {
+                    def scannerHome = tool 'scanner'
+                    withSonarQubeEnv {
+                        sh "cd nodeJS && ${scannerHome}/bin/sonar-scanner -X"
+                    }
+                }
+            }
         }
-        stage('Deploy  to Nexus') { 
-            steps{   
-                script { 
-                    sh 'npm install'    
-                  } 
-                } 
-          } 
-
-
-    } 
+        stage('Building images (node and mongo)') {
+            steps {
+                script {
+                    sh 'cd nodeJS && docker compose build'
+                }
+            }
+        }
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    sh 'npm install'
+                }
+            }
+        }
+    }
 }
