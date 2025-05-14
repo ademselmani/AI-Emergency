@@ -6,11 +6,6 @@
 </em>
  .</em>
 </p>
-
-<p align="center">
-  <strong>Features:</strong> Live triage tracking · Decision support tools
-</p>
-
 ---
 
 ## 📚 Table of Contents
