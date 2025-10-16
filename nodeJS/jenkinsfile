@@ -1,17 +1,26 @@
 pipeline {
     agent any
+    
+    tools {
+        sonarScanner 'SonarScanner'  // Use the name from your Jenkins configuration
+    }
+    
     environment {
         SONARQUBE_SERVER = 'SonarQubeLocal'
     }
+    
     stages {
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(SONARQUBE_SERVER) {
-                    sh 'cd nodeJS && sonar-scanner'
+                dir('nodeJS') {
+                    withSonarQubeEnv(SONARQUBE_SERVER) {
+                        sh 'sonar-scanner'
+                    }
                 }
             }
         }
     }
+    
     post {
         success {
             echo 'SonarQube analysis completed successfully!'
