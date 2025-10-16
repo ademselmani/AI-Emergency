@@ -12,16 +12,25 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                sh 'cd nodeJS && npm install'
+                bat 'cd nodeJS && npm install'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv(SONARQUBE_SERVER) {
-                    sh 'cd nodeJS && sonar-scanner'
+                    bat 'cd nodeJS && sonar-scanner'
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'SonarQube analysis completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check console output.'
         }
     }
 }
