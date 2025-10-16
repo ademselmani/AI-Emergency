@@ -7,7 +7,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv(SONARQUBE_SERVER) {
-                    bat 'cd nodeJS && sonar-scanner'
+                    sh 'cd nodeJS && sonar-scanner'
                 }
             }
         }
