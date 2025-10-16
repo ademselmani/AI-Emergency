@@ -15,8 +15,7 @@ pipeline {
             steps {
                 // Run SonarQube scanner
                 withSonarQubeEnv(SONARQUBE_SERVER) {
-                    bat 'sonar-scanner -Dsonar.projectKey=AI-Emergency -Dsonar.sources=.'
-                    
+                    sh 'sonar-scanner -Dsonar.projectKey=AI-Emergency -Dsonar.sources=.'
                 }
             }
         }
