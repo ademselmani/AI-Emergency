@@ -1,61 +1,43 @@
-pipeline { 
-    agent any 
-    environment { 
-    registryCredentials = "nexus" 
-    registry = "192.167.33.10:8083" 
-    } 
-    stages { 
-        stage('Install dependencies') { 
-            steps { 
-                script { 
-                    sh 'cd nodeJS && npm install' 
-                } 
-            } 
-        } 
-        stage('Unit Test') { 
-            steps { 
-                script { 
-                    sh 'cd nodeJS && npm test' 
-                } 
-            } 
-        } 
+pipeline {
+    agent {
+        docker {
+            image 'node:18'        // Use Node Docker image
+            args '-u root:root'    // Optional: allow writing to workspace
+        }
+    }
+
+    environment {
+        SONARQUBE_SERVER = 'SonarQubeLocal' // Name of SonarQube server in Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh 'cd nodeJS && npm install'
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
-                script {   
-                    def scannerHome = tool 'scanner' 
-                    withSonarQubeEnv { 
-                        sh "cd nodeJS &&  ${scannerHome}/bin/sonar-scanner"
-                    } 
-                }  
-            }   
-        } 
-       // stage('Build application') { 
-         //   steps { 
-            //    script { 
-                   // sh 'cd nodeJS && npm run build-dev' 
-                 //   sh 'cd nodeJS && npm start' 
-             //   } 
-           // } 
-     //   }
-        
-        stage('Building images (node and mongo)') { 
-            steps { 
-                script { 
-                    sh 'cd nodeJS && docker compose build' 
-                } 
-            } 
+                withSonarQubeEnv(SONARQUBE_SERVER) {
+                    sh 'cd nodeJS && sonar-scanner'
+                }
+            }
         }
-        stage('Deploy  to Nexus') { 
-            steps{   
-                script { 
-            docker.withRegistry("http://"+registry, 
-            registryCredentials ) { 
-                sh('docker push $registry/nodemongoapp:6.0 ') 
-                } 
-            } 
-                } 
-          } 
+    }
 
-    } 
+    post {
+        success {
+            echo 'SonarQube analysis completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check console output.'
+        }
+    }
 }
