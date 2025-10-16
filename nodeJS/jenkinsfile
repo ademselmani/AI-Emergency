@@ -1,32 +1,29 @@
 pipeline {
     agent any
     environment {
-        SONARQUBE_SERVER = 'SonarQubeLocal' // The name you set in Jenkins SonarQube configuration
+        SONARQUBE_SERVER = 'SonarQubeLocal' // Your SonarQube configuration in Jenkins
     }
     stages {
         stage('Checkout') {
             steps {
-                // Pull the code from your repository
                 checkout scm
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                // Run SonarQube scanner
                 withSonarQubeEnv(SONARQUBE_SERVER) {
-                    sh 'sonar-scanner -Dsonar.projectKey=AI-Emergency -Dsonar.sources=.'
+                    // Run SonarScanner in Docker
+                    sh '''
+                    docker run --rm \
+                        -v $PWD:/usr/src \
+                        -v sonar-cache:/root/.sonar \
+                        sonarsource/sonar-scanner-cli \
+                        -Dsonar.projectKey=AI-Emergency \
+                        -Dsonar.sources=/usr/src
+                    '''
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'SonarQube analysis completed successfully!'
-        }
-        failure {
-            echo 'SonarQube analysis failed. Check the logs.'
         }
     }
 }
