@@ -1,15 +1,8 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18'        // Use Node Docker image
-            args '-u root:root'    // Optional: allow writing to workspace
-        }
-    }
-
+    agent any
     environment {
-        SONARQUBE_SERVER = 'SonarQubeLocal' // Name of SonarQube server in Jenkins
+        SONARQUBE_SERVER = 'SonarQubeLocal'
     }
-
     stages {
         stage('Checkout') {
             steps {
@@ -29,15 +22,6 @@ pipeline {
                     sh 'cd nodeJS && sonar-scanner'
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'SonarQube analysis completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check console output.'
         }
     }
 }
