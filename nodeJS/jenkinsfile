@@ -1,14 +1,15 @@
 pipeline {
     agent any
-    
+
     tools {
-        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarScanner'
+        // Use the tool name defined in Jenkins global configuration
+        sonarScanner 'SonarScanner'
     }
-    
+
     environment {
         SONARQUBE_SERVER = 'SonarQubeLocal'
     }
-    
+
     stages {
         stage('SonarQube Analysis') {
             steps {
@@ -20,7 +21,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo 'SonarQube analysis completed successfully!'
