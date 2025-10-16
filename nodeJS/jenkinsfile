@@ -1,22 +1,22 @@
 pipeline {
     agent any
-
-    tools {
-        // Use the tool name defined in Jenkins global configuration
-        sonarScanner 'SonarScanner'
-    }
-
     environment {
-        SONARQUBE_SERVER = 'SonarQubeLocal'
+        SONARQUBE_SERVER = 'SonarQubeLocal' // The name you set in Jenkins SonarQube configuration
     }
-
     stages {
+        stage('Checkout') {
+            steps {
+                // Pull the code from your repository
+                checkout scm
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
-                dir('nodeJS') {
-                    withSonarQubeEnv(SONARQUBE_SERVER) {
-                        sh 'sonar-scanner'
-                    }
+                // Run SonarQube scanner
+                withSonarQubeEnv(SONARQUBE_SERVER) {
+                    sh 'sonar-scanner -Dsonar.projectKey=AI-Emergency -Dsonar.sources=.'  // Linux/macOS
+                    // For Windows, replace with: bat 'sonar-scanner -Dsonar.projectKey=AI-Emergency -Dsonar.sources=.'
                 }
             }
         }
@@ -27,7 +27,7 @@ pipeline {
             echo 'SonarQube analysis completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check console output.'
+            echo 'SonarQube analysis failed. Check the logs.'
         }
     }
 }
